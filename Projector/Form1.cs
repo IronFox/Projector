@@ -75,10 +75,19 @@ namespace Projector
                     TreeNode tsolution = solutionView.Nodes.Add(solutionName);
                     foreach (Project project in Project.All)
                     {
-                        TreeNode tproject = tsolution.Nodes.Add(project.Name + (project == Project.Primary ? " (primary)" : "") + " "+project.Type);
-                        foreach (var r in project.References)
+						string projectName = project.Name;
+						string options = project.Type ?? "Unknown";
+						if (project == Project.Primary)
+							options += ", Primary";
+						if (options.Length > 0)
+							projectName += " ("+options+")";
+
+                        TreeNode tproject = tsolution.Nodes.Add(projectName);
+						foreach (var c in project.CloneSources)
+							tproject.Nodes.Add("clones: " + c.Name);
+						foreach (var r in project.References)
                         {
-                            TreeNode treference = tproject.Nodes.Add(r.project.Name + (r.includePath ? " (include)" : ""));
+                            TreeNode treference = tproject.Nodes.Add("references: "+r.project.Name + (r.includePath ? " (include)" : ""));
                         }
                         foreach (var s in project.Sources)
                         {

@@ -196,6 +196,8 @@ namespace Projector
         List<Reference> references = new List<Reference>();
         int roundTrip = 0;
 
+		private List<Project>	cloneSources = new List<Project>();
+		public IEnumerable<Project> CloneSources { get { return cloneSources;} }
 
         public string Type { get; private set; }
         public string Name { get; private set; }
@@ -233,6 +235,8 @@ namespace Projector
         //}
 
         private bool loaded = false;
+
+
 
         public void Load(XmlNode xproject)
         {
@@ -274,6 +278,8 @@ namespace Projector
 
             }
             loaded = true;
+			if (clone.Count > 0)
+				cloneSources = clone;
 
             XmlNodeList xsources = xproject.SelectNodes("source");
             foreach (XmlNode xsource in xsources)
