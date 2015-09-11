@@ -1,0 +1,4 @@
+<project>
+  <clone name="Test" />
+	<macro name="helloWorld">yay</macro>
+</project>

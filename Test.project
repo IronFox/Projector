@@ -1,0 +1,6 @@
+<project type="executable">
+	<source path="../Hexaverse">
+		<exclude dir="IncreaseVersion"/>
+	</source>
+	<referenceProject name="DeltaWorks" includePath="true" />
+</project>

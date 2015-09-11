@@ -1,0 +1,4 @@
+<solution language="C++">
+	<project name="Test" primary="true" />
+	<project name="Test2" />
+</solution>
