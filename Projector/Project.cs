@@ -24,6 +24,9 @@ namespace Projector
         public static CodeGroup h = new CodeGroup() { name = "header", compiles = false };
         public static CodeGroup c = new CodeGroup() { name = "C", compiles = true };
 
+        public static List<Warning> Warnings = new List<Warning>();
+
+
         public static Dictionary<string, CodeGroup> extensionMap = new Dictionary<string, CodeGroup>()
         {
             {".h", h },
@@ -38,6 +41,12 @@ namespace Projector
             {".cc", cpp },
         };
 
+        internal static void FlushAll()
+        {
+            map.Clear();
+            list.Clear();
+            unloaded.Clear();
+        }
 
         public class Source
         {
@@ -78,8 +87,8 @@ namespace Projector
                     {
                         case Type.Find:
                             return info.FullName.Contains(parameter);
-//                        case Type.Dir:
-  //                          return info.Name == parameter || Match(info.Parent);
+                            //                        case Type.Dir:
+                            //                          return info.Name == parameter || Match(info.Parent);
                     }
                     return false;
                 }
@@ -129,10 +138,10 @@ namespace Projector
                         continue;
 
                     CodeGroup grp;
-                    if (extensionMap.TryGetValue(f.Extension.ToLower(),out grp))
+                    if (extensionMap.TryGetValue(f.Extension.ToLower(), out grp))
                     {
                         List<FileInfo> list;
-                        if (!sub.groups.TryGetValue(grp,out list))
+                        if (!sub.groups.TryGetValue(grp, out list))
                         {
                             list = new List<FileInfo>();
                             sub.groups.Add(grp, list);
@@ -163,7 +172,7 @@ namespace Projector
                 if (path.Exists)
                 {
 
-                    ScanFiles(root,path, recursive);
+                    ScanFiles(root, path, recursive);
                 }
 
 
@@ -177,10 +186,6 @@ namespace Projector
 
         }
 
-        struct Macro
-        {
-
-        }
 
 
         public static IEnumerable<Project> All { get { return list; } }
@@ -192,7 +197,7 @@ namespace Projector
         private static Queue<Project> unloaded = new Queue<Project>();
         //private XmlNode xproject;
         List<Source> sources = new List<Source>();
-        List<Macro> macros = new List<Macro>();
+        Dictionary<string, string> macros = new Dictionary<string, string>();
         List<Reference> references = new List<Reference>();
         int roundTrip = 0;
 
@@ -202,7 +207,7 @@ namespace Projector
         public static Project Primary { get; private set; }
         public FileInfo SourcePath { get; private set; }
 
-        public bool HasPath {  get { return SourcePath != null && SourcePath.Length > 0; } }
+        public bool HasPath { get { return SourcePath != null && SourcePath.Length > 0; } }
 
         internal bool FillPath(FileInfo from)
         {
@@ -244,7 +249,7 @@ namespace Projector
             List<Project> clone = new List<Project>();
             foreach (XmlNode xClone in xClones)
             {
-                Project p = Add(xClone,SourcePath);
+                Project p = Add(xClone, SourcePath, this);
                 if (!p.loaded)
                 {
                     allThere = false;
@@ -266,7 +271,8 @@ namespace Projector
             foreach (Project p in clone)
             {
                 sources.AddRange(p.sources);
-                macros.AddRange(p.macros);
+                foreach (var pair in p.macros)
+                    macros.Add(pair.Key, pair.Value);
                 references.AddRange(p.references);
 
                 if (Type == null)
@@ -300,21 +306,10 @@ namespace Projector
         }
 
 
-        //public void SetPath(String fileName)
-        //{
-        //    int slashAt = Math.Max(fileName.LastIndexOf('/'), fileName.LastIndexOf('\\'));
-        //    Debug.Assert(slashAt >= 0);
-
-        //    string name = fileName.Substring(slashAt + 1);
-        //    Debug.Assert(name == Name);
-        //    Debug.Assert(!HasPath);
-
-        //    this.SourcePath = fileName;
-        //}
 
         public static FileInfo GetRelative(DirectoryInfo searchScope, string fileName)
         {
-            string current =  Directory.GetCurrentDirectory();
+            string current = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(searchScope.FullName);
             FileInfo rs = new FileInfo(fileName);
             Directory.SetCurrentDirectory(current);
@@ -329,21 +324,19 @@ namespace Projector
             return rs;
         }
 
-        public static Project Add(XmlNode xproject, FileInfo searchScope)
+        public static Project Add(XmlNode xproject, FileInfo searchScope, Project warningsGoTo)
         {
             XmlNode xname = xproject.Attributes.GetNamedItem("name");
-            Debug.Assert(xname != null);
+            if (xname == null)
+            {
+                Warn(warningsGoTo, "'name' attribute not set while parsing project entry");
+                return null;
+            }
             string name = xname.Value;
             Project p;
             if (map.TryGetValue(name, out p))
                 return p;
 
-            XmlNode xpath = xproject.Attributes.GetNamedItem("path");
-            if (xpath != null)
-            {
-                p.SourcePath = GetRelative(searchScope.Directory, xpath.Value);
-                Debug.Assert(p.SourcePath.Exists);
-            }
 
             p = new Project();
             p.Name = name;
@@ -352,15 +345,47 @@ namespace Projector
             unloaded.Enqueue(p);
 
 
+            XmlNode xpath = xproject.Attributes.GetNamedItem("path");
+            if (xpath != null)
+            {
+                p.SourcePath = GetRelative(searchScope.Directory, xpath.Value);
+                if (!p.SourcePath.Exists)
+                {
+                    Warn(p, "Explicit project path '" + xpath.Value + "' does not exist relative to '" + searchScope.FullName + "'");
+                    p.SourcePath = null;
+                }
+            }
+
+
+
             XmlNode xprim = xproject.Attributes.GetNamedItem("primary");
             if (xprim != null && xprim.Value.ToLower() == "true")
                 Primary = p;
             return p;
         }
 
+
+        private static void Warn(Project p, string message)
+        {
+            Warnings.Add(new Warning(p, message));
+        }
+
+        private void Warn(string message)
+        {
+            Warn(this, message);
+        }
+
         private void AddMacro(XmlNode xmacro)
         {
-            //throw new NotImplementedException();
+            XmlNode xname = xmacro.Attributes.GetNamedItem("name");
+            if (xname == null)
+            {
+                Warn("'name' attribute not set for macro");
+                return;
+            }
+            if (macros.ContainsKey(xname.Value))
+                Warn("Redefining macro '"+xname.Value+"' to '"+xmacro.Value+"'");
+            macros.Add(xname.Value, xmacro.Value);
         }
 
         private void AddReference(XmlNode xreference)
@@ -368,7 +393,7 @@ namespace Projector
             XmlNode xinclude = xreference.Attributes.GetNamedItem("includePath");
             Reference re;
             re.includePath = xinclude != null ? xinclude.Value == "true" : false;
-            re.project = Add(xreference, SourcePath);
+            re.project = Add(xreference, SourcePath,this);
             references.Add(re);
         }
 
@@ -376,11 +401,19 @@ namespace Projector
         {
             
             XmlNode xPath = xsource.Attributes.GetNamedItem("path");
-            Debug.Assert(xPath != null);
+            if (xPath == null)
+            {
+                Warn("'path' attribute missing while parsing source entry");
+                return;
+            }
             Source s = new Source();
 
             s.path = GetRelativeDir(SourcePath.Directory, xPath.Value);
-            Debug.Assert(s.path.Exists);
+            if (!s.path.Exists)
+            {
+                Warn("Source path '" + xPath.Value + "' does not exist relative to '" + SourcePath.FullName + "'");
+                return;
+            }
 
             XmlNodeList xExcludes = xsource.SelectNodes("exclude");
             if (xExcludes != null && xExcludes.Count > 0)
@@ -419,6 +452,28 @@ namespace Projector
 
         private Project()
         { }
-        
+
+        public class Warning
+        {
+            public string Message
+            {
+                get; private set;
+            }
+            public Project Project
+            {
+                get; private set;
+            }
+
+            public override string ToString()
+            {
+                return (Project!=null ? Project.Name : "<root>")+ ": " + Message;
+            }
+
+            public Warning(Project p, string message)
+            {
+                this.Project = p;
+                this.Message = message;
+            }
+        }
     }
 }
