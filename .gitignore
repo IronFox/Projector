@@ -1,2 +1,4 @@
-Projector/obj/
-Projector/bin/
+*.suo
+*.exe
+bin/
+obj/

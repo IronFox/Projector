@@ -8,28 +8,44 @@ namespace Projector
     internal class PathRegistry
     {
         private static Dictionary<string, FileInfo> map;
+		private static HashSet<string>	ignore = new HashSet<string>();
 
         internal static FileInfo LocateProject(string name)
         {
             LoadMap();
+			if (ignore.Contains(name))
+				return null;
             FileInfo info;
             if (map.TryGetValue(name, out info))
-                return info;
-
+			{ 
+				if (info.Exists)
+					return info;
+			}
+			MessageBox.Show("Project '"+name+"' is currently unknown. Please locate the .project file to continue...","Project not known");
             ProjectView view = (ProjectView)Application.OpenForms["ProjectView"];
             OpenFileDialog dialog = view.OpenDialog;
-            dialog.Title = "Locate project '" + name + "'";
-            dialog.FileName = name + ".project";
-            if (dialog.ShowDialog() == DialogResult.OK)
-            {
-                info = new FileInfo(dialog.FileName);
-                map.Add(name, info);
-                SaveMap();
-                return info;
-            }
-            map.Add(name, null);
-            SaveMap();
-            return null;
+			do
+			{
+				dialog.Filter = "Project|"+name+".project";
+				dialog.Title = "Locate project '" + name + "'";
+				dialog.FileName = name + ".project";
+				if (dialog.ShowDialog() == DialogResult.OK)
+				{
+					dialog.Filter = "Projects|*.project|All files|*.*";
+					info = new FileInfo(dialog.FileName);
+					if (info.Name != name)
+					{
+						continue;
+					}
+					map.Add(name, info);
+					SaveMap();
+					return info;
+				}
+				dialog.Filter = "Projects|*.project|All files|*.*";
+				ignore.Add(name);
+				return null;
+			}
+			while (true);
         }
 
 
