@@ -467,7 +467,8 @@ namespace Projector
                     }
                     if (!config.isRelease)
                         writer.Write("_DEBUG;");
-                    writer.Write("_WINDOWS;");
+                    if (SubSystem != null)
+                        writer.Write("_"+ SubSystem.ToUpper()+ ";");
                     writer.Write("WIN32;");
                     writer.Write("%(PreprocessorDefinitions);%(PreprocessorDefinitions)");
                     writer.WriteLine("</PreprocessorDefinitions>");
