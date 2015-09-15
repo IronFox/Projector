@@ -2,17 +2,29 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using System.Windows.Forms;
 using System.Xml;
 
 namespace Projector
 {
+
+    class Configuration
+    {
+        public string name,
+                       platform;
+
+        public bool isRelease;
+        
+    }
+
+
     internal class Project
     {
         public class CodeGroup
         {
             public string name;
-            public bool compiles;
+            public string tag;
 
             public override int GetHashCode()
             {
@@ -20,9 +32,24 @@ namespace Projector
             }
         }
 
-        public static CodeGroup cpp = new CodeGroup() { name = "C++", compiles = true };
-        public static CodeGroup h = new CodeGroup() { name = "header", compiles = false };
-        public static CodeGroup c = new CodeGroup() { name = "C", compiles = true };
+        public static CodeGroup cpp = new CodeGroup() { name = "C++", tag = "ClCompile" };
+        public static CodeGroup h = new CodeGroup() { name = "header", tag = "ClInclude" };
+        public static CodeGroup c = new CodeGroup() { name = "C", tag = "ClCompile" };
+        public static CodeGroup shader = new CodeGroup() { name = "Shader", tag = "None" };
+        public static CodeGroup image = new CodeGroup() { name = "Image", tag = "Image" };
+        public static CodeGroup resource = new CodeGroup() { name = "Resource", tag = "ResourceCompile" };
+        //        <ItemGroup>
+        //  <ResourceCompile Include="client.rc" />
+        //</ItemGroup>
+        //<ItemGroup>
+        //  <Image Include="client.ico" />
+        //  <Image Include="small.ico" />
+        //</ItemGroup>
+        //<ItemGroup>
+        //  <ProjectReference Include="..\..\..\include\mvc12_project\DeltaWorks\DeltaWorks.vcxproj">
+        //    <Project>{17522f7e-5234-482c-a387-a29791691c36}</Project>
+        //  </ProjectReference>
+        //</ItemGroup>
 
         public static List<Warning> Warnings = new List<Warning>();
 
@@ -36,9 +63,14 @@ namespace Projector
 
             {".c", c },
 
+            {".hlsl", shader },
+
             {".cpp", cpp },
             {".c++", cpp },
             {".cc", cpp },
+
+            {".ico", image },
+            { ".rc", resource },
         };
 
         internal static void FlushAll()
@@ -59,7 +91,8 @@ namespace Projector
                 public enum Type
                 {
                     Find,
-                    Dir
+                    Dir,
+                    File
                 }
 
                 public Type type = Type.Find;
@@ -87,8 +120,8 @@ namespace Projector
                     {
                         case Type.Find:
                             return info.FullName.Contains(parameter);
-                            //                        case Type.Dir:
-                            //                          return info.Name == parameter || Match(info.Parent);
+                        case Type.File:
+                            return info.Name == parameter;
                     }
                     return false;
                 }
@@ -191,6 +224,9 @@ namespace Projector
         public static IEnumerable<Project> All { get { return list; } }
         public IEnumerable<Reference> References { get { return references; } }
         public IEnumerable<Source> Sources { get { return sources; } }
+        public List<string> PreBuildCommands { get; private set; } = new List<string>();
+        public string CustomManifest { get; private set; }
+        public int CustomStackSize { get; private set; } = -1;
 
         private static Dictionary<string, Project> map = new Dictionary<string, Project>();
         private static List<Project> list = new List<Project>();
@@ -205,6 +241,7 @@ namespace Projector
 		public IEnumerable<Project> CloneSources { get { return cloneSources;} }
 
         public string Type { get; private set; }
+        public string SubSystem { get; private set; } = null;
         public string Name { get; private set; }
         public static Project Primary { get; private set; }
         public FileInfo SourcePath { get; private set; }
@@ -223,16 +260,317 @@ namespace Projector
             return SourcePath != null;
         }
 
-        internal FileInfo SaveAs(DirectoryInfo projectDir)
+        static byte[] GetBytes(string str)
         {
-            FileInfo file = new FileInfo(Path.Combine(projectDir.FullName, Name + ".vcxproj"));
+            byte[] bytes = new byte[str.Length * sizeof(char)];
+            System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+            return bytes;
+        }
 
-            using (StreamWriter writer = File.CreateText(file.FullName))
+        private void WriteGroup(StreamWriter writer, Source source)
+        {
+            writer.WriteLine("<ItemGroup>");
+            WriteGroupMembers(writer, source.root);
+            writer.WriteLine("</ItemGroup>");
+        }
+
+        private void WriteGroupMembers(StreamWriter writer, Source.Folder folder)
+        {
+            foreach (var pair in folder.groups)
             {
+                foreach (var file in pair.Value)
+                {
+                    writer.Write("  <" + pair.Key.tag);
+                    writer.Write(" Include=\"");
+                    writer.Write(file.FullName);
+                    if (pair.Key.tag == "None")
+                    {
+                        writer.WriteLine("\">");
+                        writer.WriteLine("    <FileType>Document</FileType>");
+                        writer.WriteLine("  </"+ pair.Key.tag +">");
+                    }
+                    else
+                        writer.WriteLine("\" />");
+                }
+            }
+            foreach (var child in folder.subFolders)
+                WriteGroupMembers(writer,child);
+        }
+        private void WriteGroupFilter(StreamWriter writer, Source source, string rootPath, bool includeRootName)
+        {
+            writer.WriteLine("<ItemGroup>");
+            WriteGroupMemberFilters(writer, source.root,rootPath,includeRootName);
+            writer.WriteLine("</ItemGroup>");
+        }
+
+        private void WriteGroupMemberFilters(StreamWriter writer, Source.Folder folder, string path, bool includeName = true)
+        {
+            if (includeName)
+            {
+                if (path.Length > 0)
+                    path += "\\";
+                path += folder.name;
+            }
+            foreach (var pair in folder.groups)
+            {
+                foreach (var file in pair.Value)
+                {
+                    writer.Write("  <"+pair.Key.tag);
+                    writer.Write(" Include=\"");
+                    writer.Write(file.FullName);
+                    writer.WriteLine("\">");
+                    writer.WriteLine("    <Filter>"+ path + "</Filter>");
+                    writer.WriteLine("  </" + pair.Key.tag + ">");
+                }
+            }
+            foreach (var child in folder.subFolders)
+                WriteGroupMemberFilters(writer, child, path);
+        }
+
+        private static void SwapBytes(byte[] guid, int left, int right)
+        {
+            byte temp = guid[left];
+            guid[left] = guid[right];
+            guid[right] = temp;
+        }
+        internal static void SwapByteOrder(byte[] guid)
+        {
+            SwapBytes(guid, 0, 3);
+            SwapBytes(guid, 1, 2);
+            SwapBytes(guid, 4, 5);
+            SwapBytes(guid, 6, 7);
+        }
+
+        public Guid LocalGuid
+        {
+            get
+            {
+                SHA1 sha = new SHA1CryptoServiceProvider();
+                byte[] hashed = sha.ComputeHash(GetBytes(SourcePath.FullName));
+                byte[] newGuid = new byte[16];
+                Array.Copy(hashed, 0, newGuid, 0, 16);
+
+                // set the four most significant bits (bits 12 through 15) of the time_hi_and_version field to the appropriate 4-bit version number from Section 4.1.3 (step 8)
+                newGuid[6] = (byte)((newGuid[6] & 0x0F) | (5 << 4));
+
+                // set the two most significant bits (bits 6 and 7) of the clock_seq_hi_and_reserved to zero and one, respectively (step 10)
+                newGuid[8] = (byte)((newGuid[8] & 0x3F) | 0x80);
+
+                // convert the resulting UUID to local byte order (step 13)
+                SwapByteOrder(newGuid);
+                return new Guid(newGuid);
+                //return new Guid(Array.subhashed);
+            }
+        }
+
+        public FileInfo OutFile
+        {
+            get
+            {
+                
+//                return new FileInfo(Path.Combine(SourcePath.Directory.FullName, Name + ".vcxproj"));
+                return new FileInfo(Path.Combine(Path.Combine(SourcePath.Directory.FullName, ".projects"), Name + ".vcxproj"));
 
 
             }
-            throw new NotImplementedException();
+        }
+
+        internal Tuple<FileInfo,Guid> SaveAs(string toolSet, IEnumerable<Configuration> configurations)
+        {
+            FileInfo file = OutFile;
+            if (!file.Directory.Exists)
+                Directory.CreateDirectory(file.Directory.FullName);
+            Guid id = LocalGuid;
+            using (StreamWriter writer = File.CreateText(file.FullName))
+            {
+                writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+
+                writer.WriteLine("<Project DefaultTargets=\"Build\" ToolsVersion=\"" + toolSet + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
+                writer.WriteLine("<ItemGroup Label=\"ProjectConfigurations\">");
+                foreach (Configuration config in configurations)
+                {
+                    writer.WriteLine("<ProjectConfiguration Include=\"" + config.name + "|" + config.platform + "\">");
+                    writer.WriteLine("  <Configuration>" + config.name + "</Configuration>");
+                    writer.WriteLine("  <Platform>" + config.platform + "</Platform>");
+                    writer.WriteLine("</ProjectConfiguration>");
+                }
+                writer.WriteLine("</ItemGroup>");
+                writer.WriteLine("<PropertyGroup Label=\"Globals\">");
+                writer.WriteLine("<ProjectGuid>{" + id + "}</ProjectGuid>");
+                writer.WriteLine("<Keyword>Win32Proj</Keyword>");
+                writer.WriteLine("<RootNamespace>client</RootNamespace>");
+                writer.WriteLine("</PropertyGroup>");
+                writer.WriteLine("<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />");
+                foreach (Configuration config in configurations)
+                {
+                    writer.WriteLine("<PropertyGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config.name + "|" + config.platform + "'\" Label=\"Configuration\">");
+                    writer.WriteLine("  <ConfigurationType>" + Type + "</ConfigurationType>");
+                    writer.WriteLine("  <UseDebugLibraries>"+!config.isRelease+"</UseDebugLibraries>");
+                    writer.WriteLine("  <PlatformToolset>v" + toolSet + "0</PlatformToolset>");
+                    writer.WriteLine("  <WholeProgramOptimization>"+config.isRelease+"</WholeProgramOptimization>");
+                    writer.WriteLine("  <CharacterSet>Unicode</CharacterSet>");
+                    writer.WriteLine("</PropertyGroup>");
+                }
+                writer.WriteLine("<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.props\" />");
+                writer.WriteLine("<ImportGroup Label=\"ExtensionSettings\">");
+                writer.WriteLine("</ImportGroup>");
+                foreach (Configuration config in configurations)
+                {
+                    writer.WriteLine("<ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='" + config.name + "|" + config.platform + "'\">");
+                    writer.WriteLine("  <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />");
+                    writer.WriteLine("</ImportGroup>");
+                }
+                writer.WriteLine("<PropertyGroup Label=\"UserMacros\" />");
+                foreach (Configuration config in configurations)
+                {
+                    writer.WriteLine("<PropertyGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config.name + "|" + config.platform + "'\">");
+                    writer.WriteLine("  <LinkIncremental>" + !config.isRelease + "</LinkIncremental>");
+                    if (config.isRelease)
+                        writer.WriteLine("  <OutDir>.</OutDir>");
+
+                    string include = "";
+                    foreach (var r in references)
+                    {
+                        if (!r.includePath)
+                            continue;
+                        foreach (var source in r.project.sources)
+                        {
+
+                            include += source.path.FullName;
+                            include += ";";
+                        }
+                    }
+                    writer.WriteLine("<IncludePath>" + include + "$(IncludePath)</IncludePath>");
+                    //< LibraryPath > h:\testlib; D:\Program Files (x86)\OpenAL 1.1 SDK\libs\Win32;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86 </ LibraryPath >
+                    writer.WriteLine("</PropertyGroup>");
+                }
+                foreach (Configuration config in configurations)
+                {
+                    writer.WriteLine("<ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config.name + "|" + config.platform + "'\">");
+                    writer.WriteLine("  <ClCompile>");
+                    writer.WriteLine("    <PrecompiledHeader>NotUsing</PrecompiledHeader>");
+                    writer.WriteLine("    <WarningLevel>Level3</WarningLevel>");
+                    writer.WriteLine("    <Optimization>" + (config.isRelease ? "MaxSpeed" : "Disabled") + "</Optimization>");
+                    if (config.isRelease)
+                    {
+                        writer.WriteLine("    <FunctionLevelLinking>true</FunctionLevelLinking>");
+                        writer.WriteLine("    <IntrinsicFunctions>true</IntrinsicFunctions>");
+                    }
+
+                    writer.Write("    <PreprocessorDefinitions>");
+                    foreach (var m in macros)
+                    {
+                        writer.Write(m.Key);
+                        if (m.Value != null && m.Value.Length > 0)
+                            writer.Write("=" + m.Value);
+                        writer.Write(";");
+                    }
+                    if (!config.isRelease)
+                        writer.Write("_DEBUG;");
+                    writer.Write("_WINDOWS;");
+                    writer.Write("WIN32;");
+                    writer.Write("%(PreprocessorDefinitions);%(PreprocessorDefinitions)");
+                    writer.WriteLine("</PreprocessorDefinitions>");
+                    writer.WriteLine("    <SDLCheck>true</SDLCheck>");
+                    writer.WriteLine("    <RuntimeLibrary>MultiThreaded" + (config.isRelease ? "" : "Debug") + "</RuntimeLibrary>");
+                    writer.WriteLine("    <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>");
+                    writer.WriteLine("    <MultiProcessorCompilation>true</MultiProcessorCompilation>");
+                    writer.WriteLine("    <MinimalRebuild>false</MinimalRebuild>");
+                    writer.WriteLine("  </ClCompile>");
+                    writer.WriteLine("  <Link>");
+                    if (SubSystem != null)
+                        writer.WriteLine("  <SubSystem>"+ SubSystem + "</SubSystem>");
+                    writer.WriteLine("    <GenerateDebugInformation>" + !config.isRelease + "</GenerateDebugInformation>");
+                    if (CustomStackSize != -1)
+                        writer.WriteLine("    <AdditionalOptions>/STACK:" + CustomStackSize + " %(AdditionalOptions)</AdditionalOptions>");
+                    writer.WriteLine("  </Link>");
+                    if (CustomManifest != null)
+                    {
+                        writer.WriteLine("  <Manifest>");
+                        writer.WriteLine("    <AdditionalManifestFiles>" + Path.Combine("..",CustomManifest) + "</AdditionalManifestFiles>");
+                        writer.WriteLine("  </Manifest>");
+                    }
+                    if (PreBuildCommands.Count > 0)
+                    {
+                        writer.WriteLine("  <PreBuildEvent>");
+                        foreach (string cmd in PreBuildCommands)
+                            writer.WriteLine("    <Command>" + cmd + "</Command>");
+                        writer.WriteLine("  </PreBuildEvent>");
+                    }
+
+                    writer.WriteLine("</ItemDefinitionGroup>");
+                }
+                foreach (Source source in sources)
+                {
+                    WriteGroup(writer, source);
+                }
+
+                writer.WriteLine("<ItemGroup>");
+                foreach (var r in references)
+                {
+                    if (r.project.SourcePath != null)
+                    {
+                        writer.WriteLine("<ProjectReference Include=\"" + r.project.OutFile.FullName + "\">");
+                        writer.WriteLine("<Project>{" + r.project.LocalGuid + "}</Project>");
+                        writer.WriteLine("</ProjectReference>");
+                    }
+                }
+                writer.WriteLine("</ItemGroup>");
+
+                writer.WriteLine("<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />");
+                writer.WriteLine("<ImportGroup Label=\"ExtensionTargets\">");
+                writer.WriteLine("</ImportGroup>");
+                writer.WriteLine("</Project>");
+                writer.Close();
+            }
+
+            using (StreamWriter writer = File.CreateText(file.FullName+".filters"))
+            {
+                writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+                writer.WriteLine("<Project ToolsVersion=\"" + toolSet + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
+
+                writer.WriteLine("<ItemGroup>");
+                    DeclareGroupFilter(writer, "Files");
+                    foreach (Source source in sources)
+                    {
+                        DeclareGroupFilter(writer, source.root,"Files",sources.Count != 1);
+                    }
+                writer.WriteLine("</ItemGroup>");
+
+
+                foreach (Source source in sources)
+                {
+                    WriteGroupFilter(writer, source, "Files",sources.Count != 1);
+                }
+
+                writer.WriteLine("</Project>");
+                writer.Close();
+
+            }
+
+
+            return new Tuple<FileInfo, Guid>(file, id);
+        }
+
+        private void DeclareGroupFilter(StreamWriter writer, Source.Folder folder, string path, bool includeName=true)
+        {
+            if (includeName)
+            {
+                if (path.Length > 0)
+                    path += "\\";
+                path += folder.name;
+            }
+
+            DeclareGroupFilter(writer, path);
+            foreach (var child in folder.subFolders)
+                DeclareGroupFilter(writer, child,path);
+        }
+
+        private void DeclareGroupFilter(StreamWriter writer, string path)
+        {
+            writer.WriteLine("  <Filter Include=\"" + path + "\">");
+            writer.WriteLine("    <UniqueIdentifier>{" + Guid.NewGuid() + "}</UniqueIdentifier>");
+            writer.WriteLine("  </Filter>");
         }
 
 
@@ -259,7 +597,15 @@ namespace Projector
         {
             XmlNode xType = xproject.Attributes.GetNamedItem("type");
             if (xType != null)
+            {
                 Type = xType.Value;
+                int colon = Type.IndexOf(":");
+                if (colon != -1)
+                {
+                    SubSystem = Type.Substring(colon + 1);
+                    Type = Type.Substring(0, colon);
+                }
+            }
             XmlNodeList xClones = xproject.SelectNodes("clone");
             bool allThere = true;
             List<Project> clone = new List<Project>();
@@ -286,6 +632,11 @@ namespace Projector
             }
             foreach (Project p in clone)
             {
+                if (p.CustomStackSize != -1)
+                    CustomStackSize = p.CustomStackSize;
+                if (p.CustomManifest != null)
+                    CustomManifest = p.CustomManifest;
+                PreBuildCommands.AddRange(p.PreBuildCommands);
                 sources.AddRange(p.sources);
                 foreach (var pair in p.macros)
                     macros.Add(pair.Key, pair.Value);
@@ -299,10 +650,22 @@ namespace Projector
 			if (clone.Count > 0)
 				cloneSources = clone;
 
+            XmlNode xmanifest = xproject.Attributes.GetNamedItem("manifest");
+            if (xmanifest != null)
+                CustomManifest = xmanifest.InnerText;
+            XmlNode xStack = xproject.Attributes.GetNamedItem("stackSize");
+            if (xStack != null)
+                CustomStackSize = int.Parse( xStack.InnerText);
+
             XmlNodeList xsources = xproject.SelectNodes("source");
             foreach (XmlNode xsource in xsources)
             {
                 AddSource(xsource);
+            }
+            XmlNodeList xcommands = xproject.SelectNodes("command");
+            foreach (XmlNode xcommand in xcommands)
+            {
+                PreBuildCommands.Add(xcommand.InnerText);
             }
             XmlNodeList xmacros = xproject.SelectNodes("macro");
             foreach (XmlNode xmacro in xmacros)
@@ -458,9 +821,21 @@ namespace Projector
                             var ex = new Source.Exclude();
                             ex.type = Source.Exclude.Type.Dir;
                             ex.parameter = xDir.Value;
-                            s.exclude.Add(ex); 
+                            s.exclude.Add(ex);
                         }
-
+                        else
+                        {
+                            XmlNode xFile = xExclude.Attributes.GetNamedItem("file");
+                            if (xFile != null)
+                            {
+                                var ex = new Source.Exclude();
+                                ex.type = Source.Exclude.Type.File;
+                                ex.parameter = xFile.Value;
+                                s.exclude.Add(ex);
+                            }
+                            else
+                                Warn("Unable to determine exclusion of type");
+                        }
 
                     }
                 }

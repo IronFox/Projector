@@ -63,10 +63,18 @@ namespace Projector
 
         private void ProjectView_Load(object sender, EventArgs e)
         {
-            toolSet.SelectedIndex = 0;
+            PersistentState.Restore();
+            if (PersistentState.Toolset != null)
+                toolSet.SelectedIndex = toolSet.Items.IndexOf(PersistentState.Toolset);
+            else
+            {
+                toolSet.SelectedIndex = 0;
+                PersistentState.Toolset = toolSet.SelectedItem.ToString();
+            }
         }
 
         private string solutionName;
+        private FileInfo solutionFile;
 
         private void LoadSolution(FileInfo file)
         {
@@ -77,6 +85,7 @@ namespace Projector
             PersistentState.MemorizeRecent(file);
             UpdateRecent();
 
+            solutionFile = file;
             solutionName = "";
             {
                 var xreader = new XmlTextReader(file.FullName);
@@ -184,43 +193,66 @@ namespace Projector
 
         private static string Relativate(DirectoryInfo dir, FileInfo file)
         {
-            return new Uri(dir.FullName).MakeRelativeUri(new Uri(file.FullName)).ToString();
+            Uri udir = new Uri(dir.FullName + "\\");
+            Uri ufile = new Uri(file.FullName);
+            Uri urelative = udir.MakeRelativeUri(ufile);
+            return urelative.ToString();
         }
 
         private void buildToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FileInfo outPath = PersistentState.GetOutPathFor(solutionName);
+            FileInfo outPath = PersistentState.GetOutPathFor(solutionFile);
             if (outPath == null || !outPath.Directory.Exists)
             {
                 buildAtToolStripMenuItem_Click(sender, e);
                 return;
             }
+
+            LoadSolution(solutionFile); //refresh
+
+            LogLine("Exporting to " + outPath.FullName);
+
+            PersistentState.Toolset = toolSet.SelectedItem.ToString();
+
             DirectoryInfo dir = outPath.Directory;
-            DirectoryInfo projectDir = Directory.CreateDirectory(Path.Combine(dir.FullName, ".projects"));
+            //DirectoryInfo projectDir = Directory.CreateDirectory(Path.Combine(dir.FullName, ".projects"));
             List<Tuple<FileInfo, Guid, Project>> projects = new List<Tuple<FileInfo, Guid, Project>>();
+            string toolset = this.toolSet.SelectedItem.ToString();
+            toolset = toolset.Substring(0, toolset.IndexOf(".0"));
+
+            Configuration[] configurations = new Configuration[]
+            {
+                new Configuration() {name = "Debug", platform = "Win32", isRelease = false },
+                new Configuration() {name = "Debug", platform = "x64", isRelease = false },
+                new Configuration() {name = "Release", platform = "Win32", isRelease = true },
+                new Configuration() {name = "Release", platform = "x64", isRelease = true },
+            };
+
+
             foreach (Project p in Project.All)
             {
-                projects.Add(new Tuple<FileInfo, Guid,Project>(p.SaveAs(projectDir), Guid.NewGuid(), p));
+                var rs = p.SaveAs(toolset, configurations);
+                projects.Add(new Tuple<FileInfo, Guid, Project>(rs.Item1, rs.Item2, p));
             }
             StreamWriter writer = File.CreateText(outPath.FullName);
 
-            string toolset = this.toolSet.SelectedText.Substring(0, this.toolSet.SelectedText.IndexOf(" ("));
             writer.WriteLine();
-            writer.WriteLine("Microsoft Visual Studio Solution File, Format Version "+toolset+".00");
+            writer.WriteLine("Microsoft Visual Studio Solution File, Format Version " + toolset + ".00");
             writer.WriteLine("MinimumVisualStudioVersion = 10.0.40219.1");
             Guid solutionGuid = Guid.NewGuid();
             foreach (var tuple in projects)
             {
-                writer.WriteLine("Project(\"{" + solutionGuid + "}\") = \"" + tuple.Item3.Name + "\", \"" + Relativate(dir, tuple.Item1) + "\", \"{"
+                string path = Relativate(dir, tuple.Item1);
+                path = path.Replace("%20", " ");
+                path = path.Replace('/', '\\');
+                writer.WriteLine("Project(\"{" + solutionGuid + "}\") = \"" + tuple.Item3.Name + "\", \"" + path + "\", \"{"
                     + tuple.Item2 + "}\");");
                 writer.WriteLine("EndProject");
             }
             writer.WriteLine("Global");
             writer.WriteLine("\tGlobalSection(SolutionConfigurationPlatforms) = preSolution");
-            writer.WriteLine("\t\tDebug | Win32 = Debug | Win32");
-            writer.WriteLine("\t\tDebug | x64 = Debug | x64");
-            writer.WriteLine("\t\tRelease | Win32 = Release | Win32");
-            writer.WriteLine("\t\tRelease | x64 = Release | x64");
+            foreach (var config in configurations)
+                writer.WriteLine("\t\t"+config.name+"|"+config.platform+" = "+config.name+"|"+config.platform+"");
             writer.WriteLine("\tEndGlobalSection");
             writer.WriteLine("\tGlobalSection(ProjectConfigurationPlatforms) = postSolution");
             foreach (var tuple in projects)
@@ -243,15 +275,17 @@ namespace Projector
 
             writer.WriteLine("EndGlobal");
             writer.Close();
+            LogLine("Export done.");
         }
 
         private void buildAtToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //string name = Project.Primary.Name;
             chooseDestination.Filter = "Solution | " + solutionName + ".sln";
+            chooseDestination.FileName = solutionName + ".sln";
             if (chooseDestination.ShowDialog() == DialogResult.OK)
             {
-                PersistentState.SetOutPathFor(solutionName, new FileInfo(chooseDestination.FileName));
+                PersistentState.SetOutPathFor(solutionFile, new FileInfo(chooseDestination.FileName));
                 buildToolStripMenuItem_Click(sender, e);
             }
         }

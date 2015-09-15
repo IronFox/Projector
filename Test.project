@@ -1,4 +1,4 @@
-<project type="executable">
+<project type="Application">
 	<source path="../Hexaverse">
 		<exclude dir="IncreaseVersion"/>
 	</source>

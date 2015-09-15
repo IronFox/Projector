@@ -5,6 +5,17 @@ using System.Windows.Forms;
 
 namespace Projector
 {
+    public static partial class Extensions
+    {
+        public static string CoreName (this FileInfo info)
+        {
+            return info.Name.Substring(0, info.Name.IndexOf(info.Extension));
+        }
+
+
+    }
+
+
     internal class PathRegistry
     {
         private static Dictionary<string, FileInfo> map;
@@ -33,8 +44,9 @@ namespace Projector
 				{
 					dialog.Filter = "Projects|*.project|All files|*.*";
 					info = new FileInfo(dialog.FileName);
-					if (info.Name != name)
+					if (info.CoreName() != name)
 					{
+                        MessageBox.Show("The selected file's name does not match the expected project name '" + name + '"');
 						continue;
 					}
 					map.Add(name, info);
