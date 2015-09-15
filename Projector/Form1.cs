@@ -66,6 +66,8 @@ namespace Projector
             toolSet.SelectedIndex = 0;
         }
 
+        private string solutionName;
+
         private void LoadSolution(FileInfo file)
         {
             Project.FlushAll();
@@ -75,11 +77,11 @@ namespace Projector
             PersistentState.MemorizeRecent(file);
             UpdateRecent();
 
-            string solutionName = "";
+            solutionName = "";
             {
                 var xreader = new XmlTextReader(file.FullName);
                 //int slashAt = Math.Max(file.FullName.LastIndexOf('/'), file.FullName.LastIndexOf('\\'));
-                solutionName = file.Name;
+                solutionName = file.Name.Substring(0,file.Name.Length - file.Extension.Length);
                 XmlDocument xdoc = new XmlDocument();
                 xdoc.Load(xreader);
                 XmlNodeList xprojects = xdoc.SelectNodes("solution/project");
@@ -178,6 +180,80 @@ namespace Projector
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Application.Exit();
+        }
+
+        private static string Relativate(DirectoryInfo dir, FileInfo file)
+        {
+            return new Uri(dir.FullName).MakeRelativeUri(new Uri(file.FullName)).ToString();
+        }
+
+        private void buildToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            FileInfo outPath = PersistentState.GetOutPathFor(solutionName);
+            if (outPath == null || !outPath.Directory.Exists)
+            {
+                buildAtToolStripMenuItem_Click(sender, e);
+                return;
+            }
+            DirectoryInfo dir = outPath.Directory;
+            DirectoryInfo projectDir = Directory.CreateDirectory(Path.Combine(dir.FullName, ".projects"));
+            List<Tuple<FileInfo, Guid, Project>> projects = new List<Tuple<FileInfo, Guid, Project>>();
+            foreach (Project p in Project.All)
+            {
+                projects.Add(new Tuple<FileInfo, Guid,Project>(p.SaveAs(projectDir), Guid.NewGuid(), p));
+            }
+            StreamWriter writer = File.CreateText(outPath.FullName);
+
+            string toolset = this.toolSet.SelectedText.Substring(0, this.toolSet.SelectedText.IndexOf(" ("));
+            writer.WriteLine();
+            writer.WriteLine("Microsoft Visual Studio Solution File, Format Version "+toolset+".00");
+            writer.WriteLine("MinimumVisualStudioVersion = 10.0.40219.1");
+            Guid solutionGuid = Guid.NewGuid();
+            foreach (var tuple in projects)
+            {
+                writer.WriteLine("Project(\"{" + solutionGuid + "}\") = \"" + tuple.Item3.Name + "\", \"" + Relativate(dir, tuple.Item1) + "\", \"{"
+                    + tuple.Item2 + "}\");");
+                writer.WriteLine("EndProject");
+            }
+            writer.WriteLine("Global");
+            writer.WriteLine("\tGlobalSection(SolutionConfigurationPlatforms) = preSolution");
+            writer.WriteLine("\t\tDebug | Win32 = Debug | Win32");
+            writer.WriteLine("\t\tDebug | x64 = Debug | x64");
+            writer.WriteLine("\t\tRelease | Win32 = Release | Win32");
+            writer.WriteLine("\t\tRelease | x64 = Release | x64");
+            writer.WriteLine("\tEndGlobalSection");
+            writer.WriteLine("\tGlobalSection(ProjectConfigurationPlatforms) = postSolution");
+            foreach (var tuple in projects)
+            {
+                Guid guid = tuple.Item2;
+                writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.ActiveCfg = Debug|Win32");
+                writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.Build.0 = Debug|Win32");
+                writer.WriteLine("\t\t{" + guid + "}.Debug|x64.ActiveCfg = Debug|x64");
+                writer.WriteLine("\t\t{" + guid + "}.Debug|x64.Build.0 = Debug|x64");
+                writer.WriteLine("\t\t{" + guid + "}.Release|Win32.ActiveCfg = Release|Win32");
+                writer.WriteLine("\t\t{" + guid + "}.Release|Win32.Build.0 = Release|Win32");
+                writer.WriteLine("\t\t{" + guid + "}.Release|x64.ActiveCfg = Release|x64");
+                writer.WriteLine("\t\t{" + guid + "}.Release|x64.Build.0 = Release|x64");
+            }
+            writer.WriteLine("\tEndGlobalSection");
+
+            writer.WriteLine("\tGlobalSection(SolutionProperties) = preSolution");
+            writer.WriteLine("\t\tHideSolutionNode = FALSE");
+            writer.WriteLine("\tEndGlobalSection");
+
+            writer.WriteLine("EndGlobal");
+            writer.Close();
+        }
+
+        private void buildAtToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            //string name = Project.Primary.Name;
+            chooseDestination.Filter = "Solution | " + solutionName + ".sln";
+            if (chooseDestination.ShowDialog() == DialogResult.OK)
+            {
+                PersistentState.SetOutPathFor(solutionName, new FileInfo(chooseDestination.FileName));
+                buildToolStripMenuItem_Click(sender, e);
+            }
         }
     }
 }

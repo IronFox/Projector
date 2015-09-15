@@ -31,23 +31,24 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.loadProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.recentSolutionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
+            this.clearListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
             this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.solutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buildToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.buildAtToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openSolutionDialog = new System.Windows.Forms.OpenFileDialog();
             this.openProjectDialog = new System.Windows.Forms.OpenFileDialog();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.solutionView = new System.Windows.Forms.TreeView();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.toolSet = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.log = new System.Windows.Forms.TextBox();
-            this.solutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.buildToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.buildAtToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.recentSolutionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.clearListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
+            this.label2 = new System.Windows.Forms.Label();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.label1 = new System.Windows.Forms.Label();
+            this.toolSet = new System.Windows.Forms.ComboBox();
+            this.chooseDestination = new System.Windows.Forms.SaveFileDialog();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -82,14 +83,34 @@
             // loadProjectToolStripMenuItem
             // 
             this.loadProjectToolStripMenuItem.Name = "loadProjectToolStripMenuItem";
-            this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
             this.loadProjectToolStripMenuItem.Text = "Load Solution";
             this.loadProjectToolStripMenuItem.Click += new System.EventHandler(this.loadProjectToolStripMenuItem_Click);
+            // 
+            // recentSolutionsToolStripMenuItem
+            // 
+            this.recentSolutionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toolStripMenuItem2,
+            this.clearListToolStripMenuItem});
+            this.recentSolutionsToolStripMenuItem.Name = "recentSolutionsToolStripMenuItem";
+            this.recentSolutionsToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+            this.recentSolutionsToolStripMenuItem.Text = "Recent Solutions";
+            // 
+            // toolStripMenuItem2
+            // 
+            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
+            this.toolStripMenuItem2.Size = new System.Drawing.Size(119, 6);
+            // 
+            // clearListToolStripMenuItem
+            // 
+            this.clearListToolStripMenuItem.Name = "clearListToolStripMenuItem";
+            this.clearListToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.clearListToolStripMenuItem.Text = "Clear List";
             // 
             // toolStripMenuItem1
             // 
             this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-            this.toolStripMenuItem1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripMenuItem1.Size = new System.Drawing.Size(159, 6);
             // 
             // quitToolStripMenuItem
             // 
@@ -97,6 +118,30 @@
             this.quitToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
             this.quitToolStripMenuItem.Text = "Quit";
             this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
+            // 
+            // solutionToolStripMenuItem
+            // 
+            this.solutionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.buildToolStripMenuItem,
+            this.buildAtToolStripMenuItem});
+            this.solutionToolStripMenuItem.Enabled = false;
+            this.solutionToolStripMenuItem.Name = "solutionToolStripMenuItem";
+            this.solutionToolStripMenuItem.Size = new System.Drawing.Size(63, 20);
+            this.solutionToolStripMenuItem.Text = "Solution";
+            // 
+            // buildToolStripMenuItem
+            // 
+            this.buildToolStripMenuItem.Name = "buildToolStripMenuItem";
+            this.buildToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.buildToolStripMenuItem.Text = "Build";
+            this.buildToolStripMenuItem.Click += new System.EventHandler(this.buildToolStripMenuItem_Click);
+            // 
+            // buildAtToolStripMenuItem
+            // 
+            this.buildAtToolStripMenuItem.Name = "buildAtToolStripMenuItem";
+            this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.buildAtToolStripMenuItem.Text = "Build at...";
+            this.buildAtToolStripMenuItem.Click += new System.EventHandler(this.buildAtToolStripMenuItem_Click);
             // 
             // openSolutionDialog
             // 
@@ -140,6 +185,29 @@
             this.solutionView.Size = new System.Drawing.Size(577, 276);
             this.solutionView.TabIndex = 2;
             // 
+            // log
+            // 
+            this.log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.log.Location = new System.Drawing.Point(0, 22);
+            this.log.MaxLength = 65536;
+            this.log.Multiline = true;
+            this.log.Name = "log";
+            this.log.ReadOnly = true;
+            this.log.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.log.Size = new System.Drawing.Size(577, 100);
+            this.log.TabIndex = 1;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(3, 6);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(25, 13);
+            this.label2.TabIndex = 0;
+            this.label2.Text = "Log";
+            // 
             // panel1
             // 
             this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
@@ -150,6 +218,15 @@
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(577, 23);
             this.panel1.TabIndex = 4;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(3, 3);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(80, 13);
+            this.label1.TabIndex = 1;
+            this.label1.Text = "Toolset Version";
             // 
             // toolSet
             // 
@@ -167,80 +244,6 @@
             this.toolSet.TabIndex = 0;
             this.toolSet.ValueMember = "14.0 (VS 2015)";
             this.toolSet.SelectedIndexChanged += new System.EventHandler(this.toolSet_SelectedIndexChanged);
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 3);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(80, 13);
-            this.label1.TabIndex = 1;
-            this.label1.Text = "Toolset Version";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(3, 6);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(25, 13);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "Log";
-            // 
-            // log
-            // 
-            this.log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.log.Location = new System.Drawing.Point(0, 22);
-            this.log.MaxLength = 65536;
-            this.log.Multiline = true;
-            this.log.Name = "log";
-            this.log.ReadOnly = true;
-            this.log.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.log.Size = new System.Drawing.Size(577, 100);
-            this.log.TabIndex = 1;
-            // 
-            // solutionToolStripMenuItem
-            // 
-            this.solutionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.buildToolStripMenuItem,
-            this.buildAtToolStripMenuItem});
-            this.solutionToolStripMenuItem.Enabled = false;
-            this.solutionToolStripMenuItem.Name = "solutionToolStripMenuItem";
-            this.solutionToolStripMenuItem.Size = new System.Drawing.Size(63, 20);
-            this.solutionToolStripMenuItem.Text = "Solution";
-            // 
-            // buildToolStripMenuItem
-            // 
-            this.buildToolStripMenuItem.Name = "buildToolStripMenuItem";
-            this.buildToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.buildToolStripMenuItem.Text = "Build";
-            // 
-            // buildAtToolStripMenuItem
-            // 
-            this.buildAtToolStripMenuItem.Name = "buildAtToolStripMenuItem";
-            this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.buildAtToolStripMenuItem.Text = "Build at...";
-            // 
-            // recentSolutionsToolStripMenuItem
-            // 
-            this.recentSolutionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripMenuItem2,
-            this.clearListToolStripMenuItem});
-            this.recentSolutionsToolStripMenuItem.Name = "recentSolutionsToolStripMenuItem";
-            this.recentSolutionsToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
-            this.recentSolutionsToolStripMenuItem.Text = "Recent Solutions";
-            // 
-            // clearListToolStripMenuItem
-            // 
-            this.clearListToolStripMenuItem.Name = "clearListToolStripMenuItem";
-            this.clearListToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.clearListToolStripMenuItem.Text = "Clear List";
-            // 
-            // toolStripMenuItem2
-            // 
-            this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-            this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
             // 
             // ProjectView
             // 
@@ -290,6 +293,7 @@
         private System.Windows.Forms.ToolStripMenuItem recentSolutionsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripMenuItem2;
         private System.Windows.Forms.ToolStripMenuItem clearListToolStripMenuItem;
+        private System.Windows.Forms.SaveFileDialog chooseDestination;
     }
 }
 

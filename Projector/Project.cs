@@ -223,6 +223,18 @@ namespace Projector
             return SourcePath != null;
         }
 
+        internal FileInfo SaveAs(DirectoryInfo projectDir)
+        {
+            FileInfo file = new FileInfo(Path.Combine(projectDir.FullName, Name + ".vcxproj"));
+
+            using (StreamWriter writer = File.CreateText(file.FullName))
+            {
+
+
+            }
+            throw new NotImplementedException();
+        }
+
 
         //public static Project Load(string projectName)
         //{
