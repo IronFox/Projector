@@ -3,3 +3,4 @@
 bin/
 obj/
 Projector/persistentState.xml
+Projector/pathRegistry.txt

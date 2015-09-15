@@ -60,6 +60,15 @@ namespace Projector
 			while (true);
         }
 
+        public static FileInfo StateFile
+        {
+            get
+            {
+                return new FileInfo(Path.Combine(PersistentState.StateFile.Directory.FullName, "pathRegistry.txt"));
+            }
+        }
+
+        
 
         static void LoadMap()
         {
@@ -68,7 +77,7 @@ namespace Projector
             map = new Dictionary<string, FileInfo>();
             try
             {
-                using (System.IO.StreamReader file = new System.IO.StreamReader("pathRegistry.txt"))
+                using (System.IO.StreamReader file = new System.IO.StreamReader(StateFile.FullName))
                 {
                     string line;
                     while ((line = file.ReadLine()) != null)
@@ -89,7 +98,7 @@ namespace Projector
 
         static void SaveMap()
         {
-            using (System.IO.StreamWriter file = new System.IO.StreamWriter("pathRegistry.txt"))
+            using (System.IO.StreamWriter file = new System.IO.StreamWriter(StateFile.FullName))
             {
                 foreach (var entry in map)
                 {
