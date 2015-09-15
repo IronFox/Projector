@@ -369,7 +369,7 @@ namespace Projector
             {
                 
 //                return new FileInfo(Path.Combine(SourcePath.Directory.FullName, Name + ".vcxproj"));
-                return new FileInfo(Path.Combine(Path.Combine(SourcePath.Directory.FullName, ".projects"), Name + ".vcxproj"));
+                return new FileInfo(Path.Combine(Path.Combine(SourcePath.Directory.FullName, Path.Combine(".projects", Name)), Name + ".vcxproj"));
 
 
             }
@@ -488,14 +488,16 @@ namespace Projector
                     if (CustomManifest != null)
                     {
                         writer.WriteLine("  <Manifest>");
-                        writer.WriteLine("    <AdditionalManifestFiles>" + Path.Combine("..",CustomManifest) + "</AdditionalManifestFiles>");
+                        writer.WriteLine("    <AdditionalManifestFiles>" + Path.Combine("..",Path.Combine("..",CustomManifest)) + "</AdditionalManifestFiles>");
                         writer.WriteLine("  </Manifest>");
                     }
                     if (PreBuildCommands.Count > 0)
                     {
                         writer.WriteLine("  <PreBuildEvent>");
                         foreach (string cmd in PreBuildCommands)
-                            writer.WriteLine("    <Command>" + cmd + "</Command>");
+                        {
+                            writer.WriteLine("    <Command>../../" + cmd + "</Command>");
+                        }
                         writer.WriteLine("  </PreBuildEvent>");
                     }
 
@@ -548,7 +550,22 @@ namespace Projector
                 writer.Close();
 
             }
+            if (!File.Exists(file.FullName + ".user"))
+                using (StreamWriter writer = File.CreateText(file.FullName + ".user"))
+                {
+                    writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+                    writer.WriteLine("<Project ToolsVersion=\"" + toolSet + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
 
+                    foreach (var config in configurations)
+                    {
+                        writer.WriteLine("  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)' == '" + config.name + "|" + config.platform + "'\">");
+                        writer.WriteLine("    <LocalDebuggerWorkingDirectory>..\\..</LocalDebuggerWorkingDirectory>");
+                        writer.WriteLine("  </PropertyGroup>");
+                    }
+
+                    writer.WriteLine("</Project>");
+                    writer.Close();
+                }
 
             return new Tuple<FileInfo, Guid>(file, id);
         }
