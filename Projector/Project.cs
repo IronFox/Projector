@@ -426,7 +426,7 @@ namespace Projector
                     writer.WriteLine("<PropertyGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config.name + "|" + config.platform + "'\">");
                     writer.WriteLine("  <LinkIncremental>" + !config.isRelease + "</LinkIncremental>");
                     if (config.isRelease)
-                        writer.WriteLine("  <OutDir>.</OutDir>");
+                        writer.WriteLine("  <OutDir>..\\..</OutDir>");
 
                     string include = "";
                     foreach (var r in references)
