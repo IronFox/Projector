@@ -229,7 +229,7 @@ namespace Projector
         public IEnumerable<string> PreBuildCommands { get { return preBuildCommands; }  }
         public int CustomStackSize { get { return customStackSize; }}
 		public IEnumerable<FileInfo> CustomManifests { get { return customManifests; } }
-
+		public IEnumerable<KeyValuePair<string,string> > Macros { get { return macros; } }
 
 
 

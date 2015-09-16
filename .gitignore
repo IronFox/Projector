@@ -1,6 +1,6 @@
 *.suo
-*.exe
 bin/
 obj/
 Projector/persistentState.xml
 Projector/pathRegistry.txt
+Projector.exe.config

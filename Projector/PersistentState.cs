@@ -29,12 +29,14 @@ namespace Projector
             }
         }
 
-
-		private static FileInfo stateFile = new FileInfo("persistentState.xml"); 
+		
+		private static FileInfo stateFile = new FileInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),"projector","persistentState.xml"));
         public static FileInfo StateFile { get { return stateFile; }  }
 
-        public static void Restore()
+        public static bool Restore()
         {
+			if (!StateFile.Directory.Exists)
+				StateFile.Directory.Create();
             if (StateFile.Exists)
             {
                 var xreader = new XmlTextReader(StateFile.FullName);
@@ -71,7 +73,9 @@ namespace Projector
                 if (xtoolset != null)
                     toolset = xtoolset.InnerText;
                 xreader.Close();
+				return true;
             }
+			return false;
         }
         private static List<FileInfo> recent = new List<FileInfo>();
         private static Dictionary<string, FileInfo> outPaths = new Dictionary<string, FileInfo>();

@@ -36,11 +36,23 @@ namespace Projector
             }
         }
 
+		public void FlushLog()
+		{
+			log.Text = "";
+
+		}
+
+
         public void LogLine(string line)
         {
             if (log.Text.Length > 0)
                 log.Text += "\r\n";
             log.Text += line;
+			if (log.Visible)
+			{
+				log.SelectionStart = log.TextLength;
+				log.ScrollToCaret();
+			}
         }
 
         private void AddSourceFolder(TreeNode tsource, Project.Source.Folder root)
@@ -76,11 +88,17 @@ namespace Projector
         private string solutionName;
         private FileInfo solutionFile;
 
-        private void LoadSolution(FileInfo file)
+        private bool LoadSolution(FileInfo file)
         {
-            Project.FlushAll();
+			if (!file.Exists)
+			{
+				return false;
 
-            log.Text = "Importing '" + file.FullName + "'...";
+			}
+            Project.FlushAll();
+			FlushLog();
+
+            LogLine("Importing '" + file.FullName + "'...");
 
             PersistentState.MemorizeRecent(file);
             UpdateRecent();
@@ -124,14 +142,38 @@ namespace Projector
             TreeNode tsolution = solutionView.Nodes.Add(solutionName);
             foreach (Project project in Project.All)
             {
-                TreeNode tproject = tsolution.Nodes.Add(project.Name + (project == Project.Primary ? " (primary)" : "") + " " + project.Type);
+                TreeNode tproject = tsolution.Nodes.Add(project.Name + (project == Project.Primary ? " (primary)" : "") + " [" + project.Type+"]");
                 foreach (var r in project.References)
                 {
                     TreeNode treference = tproject.Nodes.Add(r.project.Name + (r.includePath ? " (include)" : ""));
                 }
-                foreach (var s in project.Sources)
+
+				if (project.Macros.Count() > 0)
+				{ 
+					TreeNode tmacros = tproject.Nodes.Add("Macros");
+					foreach (var m in project.Macros)
+						tmacros.Nodes.Add(m.Key+"="+m.Value);
+				}
+				if (project.CustomManifests.Count() > 0)
+				{
+					TreeNode tmacros = tproject.Nodes.Add("Manifests");
+					foreach (var m in project.CustomManifests)
+						tmacros.Nodes.Add(m.FullName);
+				}
+				if (project.CustomStackSize > -1)
+				{
+					tproject.Nodes.Add("custom stack size (bytes): "+project.CustomStackSize);
+				}
+				if (project.PreBuildCommands.Count() > 0)
+				{
+					TreeNode tcommands = tproject.Nodes.Add("Pre-Build Commands");
+					foreach (var m in project.PreBuildCommands)
+						tcommands.Nodes.Add(m);
+				}
+
+				TreeNode tsource = tproject.Nodes.Add("Sources");
+				foreach (var s in project.Sources)
                 {
-                    TreeNode tsource = tproject.Nodes.Add("sources");
                     s.ScanFiles();
                     AddSourceFolder(tsource.Nodes.Add(s.root.name), s.root);
                 }
@@ -145,7 +187,7 @@ namespace Projector
                 LogLine("No issues");
             LogLine("Projects imported: " + Project.All.Count());
             solutionToolStripMenuItem.Enabled = Project.Primary != null;
-
+			return true;
         }
 
 
@@ -182,8 +224,14 @@ namespace Projector
 
         private void ProjectView_Shown(object sender, EventArgs e)
         {
+			statusStrip.Items[0].Text = "Persistent state stored in " + PersistentState.StateFile.FullName;
+
             UpdateRecent();
 
+			string[] parameters = Environment.GetCommandLineArgs();
+			if (parameters.Length > 1)
+				if (!LoadSolution(new FileInfo(parameters[1])))
+					LogLine("Error: Unable to read solution file '"+parameters[1]+"'");
         }
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
