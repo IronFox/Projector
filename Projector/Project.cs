@@ -224,24 +224,30 @@ namespace Projector
         public static IEnumerable<Project> All { get { return list; } }
         public IEnumerable<Reference> References { get { return references; } }
         public IEnumerable<Source> Sources { get { return sources; } }
-        public List<string> PreBuildCommands { get; private set; } = new List<string>();
-        public string CustomManifest { get; private set; }
-        public int CustomStackSize { get; private set; } = -1;
+        public IEnumerable<string> PreBuildCommands { get { return preBuildCommands; }  }
+        public int CustomStackSize { get { return customStackSize; }}
 
-        private static Dictionary<string, Project> map = new Dictionary<string, Project>();
+
+        public string CustomManifest { get; private set; }
+
+
+		private static Dictionary<string, Project> map = new Dictionary<string, Project>();
         private static List<Project> list = new List<Project>();
         private static Queue<Project> unloaded = new Queue<Project>();
         //private XmlNode xproject;
+
+        List<string> preBuildCommands = new List<string>();
         List<Source> sources = new List<Source>();
         Dictionary<string, string> macros = new Dictionary<string, string>();
         List<Reference> references = new List<Reference>();
+		int customStackSize = -1;
         int roundTrip = 0;
 
 		private List<Project>	cloneSources = new List<Project>();
 		public IEnumerable<Project> CloneSources { get { return cloneSources;} }
 
         public string Type { get; private set; }
-        public string SubSystem { get; private set; } = null;
+        public string SubSystem { get; private set; }
         public string Name { get; private set; }
         public static Project Primary { get; private set; }
         public FileInfo SourcePath { get; private set; }
@@ -491,7 +497,7 @@ namespace Projector
                         writer.WriteLine("    <AdditionalManifestFiles>" + Path.Combine("..",Path.Combine("..",CustomManifest)) + "</AdditionalManifestFiles>");
                         writer.WriteLine("  </Manifest>");
                     }
-                    if (PreBuildCommands.Count > 0)
+                    if (preBuildCommands.Count > 0)
                     {
                         writer.WriteLine("  <PreBuildEvent>");
                         foreach (string cmd in PreBuildCommands)
@@ -651,10 +657,10 @@ namespace Projector
             foreach (Project p in clone)
             {
                 if (p.CustomStackSize != -1)
-                    CustomStackSize = p.CustomStackSize;
+                    customStackSize = p.CustomStackSize;
                 if (p.CustomManifest != null)
                     CustomManifest = p.CustomManifest;
-                PreBuildCommands.AddRange(p.PreBuildCommands);
+                preBuildCommands.AddRange(p.preBuildCommands);
                 sources.AddRange(p.sources);
                 foreach (var pair in p.macros)
                     macros.Add(pair.Key, pair.Value);
@@ -673,7 +679,7 @@ namespace Projector
                 CustomManifest = xmanifest.InnerText;
             XmlNode xStack = xproject.Attributes.GetNamedItem("stackSize");
             if (xStack != null)
-                CustomStackSize = int.Parse( xStack.InnerText);
+                customStackSize = int.Parse( xStack.InnerText);
 
             XmlNodeList xsources = xproject.SelectNodes("source");
             foreach (XmlNode xsource in xsources)
@@ -683,7 +689,7 @@ namespace Projector
             XmlNodeList xcommands = xproject.SelectNodes("command");
             foreach (XmlNode xcommand in xcommands)
             {
-                PreBuildCommands.Add(xcommand.InnerText);
+                preBuildCommands.Add(xcommand.InnerText);
             }
             XmlNodeList xmacros = xproject.SelectNodes("macro");
             foreach (XmlNode xmacro in xmacros)

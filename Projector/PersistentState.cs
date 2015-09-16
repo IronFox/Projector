@@ -30,7 +30,8 @@ namespace Projector
         }
 
 
-        public static FileInfo StateFile { get; private set; } = new FileInfo("persistentState.xml");
+		private static FileInfo stateFile = new FileInfo("persistentState.xml"); 
+        public static FileInfo StateFile { get { return stateFile; }  }
 
         public static void Restore()
         {
