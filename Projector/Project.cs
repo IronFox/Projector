@@ -436,7 +436,7 @@ namespace Projector
                     writer.WriteLine("  <LinkIncremental>" + !config.isRelease + "</LinkIncremental>");
                     if (config.isRelease)
 					{ 
-                        writer.WriteLine("  <OutDir>"+SourcePath.DirectoryName+"</OutDir>");
+                        writer.WriteLine("  <OutDir>"+SourcePath.DirectoryName+Path.DirectorySeparatorChar+"</OutDir>");
 						//if (config.platform == "Win32")
 						writer.WriteLine("  <TargetName>$(ProjectName) "+config.platform+"</TargetName>");
 					}
