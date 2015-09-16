@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
+using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -75,6 +76,7 @@ namespace Projector
 
         internal static void FlushAll()
         {
+			Warnings.Clear();
             map.Clear();
             list.Clear();
             unloaded.Clear();
@@ -226,9 +228,9 @@ namespace Projector
         public IEnumerable<Source> Sources { get { return sources; } }
         public IEnumerable<string> PreBuildCommands { get { return preBuildCommands; }  }
         public int CustomStackSize { get { return customStackSize; }}
+		public IEnumerable<FileInfo> CustomManifests { get { return customManifests; } }
 
 
-        public string CustomManifest { get; private set; }
 
 
 		private static Dictionary<string, Project> map = new Dictionary<string, Project>();
@@ -236,6 +238,7 @@ namespace Projector
         private static Queue<Project> unloaded = new Queue<Project>();
         //private XmlNode xproject;
 
+		List<FileInfo> customManifests = new List<FileInfo>();
         List<string> preBuildCommands = new List<string>();
         List<Source> sources = new List<Source>();
         Dictionary<string, string> macros = new Dictionary<string, string>();
@@ -432,7 +435,12 @@ namespace Projector
                     writer.WriteLine("<PropertyGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config.name + "|" + config.platform + "'\">");
                     writer.WriteLine("  <LinkIncremental>" + !config.isRelease + "</LinkIncremental>");
                     if (config.isRelease)
-                        writer.WriteLine("  <OutDir>..\\..</OutDir>");
+					{ 
+                        writer.WriteLine("  <OutDir>"+SourcePath.DirectoryName+"</OutDir>");
+						//if (config.platform == "Win32")
+						writer.WriteLine("  <TargetName>$(ProjectName) "+config.platform+"</TargetName>");
+					}
+
 
                     string include = "";
                     foreach (var r in references)
@@ -491,10 +499,13 @@ namespace Projector
                     if (CustomStackSize != -1)
                         writer.WriteLine("    <AdditionalOptions>/STACK:" + CustomStackSize + " %(AdditionalOptions)</AdditionalOptions>");
                     writer.WriteLine("  </Link>");
-                    if (CustomManifest != null)
+					if (customManifests.Count > 0)
                     {
                         writer.WriteLine("  <Manifest>");
-                        writer.WriteLine("    <AdditionalManifestFiles>" + Path.Combine("..",Path.Combine("..",CustomManifest)) + "</AdditionalManifestFiles>");
+						StringBuilder combined = new StringBuilder();
+						foreach (var manifest in customManifests)
+						combined.Append(" \"").Append(manifest.FullName).Append("\"");
+                        writer.WriteLine("    <AdditionalManifestFiles>" +  combined+ "</AdditionalManifestFiles>");
                         writer.WriteLine("  </Manifest>");
                     }
                     if (preBuildCommands.Count > 0)
@@ -636,6 +647,12 @@ namespace Projector
             foreach (XmlNode xClone in xClones)
             {
                 Project p = Add(xClone, SourcePath, this);
+				if (p == this)
+				{
+					Warn("Cannot clone self.");
+					continue;
+
+				}
                 if (!p.loaded)
                 {
                     allThere = false;
@@ -649,8 +666,7 @@ namespace Projector
                 unloaded.Enqueue(this);
                 if (roundTrip > 2)
                 {
-                    throw new Exception("Loop detected");
-
+                    throw new Exception("While loading project '"+Name+"': Self-cloning loop detected.");
                 }
                 return;
             }
@@ -658,8 +674,13 @@ namespace Projector
             {
                 if (p.CustomStackSize != -1)
                     customStackSize = p.CustomStackSize;
-                if (p.CustomManifest != null)
-                    CustomManifest = p.CustomManifest;
+				HashSet<string> have = new HashSet<string>();
+				foreach (var m in p.CustomManifests)
+					if (!have.Contains(m.FullName))
+					{ 
+						have.Add(m.FullName);
+						customManifests.Add(m);
+					}
                 preBuildCommands.AddRange(p.preBuildCommands);
                 sources.AddRange(p.sources);
                 foreach (var pair in p.macros)
@@ -674,12 +695,21 @@ namespace Projector
 			if (clone.Count > 0)
 				cloneSources = clone;
 
-            XmlNode xmanifest = xproject.Attributes.GetNamedItem("manifest");
-            if (xmanifest != null)
-                CustomManifest = xmanifest.InnerText;
             XmlNode xStack = xproject.Attributes.GetNamedItem("stackSize");
             if (xStack != null)
                 customStackSize = int.Parse( xStack.InnerText);
+
+
+			XmlNodeList xmanifests = xproject.SelectNodes("manifest");
+			foreach (XmlNode xmanifest in xmanifests)
+			{ 
+				FileInfo file = new FileInfo(xmanifest.InnerText);
+				if (file.Exists)
+					customManifests.Add(file);
+				else
+					Warn("Cannot find manifest file '"+xmanifest.InnerText+"' relative to current directory '"+Directory.GetCurrentDirectory()+"'");
+			}
+
 
             XmlNodeList xsources = xproject.SelectNodes("source");
             foreach (XmlNode xsource in xsources)
