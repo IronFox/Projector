@@ -207,6 +207,7 @@ namespace Projector
                 LogLine("No issues");
             LogLine("Projects imported: " + Project.All.Count());
             solutionToolStripMenuItem.Enabled = Project.Primary != null;
+			buildSolutionButton.Enabled = Project.Primary != null;
 			return true;
         }
 
@@ -284,7 +285,14 @@ namespace Projector
 
 			string[] parameters = Environment.GetCommandLineArgs();
 			if (parameters.Length > 1)
-				if (!LoadSolution(new FileInfo(parameters[1])))
+				if (LoadSolution(new FileInfo(parameters[1])))
+				{
+					FileInfo outPath = PersistentState.GetOutPathFor(solution.File);
+					if (outPath != null && outPath.Directory.Exists)
+						BuildCurrentSolution(outPath);
+					
+				}
+				else
 					LogLine("Error: Unable to read solution file '"+parameters[1]+"'");
         }
 
@@ -315,6 +323,11 @@ namespace Projector
 
             LoadSolution(solution.File); //refresh
 
+			BuildCurrentSolution(outPath);
+		}
+
+		private void BuildCurrentSolution(FileInfo outPath)
+		{
             LogLine("Exporting to " + outPath.FullName);
 
             PersistentState.Toolset = toolSet.SelectedItem.ToString();
