@@ -299,6 +299,7 @@
 			this.MainMenuStrip = this.menuStrip1;
 			this.Name = "ProjectView";
 			this.Text = "Projector";
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ProjectView_FormClosed);
 			this.Load += new System.EventHandler(this.ProjectView_Load);
 			this.Shown += new System.EventHandler(this.ProjectView_Shown);
 			this.menuStrip1.ResumeLayout(false);

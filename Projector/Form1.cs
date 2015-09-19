@@ -285,20 +285,25 @@ namespace Projector
 
 			string[] parameters = Environment.GetCommandLineArgs();
 			if (parameters.Length > 1)
-				if (LoadSolution(new FileInfo(parameters[1])))
-				{
-					FileInfo outPath = PersistentState.GetOutPathFor(solution.File);
-					if (outPath != null && outPath.Directory.Exists)
-						BuildCurrentSolution(outPath);
-					
-				}
-				else
-					LogLine("Error: Unable to read solution file '"+parameters[1]+"'");
+				LoadFromParameter(parameters[1]);
         }
+
+		private void LoadFromParameter(string p)
+		{
+			if (LoadSolution(new FileInfo(p)))
+			{
+				FileInfo outPath = PersistentState.GetOutPathFor(solution.File);
+				if (outPath != null && outPath.Directory.Exists)
+					BuildCurrentSolution(outPath);
+					
+			}
+			else
+				LogLine("Error: Unable to read solution file '"+p+"'");
+		}
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+			Program.End();
         }
 
         private static string Relativate(DirectoryInfo dir, FileInfo file)
@@ -375,14 +380,20 @@ namespace Projector
             foreach (var tuple in projects)
             {
                 Guid guid = tuple.Item2;
-                writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.ActiveCfg = Debug|Win32");
-                writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.Build.0 = Debug|Win32");
-                writer.WriteLine("\t\t{" + guid + "}.Debug|x64.ActiveCfg = Debug|x64");
-                writer.WriteLine("\t\t{" + guid + "}.Debug|x64.Build.0 = Debug|x64");
-                writer.WriteLine("\t\t{" + guid + "}.Release|Win32.ActiveCfg = Release|Win32");
-                writer.WriteLine("\t\t{" + guid + "}.Release|Win32.Build.0 = Release|Win32");
-                writer.WriteLine("\t\t{" + guid + "}.Release|x64.ActiveCfg = Release|x64");
-                writer.WriteLine("\t\t{" + guid + "}.Release|x64.Build.0 = Release|x64");
+				foreach (var config in configurations)
+				{
+					writer.WriteLine("\t\t{" + guid + "}." + config.name + "|" + config.platform + ".ActiveCfg = " + config.name + "|" + config.platform);
+					writer.WriteLine("\t\t{" + guid + "}." + config.name + "|" + config.platform + ".Build.0 = " + config.name + "|" + config.platform);
+
+				}
+				//	writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.ActiveCfg = Debug|Win32");
+				//writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.Build.0 = Debug|Win32");
+				//writer.WriteLine("\t\t{" + guid + "}.Debug|x64.ActiveCfg = Debug|x64");
+				//writer.WriteLine("\t\t{" + guid + "}.Debug|x64.Build.0 = Debug|x64");
+				//writer.WriteLine("\t\t{" + guid + "}.Release|Win32.ActiveCfg = Release|Win32");
+				//writer.WriteLine("\t\t{" + guid + "}.Release|Win32.Build.0 = Release|Win32");
+				//writer.WriteLine("\t\t{" + guid + "}.Release|x64.ActiveCfg = Release|x64");
+				//writer.WriteLine("\t\t{" + guid + "}.Release|x64.Build.0 = Release|x64");
             }
             writer.WriteLine("\tEndGlobalSection");
 
@@ -407,5 +418,29 @@ namespace Projector
                 buildToolStripMenuItem_Click(sender, e);
             }
         }
-    }
+
+
+		delegate void HandleInputCall(string text);
+
+		internal void HandleInput(string input)
+		{
+			// InvokeRequired required compares the thread ID of the
+			// calling thread to the thread ID of the creating thread.
+			// If these threads are different, it returns true.
+			if (this.buildSolutionButton.InvokeRequired)
+			{	
+				HandleInputCall d = new HandleInputCall(HandleInput);
+				this.Invoke(d, new object[] { input });
+			}
+			else
+			{
+				LoadFromParameter(input);
+			}
+		}
+
+		private void ProjectView_FormClosed(object sender, FormClosedEventArgs e)
+		{
+			Program.End();
+		}
+	}
 }
