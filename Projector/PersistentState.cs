@@ -187,7 +187,10 @@ namespace Projector
 
         public static void SetOutPathFor(FileInfo solutionFile, FileInfo fileInfo)
         {
-            outPaths.Add(solutionFile.FullName, fileInfo);
+			if (outPaths.ContainsKey(solutionFile.FullName))
+				outPaths[solutionFile.FullName] = fileInfo;
+			else
+				outPaths.Add(solutionFile.FullName, fileInfo);
             Backup();
         }
     }

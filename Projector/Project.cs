@@ -401,13 +401,16 @@ namespace Projector
             }
         }
 
+
+		public static readonly string WorkSubDirectory = ".projector";
+
         public FileInfo OutFile
         {
             get
             {
                 
 //                return new FileInfo(Path.Combine(SourcePath.Directory.FullName, Name + ".vcxproj"));
-                return new FileInfo(Path.Combine(Path.Combine(SourcePath.Directory.FullName, Path.Combine(".projects", Name)), Name + ".vcxproj"));
+                return new FileInfo(Path.Combine(Path.Combine(SourcePath.Directory.FullName, Path.Combine(WorkSubDirectory, Name)), Name + ".vcxproj"));
 
 
             }
@@ -619,7 +622,7 @@ namespace Projector
                     foreach (var config in configurations)
                     {
                         writer.WriteLine("  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)' == '" + config.name + "|" + config.platform + "'\">");
-                        writer.WriteLine("    <LocalDebuggerWorkingDirectory>..\\..</LocalDebuggerWorkingDirectory>");
+                        writer.WriteLine("    <LocalDebuggerWorkingDirectory>"+SourcePath.DirectoryName+"</LocalDebuggerWorkingDirectory>");
                         writer.WriteLine("  </PropertyGroup>");
                     }
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -208,6 +209,9 @@ namespace Projector
             LogLine("Projects imported: " + Project.All.Count());
             solutionToolStripMenuItem.Enabled = Project.Primary != null;
 			buildSolutionButton.Enabled = Project.Primary != null;
+
+			openGeneratedSolutionToolStripMenuItem.Enabled = PersistentState.GetOutPathFor(file) != null;
+			openGeneratedSolutionButton.Enabled = openGeneratedSolutionToolStripMenuItem.Enabled;
 			return true;
         }
 
@@ -404,6 +408,8 @@ namespace Projector
             writer.WriteLine("EndGlobal");
             writer.Close();
             LogLine("Export done.");
+			openGeneratedSolutionToolStripMenuItem.Enabled = true;
+			openGeneratedSolutionButton.Enabled = true;
         }
 
         private void buildAtToolStripMenuItem_Click(object sender, EventArgs e)
@@ -411,7 +417,8 @@ namespace Projector
             //string name = Project.Primary.Name;
             chooseDestination.Filter = "Solution | " + solution.Name + ".sln";
             chooseDestination.FileName = solution.Name + ".sln";
-			chooseDestination.InitialDirectory = solution.File.DirectoryName;
+			DirectoryInfo preferred = solution.File.Directory.CreateSubdirectory(Project.WorkSubDirectory);
+			chooseDestination.InitialDirectory = preferred.FullName;
             if (chooseDestination.ShowDialog() == DialogResult.OK)
             {
                 PersistentState.SetOutPathFor(solution.File, new FileInfo(chooseDestination.FileName));
@@ -441,6 +448,21 @@ namespace Projector
 		private void ProjectView_FormClosed(object sender, FormClosedEventArgs e)
 		{
 			Program.End();
+		}
+
+		private void openGeneratedSolutionToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+            FileInfo slnPath = PersistentState.GetOutPathFor(solution.File);
+			if (slnPath == null)
+			{
+				LogLine("Error: '"+slnPath.FullName+"' does not exist");
+				return;
+			}
+			Process myProcess = new Process();
+			myProcess.StartInfo.FileName = "devenv.exe"; //not the full application path
+			myProcess.StartInfo.Arguments = "\""+slnPath.FullName+"\"";
+			if (!myProcess.Start())
+				LogLine("Error: Failed to start process");
 		}
 	}
 }

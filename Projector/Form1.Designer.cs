@@ -54,6 +54,9 @@
 			this.statusStrip = new System.Windows.Forms.StatusStrip();
 			this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
 			this.buildSolutionButton = new System.Windows.Forms.Button();
+			this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
+			this.openGeneratedSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.openGeneratedSolutionButton = new System.Windows.Forms.Button();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
@@ -70,7 +73,7 @@
             this.solutionToolStripMenuItem});
 			this.menuStrip1.Location = new System.Drawing.Point(0, 0);
 			this.menuStrip1.Name = "menuStrip1";
-			this.menuStrip1.Size = new System.Drawing.Size(577, 24);
+			this.menuStrip1.Size = new System.Drawing.Size(564, 24);
 			this.menuStrip1.TabIndex = 2;
 			this.menuStrip1.Text = "menuStrip1";
 			this.menuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.menuStrip1_ItemClicked);
@@ -135,7 +138,9 @@
 			// 
 			this.solutionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.buildToolStripMenuItem,
-            this.buildAtToolStripMenuItem});
+            this.buildAtToolStripMenuItem,
+            this.toolStripMenuItem4,
+            this.openGeneratedSolutionToolStripMenuItem});
 			this.solutionToolStripMenuItem.Enabled = false;
 			this.solutionToolStripMenuItem.Name = "solutionToolStripMenuItem";
 			this.solutionToolStripMenuItem.Size = new System.Drawing.Size(63, 20);
@@ -144,14 +149,14 @@
 			// buildToolStripMenuItem
 			// 
 			this.buildToolStripMenuItem.Name = "buildToolStripMenuItem";
-			this.buildToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
+			this.buildToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
 			this.buildToolStripMenuItem.Text = "Build";
 			this.buildToolStripMenuItem.Click += new System.EventHandler(this.buildToolStripMenuItem_Click);
 			// 
 			// buildAtToolStripMenuItem
 			// 
 			this.buildAtToolStripMenuItem.Name = "buildAtToolStripMenuItem";
-			this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(123, 22);
+			this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
 			this.buildAtToolStripMenuItem.Text = "Build at...";
 			this.buildAtToolStripMenuItem.Click += new System.EventHandler(this.buildAtToolStripMenuItem_Click);
 			// 
@@ -185,8 +190,8 @@
 			// 
 			this.splitContainer1.Panel2.Controls.Add(this.log);
 			this.splitContainer1.Panel2.Controls.Add(this.label2);
-			this.splitContainer1.Size = new System.Drawing.Size(577, 378);
-			this.splitContainer1.SplitterDistance = 259;
+			this.splitContainer1.Size = new System.Drawing.Size(564, 382);
+			this.splitContainer1.SplitterDistance = 261;
 			this.splitContainer1.TabIndex = 3;
 			// 
 			// solutionView
@@ -194,7 +199,7 @@
 			this.solutionView.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.solutionView.Location = new System.Drawing.Point(0, 0);
 			this.solutionView.Name = "solutionView";
-			this.solutionView.Size = new System.Drawing.Size(577, 259);
+			this.solutionView.Size = new System.Drawing.Size(564, 261);
 			this.solutionView.TabIndex = 2;
 			// 
 			// log
@@ -208,7 +213,7 @@
 			this.log.Name = "log";
 			this.log.ReadOnly = true;
 			this.log.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.log.Size = new System.Drawing.Size(577, 93);
+			this.log.Size = new System.Drawing.Size(564, 95);
 			this.log.TabIndex = 1;
 			// 
 			// label2
@@ -224,6 +229,7 @@
 			// 
 			this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this.panel1.Controls.Add(this.openGeneratedSolutionButton);
 			this.panel1.Controls.Add(this.buildSolutionButton);
 			this.panel1.Controls.Add(this.label1);
 			this.panel1.Controls.Add(this.toolSet);
@@ -253,7 +259,7 @@
             "14.0 (VS 2015)"});
 			this.toolSet.Location = new System.Drawing.Point(89, 0);
 			this.toolSet.Name = "toolSet";
-			this.toolSet.Size = new System.Drawing.Size(349, 21);
+			this.toolSet.Size = new System.Drawing.Size(205, 21);
 			this.toolSet.TabIndex = 0;
 			this.toolSet.ValueMember = "14.0 (VS 2015)";
 			this.toolSet.SelectedIndexChanged += new System.EventHandler(this.toolSet_SelectedIndexChanged);
@@ -262,9 +268,9 @@
 			// 
 			this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-			this.statusStrip.Location = new System.Drawing.Point(0, 436);
+			this.statusStrip.Location = new System.Drawing.Point(0, 440);
 			this.statusStrip.Name = "statusStrip";
-			this.statusStrip.Size = new System.Drawing.Size(577, 22);
+			this.statusStrip.Size = new System.Drawing.Size(564, 22);
 			this.statusStrip.TabIndex = 5;
 			this.statusStrip.Text = "statusStrip1";
 			// 
@@ -278,7 +284,7 @@
 			// 
 			this.buildSolutionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.buildSolutionButton.Enabled = false;
-			this.buildSolutionButton.Location = new System.Drawing.Point(444, -1);
+			this.buildSolutionButton.Location = new System.Drawing.Point(300, -1);
 			this.buildSolutionButton.Name = "buildSolutionButton";
 			this.buildSolutionButton.Size = new System.Drawing.Size(132, 23);
 			this.buildSolutionButton.TabIndex = 2;
@@ -286,17 +292,43 @@
 			this.buildSolutionButton.UseVisualStyleBackColor = true;
 			this.buildSolutionButton.Click += new System.EventHandler(this.buildToolStripMenuItem_Click);
 			// 
+			// toolStripMenuItem4
+			// 
+			this.toolStripMenuItem4.Name = "toolStripMenuItem4";
+			this.toolStripMenuItem4.Size = new System.Drawing.Size(204, 6);
+			// 
+			// openGeneratedSolutionToolStripMenuItem
+			// 
+			this.openGeneratedSolutionToolStripMenuItem.Enabled = false;
+			this.openGeneratedSolutionToolStripMenuItem.Name = "openGeneratedSolutionToolStripMenuItem";
+			this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
+			this.openGeneratedSolutionToolStripMenuItem.Text = "Open Generated Solution";
+			this.openGeneratedSolutionToolStripMenuItem.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
+			// 
+			// openGeneratedSolutionButton
+			// 
+			this.openGeneratedSolutionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.openGeneratedSolutionButton.Enabled = false;
+			this.openGeneratedSolutionButton.Location = new System.Drawing.Point(432, -1);
+			this.openGeneratedSolutionButton.Name = "openGeneratedSolutionButton";
+			this.openGeneratedSolutionButton.Size = new System.Drawing.Size(132, 23);
+			this.openGeneratedSolutionButton.TabIndex = 3;
+			this.openGeneratedSolutionButton.Text = "Open Generated";
+			this.openGeneratedSolutionButton.UseVisualStyleBackColor = true;
+			this.openGeneratedSolutionButton.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
+			// 
 			// ProjectView
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(577, 458);
+			this.ClientSize = new System.Drawing.Size(564, 462);
 			this.Controls.Add(this.statusStrip);
 			this.Controls.Add(this.panel1);
 			this.Controls.Add(this.splitContainer1);
 			this.Controls.Add(this.menuStrip1);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MainMenuStrip = this.menuStrip1;
+			this.MinimumSize = new System.Drawing.Size(580, 500);
 			this.Name = "ProjectView";
 			this.Text = "Projector";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ProjectView_FormClosed);
@@ -344,6 +376,9 @@
 		private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
 		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
 		private System.Windows.Forms.Button buildSolutionButton;
+		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
+		private System.Windows.Forms.ToolStripMenuItem openGeneratedSolutionToolStripMenuItem;
+		private System.Windows.Forms.Button openGeneratedSolutionButton;
     }
 }
 
