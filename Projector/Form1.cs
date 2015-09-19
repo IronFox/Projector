@@ -85,8 +85,8 @@ namespace Projector
             }
         }
 
-        private string solutionName;
-        private FileInfo solutionFile;
+		PersistentState.SolutionDescriptor solution = new PersistentState.SolutionDescriptor();
+
 
         private bool LoadSolution(FileInfo file)
         {
@@ -100,17 +100,29 @@ namespace Projector
 
             LogLine("Importing '" + file.FullName + "'...");
 
-            PersistentState.MemorizeRecent(file);
-            UpdateRecent();
 
-            solutionFile = file;
-            solutionName = "";
+			
             {
                 var xreader = new XmlTextReader(file.FullName);
                 //int slashAt = Math.Max(file.FullName.LastIndexOf('/'), file.FullName.LastIndexOf('\\'));
-                solutionName = file.Name.Substring(0,file.Name.Length - file.Extension.Length);
                 XmlDocument xdoc = new XmlDocument();
                 xdoc.Load(xreader);
+
+				XmlNode xsolution = xdoc.SelectSingleNode("solution");
+				XmlNode xDomain = xsolution.Attributes.GetNamedItem("domain");
+				if (xDomain != null)
+				{
+					solution = new PersistentState.SolutionDescriptor(file,xDomain.Value);
+				}
+				else
+					solution = new PersistentState.SolutionDescriptor(file, null);
+				
+
+				PersistentState.MemorizeRecent(solution);
+				UpdateRecent();
+
+
+
                 XmlNodeList xprojects = xdoc.SelectNodes("solution/project");
 
                 foreach (XmlNode xproject in xprojects)
@@ -139,7 +151,7 @@ namespace Projector
 
 
             solutionView.Nodes.Clear();
-            TreeNode tsolution = solutionView.Nodes.Add(solutionName);
+            TreeNode tsolution = solutionView.Nodes.Add(solution.Name);
             foreach (Project project in Project.All)
             {
                 TreeNode tproject = tsolution.Nodes.Add(project.Name + (project == Project.Primary ? " (primary)" : "") + " [" + project.Type+"]");
@@ -203,15 +215,49 @@ namespace Projector
         {
             var collection = recentSolutionsToolStripMenuItem.DropDown.Items;
             collection.Clear();
-            //while (collection[0].Text != "-")
-            //{
-            //    collection.RemoveAt(0);
-            //}
+
+
+			//bool anyHaveDomains = false;
+			//foreach (var recent in PersistentState.Recent)
+			//	if (recent.Domain != null)
+			//	{
+			//		anyHaveDomains = true;
+			//		break;
+			//	}
+
+
+
             foreach (var recent in PersistentState.Recent)
             {
-                ToolStripItem item = new ToolStripMenuItem(recent.Name);
-                item.Click += (sender, item2) => LoadSolution(recent);
-                collection.Add(item);
+				ToolStripItemCollection parent = collection;
+				
+				//if (anyHaveDomains)
+				//{
+				//	string lookFor = recent.Domain ?? "<No Domain>";
+
+				//	ToolStripMenuItem found = null;
+				//	for (int i = 0; i < collection.Count; i++)
+				//		if (collection[i].Text == lookFor)
+				//		{ 
+				//			found = (ToolStripMenuItem)collection[i];
+				//			break;
+				//		}
+					
+				//	if (found != null)
+				//	{
+				//		//ToolStripMenuItem child = (ToolStripMenuItem)(collection[index]);
+				//		parent = found.DropDown.Items;
+				//	}
+				//	else
+				//	{
+				//		ToolStripMenuItem child = new ToolStripMenuItem(lookFor);
+				//		parent = child.DropDown.Items;
+				//		collection.Add(child);
+				//	}
+				//}
+                ToolStripItem item = new ToolStripMenuItem(recent.ToString());
+                item.Click += (sender, item2) => LoadSolution(recent.File);
+                parent.Add(item);
 
             }
             collection.Add("-");
@@ -260,14 +306,14 @@ namespace Projector
 
         private void buildToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FileInfo outPath = PersistentState.GetOutPathFor(solutionFile);
+            FileInfo outPath = PersistentState.GetOutPathFor(solution.File);
             if (outPath == null || !outPath.Directory.Exists)
             {
                 buildAtToolStripMenuItem_Click(sender, e);
                 return;
             }
 
-            LoadSolution(solutionFile); //refresh
+            LoadSolution(solution.File); //refresh
 
             LogLine("Exporting to " + outPath.FullName);
 
@@ -339,11 +385,12 @@ namespace Projector
         private void buildAtToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //string name = Project.Primary.Name;
-            chooseDestination.Filter = "Solution | " + solutionName + ".sln";
-            chooseDestination.FileName = solutionName + ".sln";
+            chooseDestination.Filter = "Solution | " + solution.Name + ".sln";
+            chooseDestination.FileName = solution.Name + ".sln";
+			chooseDestination.InitialDirectory = solution.File.DirectoryName;
             if (chooseDestination.ShowDialog() == DialogResult.OK)
             {
-                PersistentState.SetOutPathFor(solutionFile, new FileInfo(chooseDestination.FileName));
+                PersistentState.SetOutPathFor(solution.File, new FileInfo(chooseDestination.FileName));
                 buildToolStripMenuItem_Click(sender, e);
             }
         }
