@@ -326,8 +326,13 @@ namespace Projector
             FileInfo outPath = PersistentState.GetOutPathFor(solution.File);
             if (outPath == null || !outPath.Directory.Exists)
             {
-                buildAtToolStripMenuItem_Click(sender, e);
-                return;
+				string solutionName = solution.Name + ".sln";
+				DirectoryInfo preferred = solution.File.Directory.CreateSubdirectory(Project.WorkSubDirectory);
+				outPath = new FileInfo( Path.Combine(preferred.FullName,solutionName) );
+
+
+				//buildAtToolStripMenuItem_Click(sender, e);
+				//return;
             }
 
             LoadSolution(solution.File); //refresh
