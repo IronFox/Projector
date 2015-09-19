@@ -168,7 +168,11 @@ namespace Projector
 				{
 					TreeNode tcommands = tproject.Nodes.Add("Pre-Build Commands");
 					foreach (var m in project.PreBuildCommands)
-						tcommands.Nodes.Add(m);
+					{ 
+						TreeNode tparameters = tcommands.Nodes.Add(m.locatedExecutable != null ? m.locatedExecutable.FullName : m.originalExecutable);
+						foreach (var param in m.parameters)
+							tparameters.Nodes.Add(param);
+					}
 				}
 
 				TreeNode tsource = tproject.Nodes.Add("Sources");
@@ -179,7 +183,11 @@ namespace Projector
                 }
             }
 
-            foreach (var warning in Project.Warnings)
+			foreach (var message in Project.Messages)
+			{
+				LogLine("* "+message.ToString());
+			}
+			foreach (var warning in Project.Warnings)
             {
                 LogLine("Warning: " + warning);
             }
@@ -244,7 +252,10 @@ namespace Projector
             Uri udir = new Uri(dir.FullName + "\\");
             Uri ufile = new Uri(file.FullName);
             Uri urelative = udir.MakeRelativeUri(ufile);
-            return urelative.ToString();
+            string path = urelative.ToString();
+			path = path.Replace("%20", " ");
+			path = path.Replace('/', '\\');
+			return path;
         }
 
         private void buildToolStripMenuItem_Click(object sender, EventArgs e)
@@ -290,9 +301,8 @@ namespace Projector
             Guid solutionGuid = Guid.NewGuid();
             foreach (var tuple in projects)
             {
-                string path = Relativate(dir, tuple.Item1);
-                path = path.Replace("%20", " ");
-                path = path.Replace('/', '\\');
+                string path = tuple.Item1.FullName;
+				//Relativate(dir, tuple.Item1);
                 writer.WriteLine("Project(\"{" + solutionGuid + "}\") = \"" + tuple.Item3.Name + "\", \"" + path + "\", \"{"
                     + tuple.Item2 + "}\");");
                 writer.WriteLine("EndProject");

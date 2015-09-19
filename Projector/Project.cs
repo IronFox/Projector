@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
 
@@ -20,6 +21,24 @@ namespace Projector
     }
 
 
+	public static partial class Extensions
+	{
+		public static T[] ToArray<T>(this List<T> list, int start)
+		{
+			if (start >= list.Count)
+				return new T[0];
+			int len = list.Count - start;
+			T[] result = new T[len];
+			for (int i = 0; i < len; i++)
+				result[i] = list[i+start];
+			return result;
+		}
+
+
+
+	}
+
+
     internal class Project
     {
         public class CodeGroup
@@ -32,6 +51,9 @@ namespace Projector
                 return name.GetHashCode();
             }
         }
+
+		static Regex pathSplit = new Regex("(?:^| )(\"(?:[^\"]+|\"\")*\"|[^ ]*)", RegexOptions.Compiled);
+
 
         public static CodeGroup cpp = new CodeGroup() { name = "C++", tag = "ClCompile" };
         public static CodeGroup h = new CodeGroup() { name = "header", tag = "ClInclude" };
@@ -52,7 +74,7 @@ namespace Projector
         //  </ProjectReference>
         //</ItemGroup>
 
-        public static List<Warning> Warnings = new List<Warning>();
+        public static List<Notification> Warnings = new List<Notification>(), Messages = new List<Notification>();
 
 
         public static Dictionary<string, CodeGroup> extensionMap = new Dictionary<string, CodeGroup>()
@@ -77,6 +99,7 @@ namespace Projector
         internal static void FlushAll()
         {
 			Warnings.Clear();
+			Messages.Clear();
             map.Clear();
             list.Clear();
             unloaded.Clear();
@@ -221,12 +244,18 @@ namespace Projector
 
         }
 
+		public struct Command
+		{
+			public string originalExecutable;
+			public FileInfo	locatedExecutable;
+			public string[]	parameters;
+		}
 
 
         public static IEnumerable<Project> All { get { return list; } }
         public IEnumerable<Reference> References { get { return references; } }
         public IEnumerable<Source> Sources { get { return sources; } }
-        public IEnumerable<string> PreBuildCommands { get { return preBuildCommands; }  }
+		public IEnumerable<Command> PreBuildCommands { get { return preBuildCommands; } }
         public int CustomStackSize { get { return customStackSize; }}
 		public IEnumerable<FileInfo> CustomManifests { get { return customManifests; } }
 		public IEnumerable<KeyValuePair<string,string> > Macros { get { return macros; } }
@@ -239,7 +268,7 @@ namespace Projector
         //private XmlNode xproject;
 
 		List<FileInfo> customManifests = new List<FileInfo>();
-        List<string> preBuildCommands = new List<string>();
+		List<Command> preBuildCommands = new List<Command>();
         List<Source> sources = new List<Source>();
         Dictionary<string, string> macros = new Dictionary<string, string>();
         List<Reference> references = new List<Reference>();
@@ -511,9 +540,23 @@ namespace Projector
                     if (preBuildCommands.Count > 0)
                     {
                         writer.WriteLine("  <PreBuildEvent>");
-                        foreach (string cmd in PreBuildCommands)
+                        foreach (Command cmd in PreBuildCommands)
                         {
-                            writer.WriteLine("    <Command>../../" + cmd + "</Command>");
+							if (cmd.locatedExecutable != null)
+							{
+								writer.Write("    <Command>\"");
+								writer.Write(cmd.locatedExecutable.FullName);
+								writer.Write("\"");
+								foreach (string parameter in cmd.parameters)
+								{ 
+									writer.Write(" \"");
+									writer.Write(parameter);
+									writer.Write("\"");
+								}
+								writer.WriteLine("</Command>");
+							}
+							else
+								writer.WriteLine("    <Command>../../" + cmd + "</Command>");
                         }
                         writer.WriteLine("  </PreBuildEvent>");
                     }
@@ -719,7 +762,46 @@ namespace Projector
             XmlNodeList xcommands = xproject.SelectNodes("command");
             foreach (XmlNode xcommand in xcommands)
             {
-                preBuildCommands.Add(xcommand.InnerText);
+				string source = xcommand.InnerText;
+
+				//string source = "combined executable split parameter \"joined parameter\"";
+
+				List<string> elements = new List<string>();
+				foreach (Match match in pathSplit.Matches(source))
+				{
+					string param = match.Value.Trim(new char[]{' ','\"'});
+					if (elements.Count > 0)
+					{
+						FileInfo test = new FileInfo(param);
+						if (test.Exists)
+						{ 
+							Inform("Parameter '"+param+"' of command '"+elements[0]+"' recognized as file. Replacing parameter with full path '"+test.FullName+"'");
+							param = test.FullName;
+						}
+					}
+					elements.Add(param);
+				}
+
+
+
+				if (elements.Count == 0)
+				{
+					Warn("Empty command encountered");
+					continue;
+				}
+
+				Command cmd = new Command(){originalExecutable = elements[0],parameters = elements.ToArray(1)};
+				FileInfo file = TryFindExecutable(cmd.originalExecutable);
+				if (file == null)
+					file = TryFindExecutable(cmd.originalExecutable+".exe");
+				if (file == null)
+					file = TryFindExecutable(cmd.originalExecutable + ".bat");
+				if (file != null)
+					cmd.locatedExecutable = file;
+				else
+					Warn("Unable to locate executable '"+cmd.originalExecutable+"'");
+
+                preBuildCommands.Add(cmd);
             }
             XmlNodeList xmacros = xproject.SelectNodes("macro");
             foreach (XmlNode xmacro in xmacros)
@@ -732,6 +814,23 @@ namespace Projector
                 AddReference(xreference);
             }
         }
+
+		private FileInfo TryFindExecutable(string executable)
+		{
+			FileInfo file = new FileInfo(executable);
+			if (file.Exists)
+				return file;
+
+			string pathEnv = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine);
+			string[] paths = pathEnv.Split(Path.PathSeparator);
+			foreach (string path in paths)
+			{
+				file = new FileInfo(Path.Combine(path, executable));
+				if (file.Exists)
+					return file;
+			}
+			return null;
+		}
 
         internal static Project GetNextUnloaded()
         {
@@ -802,13 +901,23 @@ namespace Projector
 
         private static void Warn(Project p, string message)
         {
-            Warnings.Add(new Warning(p, message));
+            Warnings.Add(new Notification(p, message));
         }
 
         private void Warn(string message)
         {
             Warn(this, message);
         }
+
+		private static void Inform(Project p, string message)
+		{
+			Messages.Add(new Notification(p, message));
+		}
+
+		private void Inform(string message)
+		{
+			Inform(this, message);
+		}
 
         private void AddMacro(XmlNode xmacro)
         {
@@ -900,7 +1009,7 @@ namespace Projector
         private Project()
         { }
 
-        public class Warning
+        public class Notification
         {
             public string Message
             {
@@ -916,7 +1025,7 @@ namespace Projector
                 return (Project!=null ? Project.Name : "<root>")+ ": " + Message;
             }
 
-            public Warning(Project p, string message)
+            public Notification(Project p, string message)
             {
                 this.Project = p;
                 this.Message = message;
