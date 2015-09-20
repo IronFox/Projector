@@ -884,7 +884,7 @@ namespace Projector
                     if (SubSystem != null)
                         writer.Write("_"+ SubSystem.ToUpper()+ ";");
                     writer.Write("WIN32;");
-                    writer.Write("%(PreprocessorDefinitions);%(PreprocessorDefinitions)");
+                    writer.Write("%(PreprocessorDefinitions)");
                     writer.WriteLine("</PreprocessorDefinitions>");
                     writer.WriteLine("    <SDLCheck>true</SDLCheck>");
                     writer.WriteLine("    <RuntimeLibrary>MultiThreaded" + (config.IsRelease ? "" : "Debug") + "</RuntimeLibrary>");
