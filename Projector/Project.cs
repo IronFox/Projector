@@ -415,13 +415,17 @@ namespace Projector
 			public List<Tuple<Condition, DirectoryInfo>> Includes { get; private set; }
 			public List<Tuple<Condition, DirectoryInfo>> LinkDirectories { get; private set; }
 			public List<Tuple<Condition, string>> Link { get; private set; }
+            public bool NotReady { get { return Link == null; }  }
 
-
-			public override bool Equals(object obj)
+            public override bool Equals(object obj)
 			{
 				LibraryInclusion other = obj as LibraryInclusion;
 				if (other == null)
 					return false;
+                if (Link == null)
+                    return other.Link == null && Name == other.Name;
+                if (other.Link == null)
+                    return false;
 				if (Link.Count != other.Link.Count)
 					return false;
 				for (int i = 0; i < Link.Count; i++)
