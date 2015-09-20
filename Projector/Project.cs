@@ -410,7 +410,7 @@ namespace Projector
             {
                 
 //                return new FileInfo(Path.Combine(SourcePath.Directory.FullName, Name + ".vcxproj"));
-                return new FileInfo(Path.Combine(Path.Combine(SourcePath.Directory.FullName, Path.Combine(WorkSubDirectory, Name)), Name + ".vcxproj"));
+                return new FileInfo(Path.Combine(Path.Combine(SourcePath.Directory.FullName, Path.Combine(WorkSubDirectory, "Projects" , Name)), Name + ".vcxproj"));
 
 
             }
