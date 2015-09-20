@@ -195,6 +195,7 @@ namespace Projector
                     AddSourceFolder(tsource.Nodes.Add(s.root.name), s.root);
                 }
             }
+			tsolution.Expand();
 
 			foreach (var message in Project.Messages)
 			{
