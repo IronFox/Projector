@@ -208,8 +208,6 @@ namespace Projector
 					foreach (var s in project.IncludedLibraries)
 					{
 						TreeNode tlib = tlibs.Nodes.Add(s.Name);
-                        if (s.NotReady)
-                            continue;
 						if (s.Includes.Count > 0)
 						{
 							TreeNode tincs = tlib.Nodes.Add("Include");

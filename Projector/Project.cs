@@ -415,17 +415,14 @@ namespace Projector
 			public List<Tuple<Condition, DirectoryInfo>> Includes { get; private set; }
 			public List<Tuple<Condition, DirectoryInfo>> LinkDirectories { get; private set; }
 			public List<Tuple<Condition, string>> Link { get; private set; }
-            public bool NotReady { get { return Link == null; }  }
 
             public override bool Equals(object obj)
 			{
 				LibraryInclusion other = obj as LibraryInclusion;
 				if (other == null)
 					return false;
-                if (Link == null)
-                    return other.Link == null && Name == other.Name;
-                if (other.Link == null)
-                    return false;
+                if (Link.Count == 0)
+                    return other.Link.Count == 0 && Name == other.Name;
 				if (Link.Count != other.Link.Count)
 					return false;
 				for (int i = 0; i < Link.Count; i++)
@@ -538,7 +535,12 @@ namespace Projector
 					Name = xName.Value;
 
 
-				HashSet<string>	knownRoots = new HashSet<string>();
+                Includes = new List<Tuple<Condition, DirectoryInfo>>();
+                LinkDirectories = new List<Tuple<Condition, DirectoryInfo>>();
+                Link = new List<Tuple<Condition, string>>();
+
+
+                HashSet<string>	knownRoots = new HashSet<string>();
 
 				List<string>	missed = new List<string>();
 				XmlNodeList xRootHints = xLib.SelectNodes("rootRegistryHint");
@@ -571,35 +573,34 @@ namespace Projector
 							Root = info;
 					}
 				}
-				if (Root == null)
-				{
-					warn.Warn(Name+": None of the "+missed.Count+" root locations could be evaluated. Is this library installed on your machine?");
-				}
-				else
-				{ 
-					Includes = new List<Tuple<Condition,DirectoryInfo>>();
-					XmlNodeList xIncludes = xLib.SelectNodes("include");
-					foreach (XmlNode xInclude in xIncludes)
-					{
-						DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName,xInclude.InnerText));
-						if (dir.Exists)
-							Includes.Add(new Tuple<Condition,DirectoryInfo>(new Condition(xInclude),dir));
-						else
-							warn.Warn(Name+": Declared include directory '"+xInclude.InnerText+"' does not exist");
-					}
+                if (Root == null)
+                {
+                    warn.Warn(Name + ": None of the " + missed.Count + " root locations could be evaluated. Is this library installed on your machine?");
+                }
+                else
+                {
+                    XmlNodeList xIncludes = xLib.SelectNodes("include");
+                    foreach (XmlNode xInclude in xIncludes)
+                    {
+                        DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName, xInclude.InnerText));
+                        if (dir.Exists)
+                            Includes.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xInclude), dir));
+                        else
+                            warn.Warn(Name + ": Declared include directory '" + xInclude.InnerText + "' does not exist");
+                    }
 
-					LinkDirectories = new List<Tuple<Condition,DirectoryInfo>>();
-					XmlNodeList xLinkDirs = xLib.SelectNodes("linkDirectory");
-					foreach (XmlNode xLinkDir in xLinkDirs)
-					{
-						DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName, xLinkDir.InnerText));
-						if (dir.Exists)
-							LinkDirectories.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xLinkDir), dir));
-						else
-							warn.Warn(Name + ": Declared link directory '" + xLinkDir.InnerText + "' does not exist");
-					}
+                    XmlNodeList xLinkDirs = xLib.SelectNodes("linkDirectory");
+                    foreach (XmlNode xLinkDir in xLinkDirs)
+                    {
+                        DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName, xLinkDir.InnerText));
+                        if (dir.Exists)
+                            LinkDirectories.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xLinkDir), dir));
+                        else
+                            warn.Warn(Name + ": Declared link directory '" + xLinkDir.InnerText + "' does not exist");
+                    }
+                }
 
-					Link = new List<Tuple<Condition,string>>();
+                {
 					XmlNodeList xLink = xLib.SelectNodes("link");
 					foreach (XmlNode xl in xLink)
 					{
