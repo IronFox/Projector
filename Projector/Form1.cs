@@ -350,7 +350,7 @@ namespace Projector
 
 		private void BuildCurrentSolution(FileInfo outPath)
 		{
-            LogLine("Exporting to " + outPath.FullName);
+            LogLine("Writing solution to '" + outPath.FullName+"'");
 
             PersistentState.Toolset = toolSet.SelectedItem.ToString();
 
@@ -396,8 +396,10 @@ namespace Projector
 
             foreach (Project p in Project.All)
             {
+
                 var rs = p.SaveAs(toolset, configurations);
-                projects.Add(new Tuple<FileInfo, Guid, Project>(rs.Item1, rs.Item2, p));
+				LogLine("Project '" +p.Name+"' written to '"+rs.Item1.FullName+"'");
+				projects.Add(new Tuple<FileInfo, Guid, Project>(rs.Item1, rs.Item2, p));
             }
             StreamWriter writer = File.CreateText(outPath.FullName);
 
