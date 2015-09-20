@@ -64,7 +64,7 @@ namespace Projector
 				{ 
 					npcs.Connect(100);
 				}
-				catch (Exception e)
+				catch (Exception)
 				{ }
 			}
 

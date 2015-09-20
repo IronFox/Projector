@@ -160,12 +160,12 @@ namespace Projector
 					options.Add("primary");
 				if (project.PurelyImplicitlyLoaded)
 					options.Add("implicit");
-				string optionString = options.Count > 0 ? " ("+options.Implode(",")+")":"";
+				string optionString = options.Count > 0 ? " ("+options.Fuse(",")+")":"";
 
                 TreeNode tproject = tsolution.Nodes.Add(project.Name + optionString + " [" + project.Type+"]");
                 foreach (var r in project.References)
                 {
-                    TreeNode treference = tproject.Nodes.Add(r.project.Name + (r.includePath ? " (include)" : ""));
+                    TreeNode treference = tproject.Nodes.Add(r.Project.Name + (r.IncludePath ? " (include)" : ""));
                 }
 
 				if (project.Macros.Count() > 0)
@@ -201,6 +201,60 @@ namespace Projector
                     s.ScanFiles();
                     AddSourceFolder(tsource.Nodes.Add(s.root.name), s.root);
                 }
+
+				if (project.IncludedLibraries.Count() > 0)
+				{
+					TreeNode tlibs = tproject.Nodes.Add("Libraries");
+					foreach (var s in project.IncludedLibraries)
+					{
+						TreeNode tlib = tlibs.Nodes.Add(s.Name);
+						if (s.Includes.Count > 0)
+						{
+							TreeNode tincs = tlib.Nodes.Add("Include");
+							foreach (var inc in s.Includes)
+							{
+								if (inc.Item1.AlwaysTrue)
+									tincs.Nodes.Add(inc.Item2.FullName);
+								else
+								{ 
+									TreeNode tinc = tincs.Nodes.Add(inc.Item1.ToString());
+									tinc.Nodes.Add(inc.Item2.FullName);
+								}
+							}
+						}
+						if (s.LinkDirectories.Count > 0)
+						{
+							TreeNode tgroup = tlib.Nodes.Add("LinkDirectories");
+							foreach (var link in s.LinkDirectories)
+							{
+								if (link.Item1.AlwaysTrue)
+									tgroup.Nodes.Add(link.Item2.FullName);
+								else
+								{ 
+									TreeNode telement = tgroup.Nodes.Add(link.Item1.ToString());
+									telement.Nodes.Add(link.Item2.FullName);
+								}
+							}
+						}
+						if (s.Link.Count > 0)
+						{
+							TreeNode tgroup = tlib.Nodes.Add("Link");
+							foreach (var link in s.Link)
+							{
+								if (link.Item1.AlwaysTrue)
+									tgroup.Nodes.Add(link.Item2);
+								else
+								{ 
+									TreeNode telement = tgroup.Nodes.Add(link.Item1.ToString());
+									telement.Nodes.Add(link.Item2);
+								}
+							}
+						}
+					}
+
+
+
+				}
             }
 			tsolution.Expand();
 
@@ -316,17 +370,6 @@ namespace Projector
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
         {
 			Program.End();
-        }
-
-        private static string Relativate(DirectoryInfo dir, FileInfo file)
-        {
-            Uri udir = new Uri(dir.FullName + "\\");
-            Uri ufile = new Uri(file.FullName);
-            Uri urelative = udir.MakeRelativeUri(ufile);
-            string path = urelative.ToString();
-			path = path.Replace("%20", " ");
-			path = path.Replace('/', '\\');
-			return path;
         }
 
         private void buildToolStripMenuItem_Click(object sender, EventArgs e)

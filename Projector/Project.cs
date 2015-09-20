@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -397,10 +398,234 @@ namespace Projector
 		/// </summary>
         public struct Reference
         {
-            public Project project;
-            public bool includePath;
+            public readonly Project Project;
+			public readonly bool IncludePath;
 
+			public Reference(Project project, bool includePath)
+			{
+				Project = project;
+				IncludePath = includePath;
+			}
         }
+
+		public class LibraryInclusion
+		{
+			public string Name { get ; private set; }
+			public DirectoryInfo Root { get; private set;}
+			public List<Tuple<Condition, DirectoryInfo>> Includes { get; private set; }
+			public List<Tuple<Condition, DirectoryInfo>> LinkDirectories { get; private set; }
+			public List<Tuple<Condition, string>> Link { get; private set; }
+
+
+			public override bool Equals(object obj)
+			{
+				LibraryInclusion other = obj as LibraryInclusion;
+				if (other == null)
+					return false;
+				if (Link.Count != other.Link.Count)
+					return false;
+				for (int i = 0; i < Link.Count; i++)
+				{ 
+					var a = Link[i];
+					var b = other.Link[i];
+					if (a.Item1 != b.Item1)
+						return false;
+					if (a.Item2 != b.Item2)
+						return false;
+				}
+				return true;
+			}
+
+			public override int GetHashCode()
+			{
+				return Link.GetHashCode();
+			}
+
+			public struct Condition
+			{
+				public readonly string IfPlatform;
+				public readonly string IfConfig;
+
+				public Condition(string ifPlatform, string ifConfig)
+				{
+					IfPlatform = ifPlatform;
+					IfConfig = ifConfig;
+				}
+
+				public Condition(XmlNode node)
+				{
+					XmlNode ifPlatform = node.Attributes.GetNamedItem("if_platform");
+					if (ifPlatform != null && ifPlatform.Value.Length > 0)
+						IfPlatform = ifPlatform.Value;
+					else
+						IfPlatform = null;
+
+					XmlNode ifConfig = node.Attributes.GetNamedItem("if_config");
+					if (ifConfig != null && ifConfig.Value.Length > 0)
+						IfConfig = ifConfig.Value;
+					else
+						IfConfig = null;
+				}
+
+				public override bool Equals(object obj)
+				{
+					if (!(obj is Condition))
+						return false;
+					Condition other = (Condition)obj;
+					return other == this;
+				}
+
+				public override int GetHashCode()
+				{
+					int hash = 17;
+					if (IfPlatform != null)
+						hash = hash * 31 + IfPlatform.GetHashCode();
+					if (IfConfig != null)
+						hash = hash * 31 + IfConfig.GetHashCode();
+					return hash;
+				}
+
+				public static bool operator==(Condition a, Condition b)
+				{
+					return a.IfPlatform == b.IfPlatform && a.IfConfig == b.IfConfig;
+				}
+				public static bool operator !=(Condition a, Condition b)
+				{
+					return a.IfPlatform != b.IfPlatform || a.IfConfig != b.IfConfig;
+				}
+
+				public override string ToString()
+				{
+					return "if ("+(IfPlatform??"")+","+(IfConfig??"")+")";
+				}
+
+				public bool AlwaysTrue
+				{
+					get {return IfPlatform == null && IfConfig == null;}
+				}
+
+				public bool Excludes(Condition other)
+				{
+					bool differentA = IfPlatform != null && other.IfPlatform != null && IfPlatform != other.IfPlatform;
+					bool differentB = IfConfig != null && other.IfConfig != null && IfConfig != other.IfConfig;
+					return differentA || differentB;
+				}
+
+				public bool Test(Configuration config)
+				{
+					return (IfPlatform == null || IfPlatform == config.Platform.ToString())
+							&&
+							(IfConfig == null || IfConfig == config.Name);
+				}
+
+			}
+
+
+
+			public LibraryInclusion(XmlNode xLib, Project warn)
+			{
+				XmlNode xName = xLib.Attributes.GetNamedItem("name");
+				if (xName == null)
+				{
+					warn.Warn("<includeLibrary> lacks 'name' attribute");
+					Name = "<Unnamed Library>";
+				}
+				else
+					Name = xName.Value;
+
+
+				HashSet<string>	knownRoots = new HashSet<string>();
+
+				List<string>	missed = new List<string>();
+				XmlNodeList xRootHints = xLib.SelectNodes("rootRegistryHint");
+				foreach (XmlNode hint in xRootHints)
+				{
+					string fullKey = hint.InnerText;
+					int lastSlash = fullKey.LastIndexOf('\\');
+					if (lastSlash == -1)
+					{
+						warn.Warn("<includeLibrary>/<rootRegistryHint>: '"+fullKey+"' is not a valid registry value");
+						continue;
+					}
+					string key = fullKey.Substring(0,lastSlash);
+					string valueName = fullKey.Substring(lastSlash+1);
+
+					object result = Registry.GetValue(key,valueName,null);
+					if (result == null)
+					{
+						missed.Add(fullKey);
+						continue;
+					}
+					DirectoryInfo info = new DirectoryInfo(result.ToString());
+					if (!info.Exists)
+					{
+						warn.Warn(Name+": The directory '"+result.ToString()+" does not exist");
+					}
+					else
+					{
+						if (Root == null)
+							Root = info;
+					}
+				}
+				if (Root == null)
+				{
+					warn.Warn(Name+": None of the "+missed.Count+" root locations could be evaluated. Is this library installed on your machine?");
+				}
+				else
+				{ 
+					Includes = new List<Tuple<Condition,DirectoryInfo>>();
+					XmlNodeList xIncludes = xLib.SelectNodes("include");
+					foreach (XmlNode xInclude in xIncludes)
+					{
+						DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName,xInclude.InnerText));
+						if (dir.Exists)
+							Includes.Add(new Tuple<Condition,DirectoryInfo>(new Condition(xInclude),dir));
+						else
+							warn.Warn(Name+": Declared include directory '"+xInclude.InnerText+"' does not exist");
+					}
+
+					LinkDirectories = new List<Tuple<Condition,DirectoryInfo>>();
+					XmlNodeList xLinkDirs = xLib.SelectNodes("linkDirectory");
+					foreach (XmlNode xLinkDir in xLinkDirs)
+					{
+						DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName, xLinkDir.InnerText));
+						if (dir.Exists)
+							LinkDirectories.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xLinkDir), dir));
+						else
+							warn.Warn(Name + ": Declared link directory '" + xLinkDir.InnerText + "' does not exist");
+					}
+
+					Link = new List<Tuple<Condition,string>>();
+					XmlNodeList xLink = xLib.SelectNodes("link");
+					foreach (XmlNode xl in xLink)
+					{
+						Condition condition = new Condition(xl);
+						bool okayDoAdd = true;
+						foreach (var dir in LinkDirectories)
+						{
+							if (condition.Excludes(dir.Item1))
+								continue;
+
+							FileInfo file = new FileInfo(Path.Combine(dir.Item2.FullName, xl.InnerText));
+							if (!file.Exists)
+							{
+								okayDoAdd = false;
+								warn.Warn(Name + ": Declared library '" + xl.InnerText + "' could not be located in context '" + dir.Item2.FullName + "'. Skipping");
+								break;
+							}
+
+						}
+						if (okayDoAdd)
+							Link.Add(new Tuple<Condition, string>(condition, xl.InnerText));
+					}
+
+				}
+
+			}
+			
+
+		}
+
 
 		public struct Command
 		{
@@ -419,6 +644,10 @@ namespace Projector
 		public static Project Primary { get; private set; }
 
 
+		/// <summary>
+		/// Retrieves all external libraries included by the local project
+		/// </summary>
+		public IEnumerable<LibraryInclusion> IncludedLibraries { get { return includedLibraries; } }
 		/// <summary>
 		/// Retrieves all locally referenced projects. May be empty, but never null
 		/// </summary>
@@ -478,6 +707,7 @@ namespace Projector
         private static Queue<Project> unloaded = new Queue<Project>();
         //private XmlNode xproject;
 
+		List<LibraryInclusion> includedLibraries = new List<LibraryInclusion>();
 		List<FileInfo> customManifests = new List<FileInfo>();
 		List<Command> preBuildCommands = new List<Command>();
         List<Source> sources = new List<Source>();
@@ -599,20 +829,33 @@ namespace Projector
 					}
 
 
-                    string include = "";
-                    foreach (var r in references)
+					List<string> includes = new List<string>(), libPaths = new List<string>();
+					foreach (var r in references)
                     {
-                        if (!r.includePath)
+                        if (!r.IncludePath)
                             continue;
-                        foreach (var source in r.project.sources)
+                        foreach (var source in r.Project.sources)
                         {
 
-                            include += source.path.FullName;
-                            include += ";";
+                            includes.Add(source.path.FullName);
                         }
                     }
-                    writer.WriteLine("<IncludePath>" + include + "$(IncludePath)</IncludePath>");
-                    //< LibraryPath > h:\testlib; D:\Program Files (x86)\OpenAL 1.1 SDK\libs\Win32;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86);$(NETFXKitsDir)Lib\um\x86 </ LibraryPath >
+
+					foreach (var lib in includedLibraries)
+					{
+						foreach (var inc in lib.Includes)
+						{
+							if (inc.Item1.Test(config))
+								includes.Add(inc.Item2.FullName);
+						}
+						foreach (var linkDir in lib.LinkDirectories)
+							if (linkDir.Item1.Test(config))
+								libPaths.Add(linkDir.Item2.FullName);
+					}
+					if (includes.Count > 0)
+						writer.WriteLine("  <IncludePath>" + includes.Fuse(";") + ";$(IncludePath)</IncludePath>");
+					if (libPaths.Count > 0)
+						writer.WriteLine("  <LibraryPath>" + libPaths.Fuse(";")+ ";$(LibraryPath)</LibraryPath>");
                     writer.WriteLine("</PropertyGroup>");
                 }
                 foreach (Configuration config in configurations)
@@ -655,6 +898,17 @@ namespace Projector
                     writer.WriteLine("    <GenerateDebugInformation>" + !config.IsRelease + "</GenerateDebugInformation>");
                     if (CustomStackSize != -1)
                         writer.WriteLine("    <AdditionalOptions>/STACK:" + CustomStackSize + " %(AdditionalOptions)</AdditionalOptions>");
+
+					List<string> libs = new List<string>();
+					foreach (var lib in includedLibraries)
+					{
+						foreach (var link in lib.Link)
+							if (link.Item1.Test(config))
+								libs.Add(link.Item2);
+					}
+					if (libs.Count > 0)
+						writer.WriteLine("    <AdditionalDependencies>"+libs.Fuse(";")+";%(AdditionalDependencies)</AdditionalDependencies>");
+
                     writer.WriteLine("  </Link>");
 					if (customManifests.Count > 0)
                     {
@@ -693,16 +947,17 @@ namespace Projector
                 }
                 foreach (Source source in sources)
                 {
+					source.ScanFiles();
 					source.WriteProjectGroup(writer);
                 }
 
                 writer.WriteLine("<ItemGroup>");
                 foreach (var r in references)
                 {
-                    if (r.project.SourcePath != null)
+                    if (r.Project.SourcePath != null)
                     {
-                        writer.WriteLine("<ProjectReference Include=\"" + r.project.OutFile.FullName + "\">");
-                        writer.WriteLine("<Project>{" + r.project.LocalGuid + "}</Project>");
+                        writer.WriteLine("<ProjectReference Include=\"" + r.Project.OutFile.FullName + "\">");
+                        writer.WriteLine("<Project>{" + r.Project.LocalGuid + "}</Project>");
                         writer.WriteLine("</ProjectReference>");
                     }
                 }
@@ -831,6 +1086,9 @@ namespace Projector
 						have.Add(m.FullName);
 						customManifests.Add(m);
 					}
+				foreach (var lib in p.IncludedLibraries)
+					if (!includedLibraries.Contains(lib))
+						includedLibraries.Add(lib);
                 preBuildCommands.AddRange(p.preBuildCommands);
                 sources.AddRange(p.sources);
                 foreach (var pair in p.macros)
@@ -911,6 +1169,16 @@ namespace Projector
 
                 preBuildCommands.Add(cmd);
             }
+
+			XmlNodeList xLibraries = xproject.SelectNodes("includeLibrary");
+			foreach (XmlNode xLib in xLibraries)
+			{
+				LibraryInclusion lib = new LibraryInclusion(xLib,this);
+				if (!includedLibraries.Contains(lib))
+					includedLibraries.Add(lib);
+			}
+
+
             XmlNodeList xmacros = xproject.SelectNodes("macro");
             foreach (XmlNode xmacro in xmacros)
             {
@@ -1072,9 +1340,10 @@ namespace Projector
         private void AddReference(XmlNode xreference)
         {
             XmlNode xinclude = xreference.Attributes.GetNamedItem("includePath");
-            Reference re;
-            re.includePath = xinclude != null ? xinclude.Value == "true" : false;
-            re.project = Add(xreference, SourcePath,this);
+            Reference re = new Reference(
+									Add(xreference, SourcePath,this),
+									xinclude != null ? xinclude.Value == "true" : false
+									);
             references.Add(re);
         }
 

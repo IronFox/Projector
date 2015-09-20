@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -9,7 +10,21 @@ namespace Projector
 {
 	public static partial class Extensions
 	{
-		public static string Implode<T>(this IEnumerable<T> items, string glue)
+		public static string RelativateTo(this FileInfo file, DirectoryInfo dir)
+		{
+			Uri udir = new Uri(dir.FullName + "\\");
+			Uri ufile = new Uri(file.FullName);
+			Uri urelative = udir.MakeRelativeUri(ufile);
+			string path = urelative.ToString();
+			path = path.Replace("%20", " ");
+			if (Path.DirectorySeparatorChar != '/')
+				path = path.Replace('/', Path.DirectorySeparatorChar);
+			return path;
+		}
+
+
+
+		public static string Fuse<T>(this IEnumerable<T> items, string glue)
 		{
 			StringBuilder builder = new StringBuilder();
 			bool first = true;
