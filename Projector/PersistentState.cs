@@ -185,12 +185,16 @@ namespace Projector
             return null;
         }
 
-        public static void SetOutPathFor(FileInfo solutionFile, FileInfo fileInfo)
+        public static void SetOutPathFor(FileInfo solutionSourceFile, FileInfo solutionOutFile)
         {
-			if (outPaths.ContainsKey(solutionFile.FullName))
-				outPaths[solutionFile.FullName] = fileInfo;
+			if (outPaths.ContainsKey(solutionSourceFile.FullName))
+			{
+				if (outPaths[solutionSourceFile.FullName] == solutionOutFile)
+					return;
+				outPaths[solutionSourceFile.FullName] = solutionOutFile;
+			}
 			else
-				outPaths.Add(solutionFile.FullName, fileInfo);
+				outPaths.Add(solutionSourceFile.FullName, solutionOutFile);
             Backup();
         }
     }

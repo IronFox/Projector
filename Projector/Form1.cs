@@ -413,6 +413,11 @@ namespace Projector
             writer.WriteLine("EndGlobal");
             writer.Close();
             LogLine("Export done.");
+
+
+			PersistentState.SetOutPathFor(solution.File,outPath);
+
+
 			openGeneratedSolutionToolStripMenuItem.Enabled = true;
 			openGeneratedSolutionButton.Enabled = true;
         }
@@ -459,6 +464,11 @@ namespace Projector
 		{
             FileInfo slnPath = PersistentState.GetOutPathFor(solution.File);
 			if (slnPath == null)
+			{
+				LogLine("Error: Received null while trying to retrieve sln location for '"+solution+"'. This should never happen...");
+				return;
+			}
+			if (!slnPath.Exists)
 			{
 				LogLine("Error: '"+slnPath.FullName+"' does not exist");
 				return;
