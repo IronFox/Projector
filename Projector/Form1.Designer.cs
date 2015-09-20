@@ -41,6 +41,8 @@
 			this.solutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.buildToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.buildAtToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
+			this.openGeneratedSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.openSolutionDialog = new System.Windows.Forms.OpenFileDialog();
 			this.openProjectDialog = new System.Windows.Forms.OpenFileDialog();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -48,15 +50,13 @@
 			this.log = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
 			this.panel1 = new System.Windows.Forms.Panel();
+			this.openGeneratedSolutionButton = new System.Windows.Forms.Button();
+			this.buildSolutionButton = new System.Windows.Forms.Button();
 			this.label1 = new System.Windows.Forms.Label();
 			this.toolSet = new System.Windows.Forms.ComboBox();
 			this.chooseDestination = new System.Windows.Forms.SaveFileDialog();
 			this.statusStrip = new System.Windows.Forms.StatusStrip();
 			this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-			this.buildSolutionButton = new System.Windows.Forms.Button();
-			this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
-			this.openGeneratedSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.openGeneratedSolutionButton = new System.Windows.Forms.Button();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
@@ -160,6 +160,19 @@
 			this.buildAtToolStripMenuItem.Text = "Build at...";
 			this.buildAtToolStripMenuItem.Click += new System.EventHandler(this.buildAtToolStripMenuItem_Click);
 			// 
+			// toolStripMenuItem4
+			// 
+			this.toolStripMenuItem4.Name = "toolStripMenuItem4";
+			this.toolStripMenuItem4.Size = new System.Drawing.Size(204, 6);
+			// 
+			// openGeneratedSolutionToolStripMenuItem
+			// 
+			this.openGeneratedSolutionToolStripMenuItem.Enabled = false;
+			this.openGeneratedSolutionToolStripMenuItem.Name = "openGeneratedSolutionToolStripMenuItem";
+			this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
+			this.openGeneratedSolutionToolStripMenuItem.Text = "Open Generated Solution";
+			this.openGeneratedSolutionToolStripMenuItem.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
+			// 
 			// openSolutionDialog
 			// 
 			this.openSolutionDialog.DefaultExt = "solution";
@@ -197,8 +210,10 @@
 			// solutionView
 			// 
 			this.solutionView.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.solutionView.FullRowSelect = true;
 			this.solutionView.Location = new System.Drawing.Point(0, 0);
 			this.solutionView.Name = "solutionView";
+			this.solutionView.ShowLines = false;
 			this.solutionView.Size = new System.Drawing.Size(564, 261);
 			this.solutionView.TabIndex = 2;
 			// 
@@ -237,6 +252,30 @@
 			this.panel1.Name = "panel1";
 			this.panel1.Size = new System.Drawing.Size(577, 23);
 			this.panel1.TabIndex = 4;
+			// 
+			// openGeneratedSolutionButton
+			// 
+			this.openGeneratedSolutionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.openGeneratedSolutionButton.Enabled = false;
+			this.openGeneratedSolutionButton.Location = new System.Drawing.Point(432, -1);
+			this.openGeneratedSolutionButton.Name = "openGeneratedSolutionButton";
+			this.openGeneratedSolutionButton.Size = new System.Drawing.Size(132, 23);
+			this.openGeneratedSolutionButton.TabIndex = 3;
+			this.openGeneratedSolutionButton.Text = "Open Generated";
+			this.openGeneratedSolutionButton.UseVisualStyleBackColor = true;
+			this.openGeneratedSolutionButton.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
+			// 
+			// buildSolutionButton
+			// 
+			this.buildSolutionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.buildSolutionButton.Enabled = false;
+			this.buildSolutionButton.Location = new System.Drawing.Point(300, -1);
+			this.buildSolutionButton.Name = "buildSolutionButton";
+			this.buildSolutionButton.Size = new System.Drawing.Size(132, 23);
+			this.buildSolutionButton.TabIndex = 2;
+			this.buildSolutionButton.Text = "Build Solution";
+			this.buildSolutionButton.UseVisualStyleBackColor = true;
+			this.buildSolutionButton.Click += new System.EventHandler(this.buildToolStripMenuItem_Click);
 			// 
 			// label1
 			// 
@@ -279,43 +318,6 @@
 			this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
 			this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 17);
 			this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
-			// 
-			// buildSolutionButton
-			// 
-			this.buildSolutionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buildSolutionButton.Enabled = false;
-			this.buildSolutionButton.Location = new System.Drawing.Point(300, -1);
-			this.buildSolutionButton.Name = "buildSolutionButton";
-			this.buildSolutionButton.Size = new System.Drawing.Size(132, 23);
-			this.buildSolutionButton.TabIndex = 2;
-			this.buildSolutionButton.Text = "Build Solution";
-			this.buildSolutionButton.UseVisualStyleBackColor = true;
-			this.buildSolutionButton.Click += new System.EventHandler(this.buildToolStripMenuItem_Click);
-			// 
-			// toolStripMenuItem4
-			// 
-			this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-			this.toolStripMenuItem4.Size = new System.Drawing.Size(204, 6);
-			// 
-			// openGeneratedSolutionToolStripMenuItem
-			// 
-			this.openGeneratedSolutionToolStripMenuItem.Enabled = false;
-			this.openGeneratedSolutionToolStripMenuItem.Name = "openGeneratedSolutionToolStripMenuItem";
-			this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
-			this.openGeneratedSolutionToolStripMenuItem.Text = "Open Generated Solution";
-			this.openGeneratedSolutionToolStripMenuItem.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
-			// 
-			// openGeneratedSolutionButton
-			// 
-			this.openGeneratedSolutionButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.openGeneratedSolutionButton.Enabled = false;
-			this.openGeneratedSolutionButton.Location = new System.Drawing.Point(432, -1);
-			this.openGeneratedSolutionButton.Name = "openGeneratedSolutionButton";
-			this.openGeneratedSolutionButton.Size = new System.Drawing.Size(132, 23);
-			this.openGeneratedSolutionButton.TabIndex = 3;
-			this.openGeneratedSolutionButton.Text = "Open Generated";
-			this.openGeneratedSolutionButton.UseVisualStyleBackColor = true;
-			this.openGeneratedSolutionButton.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
 			// 
 			// ProjectView
 			// 
