@@ -135,9 +135,9 @@ namespace Projector
             }
 
             Project p;
-            while ((p = Project.GetNextUnloaded()) != null)
+            while ((p = Project.GetNextToLoad()) != null)
             {
-                if (!p.HasPath && !p.FillPath(file))
+                if (!p.HasSource && !p.AutoConfigureSourcePath(file))
                     continue;
 
                 string filename = p.SourcePath.FullName;
@@ -152,10 +152,17 @@ namespace Projector
 
 
             solutionView.Nodes.Clear();
-            TreeNode tsolution = solutionView.Nodes.Add(solution.Name);
+            TreeNode tsolution = solutionView.Nodes.Add(solution.ToString());
             foreach (Project project in Project.All)
             {
-                TreeNode tproject = tsolution.Nodes.Add(project.Name + (project == Project.Primary ? " (primary)" : "") + " [" + project.Type+"]");
+				List<String>	options = new List<string>();
+				if (project == Project.Primary)
+					options.Add("primary");
+				if (project.PurelyImplicitlyLoaded)
+					options.Add("implicit");
+				string optionString = options.Count > 0 ? " ("+options.Implode(",")+")":"";
+
+                TreeNode tproject = tsolution.Nodes.Add(project.Name + optionString + " [" + project.Type+"]");
                 foreach (var r in project.References)
                 {
                     TreeNode treference = tproject.Nodes.Add(r.project.Name + (r.includePath ? " (include)" : ""));
@@ -350,16 +357,41 @@ namespace Projector
             DirectoryInfo dir = outPath.Directory;
             //DirectoryInfo projectDir = Directory.CreateDirectory(Path.Combine(dir.FullName, ".projects"));
             List<Tuple<FileInfo, Guid, Project>> projects = new List<Tuple<FileInfo, Guid, Project>>();
-            string toolset = this.toolSet.SelectedItem.ToString();
-            toolset = toolset.Substring(0, toolset.IndexOf(".0"));
+			int toolset;
+			{ 
+				string toolsetStr = this.toolSet.SelectedItem.ToString();
+				toolsetStr = toolsetStr.Substring(0, toolsetStr.IndexOf(".0"));
+				if (!int.TryParse(toolsetStr,out toolset))
+				{
+					LogLine("Internal Error: Unable to decode toolset-version from specified toolset '"+this.toolSet.SelectedItem+"'");
+					return;
+				}
+			}
 
-            Configuration[] configurations = new Configuration[]
-            {
-                new Configuration() {name = "Debug", platform = "Win32", isRelease = false },
-                new Configuration() {name = "Debug", platform = "x64", isRelease = false },
-                new Configuration() {name = "Release", platform = "Win32", isRelease = true },
-                new Configuration() {name = "Release", platform = "x64", isRelease = true },
-            };
+            List<Configuration> configurations = new List<Configuration>();
+
+			{
+				Platform[] platforms = new Platform[]{
+					Platform.Win32,
+					Platform.x64
+				};
+				Tuple<string,bool>[] names = new Tuple<string,bool>[]
+				{
+					new Tuple<string,bool>("Debug", false),
+					new Tuple<string,bool>("Release", true)
+				};
+
+
+				foreach (var p in platforms)
+					foreach (var n in names)
+						configurations.Add(new Configuration(n.Item1,p,n.Item2));
+			}
+			//{
+			//	new Configuration() {Name = "Debug", Platform = "Win32", IsRelease = false },
+			//	new Configuration() {Name = "Debug", Platform = "x64", IsRelease = false },
+			//	new Configuration() {Name = "Release", Platform = "Win32", IsRelease = true },
+			//	new Configuration() {Name = "Release", Platform = "x64", IsRelease = true },
+			//};
 
 
             foreach (Project p in Project.All)
@@ -384,7 +416,7 @@ namespace Projector
             writer.WriteLine("Global");
             writer.WriteLine("\tGlobalSection(SolutionConfigurationPlatforms) = preSolution");
             foreach (var config in configurations)
-                writer.WriteLine("\t\t"+config.name+"|"+config.platform+" = "+config.name+"|"+config.platform+"");
+                writer.WriteLine("\t\t"+config+" = "+config+"");
             writer.WriteLine("\tEndGlobalSection");
             writer.WriteLine("\tGlobalSection(ProjectConfigurationPlatforms) = postSolution");
             foreach (var tuple in projects)
@@ -392,8 +424,8 @@ namespace Projector
                 Guid guid = tuple.Item2;
 				foreach (var config in configurations)
 				{
-					writer.WriteLine("\t\t{" + guid + "}." + config.name + "|" + config.platform + ".ActiveCfg = " + config.name + "|" + config.platform);
-					writer.WriteLine("\t\t{" + guid + "}." + config.name + "|" + config.platform + ".Build.0 = " + config.name + "|" + config.platform);
+					writer.WriteLine("\t\t{" + guid + "}." + config + ".ActiveCfg = " + config);
+					writer.WriteLine("\t\t{" + guid + "}." + config + ".Build.0 = " + config);
 
 				}
 				//	writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.ActiveCfg = Debug|Win32");
