@@ -205,6 +205,8 @@ namespace Projector
 				TreeNode ttarget = tproject.Nodes.Add("TargetNames");
 				foreach (Platform platform in Enum.GetValues(typeof(Platform)))
 				{
+					if (platform == Platform.None)
+						continue;
 					bool isCustom;
 					string t = project.GetReleaseTargetNameFor(platform, out isCustom);
 					ttarget.Nodes.Add(platform+": \""+t+"\""+(isCustom ? " (custom)":""));

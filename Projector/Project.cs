@@ -18,7 +18,7 @@ namespace Projector
 	/// </summary>
 	public enum Platform
 	{
-		//Win32,
+		None,
 		x32,
 		x64,
 		ARM
@@ -73,28 +73,33 @@ namespace Projector
 	public struct Condition
 	{
 		/// <summary>
-		/// Platform target to be matched. null if not enabled (always true)
+		/// Platform target to be matched. Platform.None if not enabled (always true)
 		/// </summary>
-		public readonly string IfPlatform;
+		public readonly Platform IfPlatform;
 		/// <summary>
 		/// Configuration name target to be matched. null if not enabled (always true)
 		/// </summary>
 		public readonly string IfConfig;
 
-		public Condition(string ifPlatform, string ifConfig)
+		public Condition(Platform ifPlatform, string ifConfig)
 		{
 			IfPlatform = ifPlatform;
 			IfConfig = ifConfig;
 		}
 
-		public Condition(XmlNode node)
+		public Condition(XmlNode node, Project warnWhom)
 		{
 			XmlNode ifPlatform = node.Attributes.GetNamedItem("if_platform");
-			if (ifPlatform != null && ifPlatform.Value.Length > 0)
-				IfPlatform = ifPlatform.Value;
-			else
-				IfPlatform = null;
-
+			try
+			{
+				IfPlatform = (Platform)Enum.Parse(typeof(Platform),ifPlatform.Value);
+			}
+			catch
+			{
+				if (ifPlatform != null && ifPlatform.Value.Length > 0)
+					warnWhom.Warn("Unable to decode condition platform '"+ifPlatform.Value+"'. Supported values are ARM, x32, and x64");
+				IfPlatform = Platform.None;
+			}
 			XmlNode ifConfig = node.Attributes.GetNamedItem("if_config");
 			if (ifConfig != null && ifConfig.Value.Length > 0)
 				IfConfig = ifConfig.Value;
@@ -131,7 +136,7 @@ namespace Projector
 
 		public override string ToString()
 		{
-			return "if (" + (IfPlatform ?? "") + "," + (IfConfig ?? "") + ")";
+			return "if (" + (IfPlatform != Platform.None ? IfPlatform.ToString(): "") + "," + (IfConfig ?? "") + ")";
 		}
 
 		public bool AlwaysTrue
@@ -148,7 +153,7 @@ namespace Projector
 
 		public bool Test(Configuration config)
 		{
-			return (IfPlatform == null || IfPlatform == config.Platform.ToString())
+			return (IfPlatform == Platform.None || IfPlatform == config.Platform)
 					&&
 					(IfConfig == null || IfConfig == config.Name);
 		}
@@ -165,7 +170,7 @@ namespace Projector
 	/// <summary>
 	/// Loaded project. Each .project file must be loaded only once
 	/// </summary>
-    internal class Project
+    public class Project
     {
 
 		/// <summary>
@@ -605,7 +610,7 @@ namespace Projector
                     {
                         DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName, xInclude.InnerText));
                         if (dir.Exists)
-                            Includes.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xInclude), dir));
+                            Includes.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xInclude,warn), dir));
                         else
                             warn.Warn(Name + ": Declared include directory '" + xInclude.InnerText + "' does not exist");
                     }
@@ -615,7 +620,7 @@ namespace Projector
                     {
                         DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName, xLinkDir.InnerText));
                         if (dir.Exists)
-                            LinkDirectories.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xLinkDir), dir));
+							LinkDirectories.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xLinkDir, warn), dir));
                         else
                             warn.Warn(Name + ": Declared link directory '" + xLinkDir.InnerText + "' does not exist");
                     }
@@ -625,7 +630,7 @@ namespace Projector
 					XmlNodeList xLink = xLib.SelectNodes("link");
 					foreach (XmlNode xl in xLink)
 					{
-						Condition condition = new Condition(xl);
+						Condition condition = new Condition(xl, warn);
 						bool okayDoAdd = true;
 						foreach (var dir in LinkDirectories)
 						{
@@ -1390,7 +1395,7 @@ namespace Projector
             Warnings.Add(new Notification(p, message));
         }
 
-        private void Warn(string message)
+        public void Warn(string message)
         {
             Warn(this, message);
         }
