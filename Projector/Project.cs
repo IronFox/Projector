@@ -18,7 +18,8 @@ namespace Projector
 	/// </summary>
 	public enum Platform
 	{
-		Win32,
+		//Win32,
+		x32,
 		x64,
 		ARM
 	}
@@ -49,13 +50,112 @@ namespace Projector
 			IsRelease = isRelease;
 		}
 
+		public static string TranslateForVisualStudio(Platform p)
+		{
+			return p == Platform.x32 ? "Win32" : p.ToString();
+		}
+
+		public static bool DefaultIncludePlatformInReleaseName(Platform p)
+		{
+			return p != Platform.x64;
+		}
 
 		public override string ToString()
 		{
-			return Name+"|"+Platform;
+			return Name+"|"+TranslateForVisualStudio(Platform);
 		}
         
     }
+
+	/// <summary>
+	/// Condition for certain operations declared by platform-name and config-name. If both are set, they are combined via and
+	/// </summary>
+	public struct Condition
+	{
+		/// <summary>
+		/// Platform target to be matched. null if not enabled (always true)
+		/// </summary>
+		public readonly string IfPlatform;
+		/// <summary>
+		/// Configuration name target to be matched. null if not enabled (always true)
+		/// </summary>
+		public readonly string IfConfig;
+
+		public Condition(string ifPlatform, string ifConfig)
+		{
+			IfPlatform = ifPlatform;
+			IfConfig = ifConfig;
+		}
+
+		public Condition(XmlNode node)
+		{
+			XmlNode ifPlatform = node.Attributes.GetNamedItem("if_platform");
+			if (ifPlatform != null && ifPlatform.Value.Length > 0)
+				IfPlatform = ifPlatform.Value;
+			else
+				IfPlatform = null;
+
+			XmlNode ifConfig = node.Attributes.GetNamedItem("if_config");
+			if (ifConfig != null && ifConfig.Value.Length > 0)
+				IfConfig = ifConfig.Value;
+			else
+				IfConfig = null;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (!(obj is Condition))
+				return false;
+			Condition other = (Condition)obj;
+			return other == this;
+		}
+
+		public override int GetHashCode()
+		{
+			int hash = 17;
+			if (IfPlatform != null)
+				hash = hash * 31 + IfPlatform.GetHashCode();
+			if (IfConfig != null)
+				hash = hash * 31 + IfConfig.GetHashCode();
+			return hash;
+		}
+
+		public static bool operator ==(Condition a, Condition b)
+		{
+			return a.IfPlatform == b.IfPlatform && a.IfConfig == b.IfConfig;
+		}
+		public static bool operator !=(Condition a, Condition b)
+		{
+			return a.IfPlatform != b.IfPlatform || a.IfConfig != b.IfConfig;
+		}
+
+		public override string ToString()
+		{
+			return "if (" + (IfPlatform ?? "") + "," + (IfConfig ?? "") + ")";
+		}
+
+		public bool AlwaysTrue
+		{
+			get { return IfPlatform == null && IfConfig == null; }
+		}
+
+		public bool Excludes(Condition other)
+		{
+			bool differentA = IfPlatform != null && other.IfPlatform != null && IfPlatform != other.IfPlatform;
+			bool differentB = IfConfig != null && other.IfConfig != null && IfConfig != other.IfConfig;
+			return differentA || differentB;
+		}
+
+		public bool Test(Configuration config)
+		{
+			return (IfPlatform == null || IfPlatform == config.Platform.ToString())
+					&&
+					(IfConfig == null || IfConfig == config.Name);
+		}
+
+	}
+
+
 
 
 	public static partial class Extensions
@@ -442,85 +542,6 @@ namespace Projector
 				return Link.GetHashCode();
 			}
 
-			public struct Condition
-			{
-				public readonly string IfPlatform;
-				public readonly string IfConfig;
-
-				public Condition(string ifPlatform, string ifConfig)
-				{
-					IfPlatform = ifPlatform;
-					IfConfig = ifConfig;
-				}
-
-				public Condition(XmlNode node)
-				{
-					XmlNode ifPlatform = node.Attributes.GetNamedItem("if_platform");
-					if (ifPlatform != null && ifPlatform.Value.Length > 0)
-						IfPlatform = ifPlatform.Value;
-					else
-						IfPlatform = null;
-
-					XmlNode ifConfig = node.Attributes.GetNamedItem("if_config");
-					if (ifConfig != null && ifConfig.Value.Length > 0)
-						IfConfig = ifConfig.Value;
-					else
-						IfConfig = null;
-				}
-
-				public override bool Equals(object obj)
-				{
-					if (!(obj is Condition))
-						return false;
-					Condition other = (Condition)obj;
-					return other == this;
-				}
-
-				public override int GetHashCode()
-				{
-					int hash = 17;
-					if (IfPlatform != null)
-						hash = hash * 31 + IfPlatform.GetHashCode();
-					if (IfConfig != null)
-						hash = hash * 31 + IfConfig.GetHashCode();
-					return hash;
-				}
-
-				public static bool operator==(Condition a, Condition b)
-				{
-					return a.IfPlatform == b.IfPlatform && a.IfConfig == b.IfConfig;
-				}
-				public static bool operator !=(Condition a, Condition b)
-				{
-					return a.IfPlatform != b.IfPlatform || a.IfConfig != b.IfConfig;
-				}
-
-				public override string ToString()
-				{
-					return "if ("+(IfPlatform??"")+","+(IfConfig??"")+")";
-				}
-
-				public bool AlwaysTrue
-				{
-					get {return IfPlatform == null && IfConfig == null;}
-				}
-
-				public bool Excludes(Condition other)
-				{
-					bool differentA = IfPlatform != null && other.IfPlatform != null && IfPlatform != other.IfPlatform;
-					bool differentB = IfConfig != null && other.IfConfig != null && IfConfig != other.IfConfig;
-					return differentA || differentB;
-				}
-
-				public bool Test(Configuration config)
-				{
-					return (IfPlatform == null || IfPlatform == config.Platform.ToString())
-							&&
-							(IfConfig == null || IfConfig == config.Name);
-				}
-
-			}
-
 
 
 			public LibraryInclusion(XmlNode xLib, Project warn)
@@ -648,7 +669,10 @@ namespace Projector
 		/// </summary>
 		public static Project Primary { get; private set; }
 
-
+		/// <summary>
+		/// Fetches all conditioned build target names.
+		/// </summary>
+		public IEnumerable<KeyValuePair<Platform, string>> CustomTargetNames { get {  return customTargetNames; } }
 		/// <summary>
 		/// Retrieves all external libraries included by the local project
 		/// </summary>
@@ -718,6 +742,7 @@ namespace Projector
         List<Source> sources = new List<Source>();
         Dictionary<string, string> macros = new Dictionary<string, string>();
         List<Reference> references = new List<Reference>();
+		Dictionary<Platform,string>customTargetNames = new Dictionary<Platform,string>();
 		int customStackSize = -1;
         int roundTrip = 0;
 
@@ -792,7 +817,7 @@ namespace Projector
                 {
                     writer.WriteLine("<ProjectConfiguration Include=\"" + config + "\">");
                     writer.WriteLine("  <Configuration>" + config.Name + "</Configuration>");
-                    writer.WriteLine("  <Platform>" + config.Platform + "</Platform>");
+                    writer.WriteLine("  <Platform>" + Configuration.TranslateForVisualStudio(config.Platform) + "</Platform>");
                     writer.WriteLine("</ProjectConfiguration>");
                 }
                 writer.WriteLine("</ItemGroup>");
@@ -830,7 +855,8 @@ namespace Projector
 					{ 
                         writer.WriteLine("  <OutDir>"+SourcePath.DirectoryName+Path.DirectorySeparatorChar+"</OutDir>");
 						//if (config.platform == "Win32")
-						writer.WriteLine("  <TargetName>$(ProjectName) "+config.Platform+"</TargetName>");
+						bool dummy;
+						writer.WriteLine("  <TargetName>" + GetReleaseTargetNameFor(config.Platform, out dummy) + "</TargetName>");
 					}
 
 
@@ -887,7 +913,7 @@ namespace Projector
                     if (!config.IsRelease)
                         writer.Write("_DEBUG;");
 					writer.Write("PLATFORM_"+config.Platform.ToString().ToUpper()+";");
-					writer.Write("PLATFORM_STR=\"" + config.Platform.ToString() + "\";");
+					writer.Write("PLATFORM_TARGET_NAME_EXTENSION_STR=\"" + (Configuration.DefaultIncludePlatformInReleaseName(config.Platform) ? " "+config.Platform.ToString():"") + "\";");
 					if (SubSystem != null)
                         writer.Write("_"+ SubSystem.ToUpper()+ ";");
                     writer.Write("WIN32;");
@@ -1021,6 +1047,19 @@ namespace Projector
         }
 
 
+		public string GetReleaseTargetNameFor(Platform platform, out bool isCustom)
+		{
+			string customTargetName;
+			if (customTargetNames.TryGetValue(platform,out customTargetName))
+			{ 
+				isCustom = true;
+				return customTargetName;
+			}
+			isCustom = false;
+			return Configuration.DefaultIncludePlatformInReleaseName(platform) ? Name+" "+platform : Name;
+		}
+
+
 		/// <summary>
 		/// Declares a new filter in the writer stream
 		/// </summary>
@@ -1102,6 +1141,13 @@ namespace Projector
                     macros.Add(pair.Key, pair.Value);
                 references.AddRange(p.references);
 
+				foreach (var c in p.CustomTargetNames)
+					if (customTargetNames.ContainsKey(c.Key))
+						customTargetNames[c.Key] = c.Value;
+					else
+						customTargetNames.Add(c.Key,c.Value);
+
+
                 if (Type == null)
                     Type = p.Type;
 
@@ -1131,6 +1177,34 @@ namespace Projector
             {
                 AddSource(xsource);
             }
+
+			XmlNodeList xtargets = xproject.SelectNodes("targetName");
+			foreach (XmlNode xtarget in xtargets)
+			{
+				XmlNode xplatform = xtarget.Attributes.GetNamedItem("platform");
+				if (xplatform == null)
+				{
+					Warn("'platform' attribute not set for targetName setting. Supported platforms are 'ARM', 'x32', 'x64' Ignoring");
+					continue;
+				}
+				Platform p;
+				try
+				{
+					p = (Platform)Enum.Parse(typeof(Platform),xplatform.Value);
+				}
+				catch (ArgumentException)
+				{
+					Warn("'platform' attribute value '"+xplatform.Value+"' does not point to a supported platform. Supported platforms are 'ARM', 'x32', 'x64' Ignoring");
+					continue;
+				}
+
+				if (customTargetNames.ContainsKey(p))
+					customTargetNames[p] = xtarget.InnerText;
+				else
+					customTargetNames.Add(p,xtarget.InnerText);
+
+			}
+
             XmlNodeList xcommands = xproject.SelectNodes("command");
             foreach (XmlNode xcommand in xcommands)
             {

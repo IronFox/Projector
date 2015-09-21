@@ -202,6 +202,15 @@ namespace Projector
                     AddSourceFolder(tsource.Nodes.Add(s.root.name), s.root);
                 }
 
+				TreeNode ttarget = tproject.Nodes.Add("TargetNames");
+				foreach (Platform platform in Enum.GetValues(typeof(Platform)))
+				{
+					bool isCustom;
+					string t = project.GetReleaseTargetNameFor(platform, out isCustom);
+					ttarget.Nodes.Add(platform+": \""+t+"\""+(isCustom ? " (custom)":""));
+				}
+
+
 				if (project.IncludedLibraries.Count() > 0)
 				{
 					TreeNode tlibs = tproject.Nodes.Add("Libraries");
@@ -415,7 +424,7 @@ namespace Projector
 
 			{
 				Platform[] platforms = new Platform[]{
-					Platform.Win32,
+					Platform.x32,
 					Platform.x64
 				};
 				Tuple<string,bool>[] names = new Tuple<string,bool>[]
