@@ -1347,9 +1347,11 @@ namespace Projector
         private void AddReference(XmlNode xreference)
         {
             XmlNode xinclude = xreference.Attributes.GetNamedItem("includePath");
+            if (xinclude == null)
+                xinclude = xreference.Attributes.GetNamedItem("include");
             Reference re = new Reference(
 									Add(xreference, SourcePath,this),
-									xinclude != null ? xinclude.Value == "true" : false
+									xinclude != null ? xinclude.Value == "true" : true
 									);
             references.Add(re);
         }
