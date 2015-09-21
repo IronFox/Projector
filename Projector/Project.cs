@@ -118,8 +118,8 @@ namespace Projector
 		public override int GetHashCode()
 		{
 			int hash = 17;
-			if (IfPlatform != null)
-				hash = hash * 31 + IfPlatform.GetHashCode();
+			//if (IfPlatform != Pla)
+			hash = hash * 31 + IfPlatform.GetHashCode();
 			if (IfConfig != null)
 				hash = hash * 31 + IfConfig.GetHashCode();
 			return hash;
@@ -141,12 +141,12 @@ namespace Projector
 
 		public bool AlwaysTrue
 		{
-			get { return IfPlatform == null && IfConfig == null; }
+			get { return IfPlatform == Platform.None && IfConfig == null; }
 		}
 
 		public bool Excludes(Condition other)
 		{
-			bool differentA = IfPlatform != null && other.IfPlatform != null && IfPlatform != other.IfPlatform;
+			bool differentA = IfPlatform != Platform.None && other.IfPlatform != Platform.None && IfPlatform != other.IfPlatform;
 			bool differentB = IfConfig != null && other.IfConfig != null && IfConfig != other.IfConfig;
 			return differentA || differentB;
 		}
