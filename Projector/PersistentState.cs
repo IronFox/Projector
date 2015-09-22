@@ -34,7 +34,7 @@ namespace Projector
 
 			public override string ToString()
 			{
-				return Domain+"/"+Name;
+				return Domain.Length > 0 ? Domain + "/"+Name : Name;
 			}
 
 			public override int GetHashCode()
@@ -96,7 +96,7 @@ namespace Projector
                 foreach (XmlNode xr in xrecent)
                 {
                     FileInfo f = new FileInfo(xr.InnerText);
-                    if (!recentKnown.Contains(f.FullName))
+                    if (f.Exists && !recentKnown.Contains(f.FullName))
                     {
 						XmlNode xdomain = xr.Attributes.GetNamedItem("domain");
 						SolutionDescriptor desc;

@@ -96,6 +96,7 @@ namespace Projector
 				return false;
 
 			}
+            recentSolutions.Visible = false;
             Project.FlushAll();
 			FlushLog();
 
@@ -295,48 +296,80 @@ namespace Projector
             collection.Clear();
 
 
-			//bool anyHaveDomains = false;
-			//foreach (var recent in PersistentState.Recent)
-			//	if (recent.Domain != null)
-			//	{
-			//		anyHaveDomains = true;
-			//		break;
-			//	}
+            //bool anyHaveDomains = false;
+            //foreach (var recent in PersistentState.Recent)
+            //	if (recent.Domain != null)
+            //	{
+            //		anyHaveDomains = true;
+            //		break;
+            //	}
 
 
+
+            recentSolutions.Controls.Clear();
+
+            int top = 10;
+
+            Font f;
+            {
+                Label title = new Label();
+
+                f = new Font(title.Font.FontFamily, title.Font.Size * 1.2f);
+                title.Font = f;
+                title.Text = "Recent Solutions:";
+                title.Left = 15;
+                title.Top = top;
+                top += title.Height;
+                title.Width = title.PreferredWidth;
+                recentSolutions.Controls.Add(title);
+            }
 
             foreach (var recent in PersistentState.Recent)
             {
 				ToolStripItemCollection parent = collection;
-				
-				//if (anyHaveDomains)
-				//{
-				//	string lookFor = recent.Domain ?? "<No Domain>";
 
-				//	ToolStripMenuItem found = null;
-				//	for (int i = 0; i < collection.Count; i++)
-				//		if (collection[i].Text == lookFor)
-				//		{ 
-				//			found = (ToolStripMenuItem)collection[i];
-				//			break;
-				//		}
-					
-				//	if (found != null)
-				//	{
-				//		//ToolStripMenuItem child = (ToolStripMenuItem)(collection[index]);
-				//		parent = found.DropDown.Items;
-				//	}
-				//	else
-				//	{
-				//		ToolStripMenuItem child = new ToolStripMenuItem(lookFor);
-				//		parent = child.DropDown.Items;
-				//		collection.Add(child);
-				//	}
-				//}
+                LinkLabel lrecent = new LinkLabel();
+                lrecent.Top = top;
+                //lrecent.Font;
+
+                lrecent.Font = f;
+                lrecent.Left = 20;
+                lrecent.Text = recent.ToString();
+                top += lrecent.Height;
+                lrecent.Width = lrecent.PreferredWidth;
+                recentSolutions.Controls.Add(lrecent);
+                lrecent.ForeColor = Label.DefaultForeColor;
+                //lrecent.Cursor = Cursor.
+
+
+                //if (anyHaveDomains)
+                //{
+                //	string lookFor = recent.Domain ?? "<No Domain>";
+
+                //	ToolStripMenuItem found = null;
+                //	for (int i = 0; i < collection.Count; i++)
+                //		if (collection[i].Text == lookFor)
+                //		{ 
+                //			found = (ToolStripMenuItem)collection[i];
+                //			break;
+                //		}
+
+                //	if (found != null)
+                //	{
+                //		//ToolStripMenuItem child = (ToolStripMenuItem)(collection[index]);
+                //		parent = found.DropDown.Items;
+                //	}
+                //	else
+                //	{
+                //		ToolStripMenuItem child = new ToolStripMenuItem(lookFor);
+                //		parent = child.DropDown.Items;
+                //		collection.Add(child);
+                //	}
+                //}
                 ToolStripItem item = new ToolStripMenuItem(recent.ToString());
                 item.Click += (sender, item2) => LoadSolution(recent.File);
+                lrecent.Click += (sender, item2) => LoadSolution(recent.File);
                 parent.Add(item);
-
             }
             collection.Add("-");
             {

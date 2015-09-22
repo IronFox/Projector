@@ -55,20 +55,23 @@ namespace Projector
 
 		public static void End()
 		{
-			pipeServer.Close();
-			pipeServer = null;
+            if (pipeServer != null)
+            {
+                pipeServer.Close();
+                pipeServer = null;
 
-			using (NamedPipeClientStream npcs = new NamedPipeClientStream(".",PipeName, PipeDirection.Out, PipeOptions.None))
-			{
-				try
-				{ 
-					npcs.Connect(100);
-				}
-				catch (Exception)
-				{ }
-			}
+                using (NamedPipeClientStream npcs = new NamedPipeClientStream(".", PipeName, PipeDirection.Out, PipeOptions.None))
+                {
+                    try
+                    {
+                        npcs.Connect(100);
+                    }
+                    catch (Exception)
+                    { }
+                }
 
-			pipeServerThread.Join();
+                pipeServerThread.Join();
+            }
 			Application.Exit();
 		}
 
