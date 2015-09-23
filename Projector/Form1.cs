@@ -435,6 +435,20 @@ namespace Projector
 			BuildCurrentSolution(outPath);
 		}
 
+
+        struct Config
+        {
+            public readonly string Name;
+            public readonly bool IsRelease,
+                                    Deploy;
+            public    Config(string name, bool isRelease, bool deploy)
+            {
+                Name = name;
+                IsRelease = isRelease;
+                Deploy = deploy;
+            }
+        }
+
 		private void BuildCurrentSolution(FileInfo outPath)
 		{
             LogLine("Writing solution to '" + outPath.FullName+"'");
@@ -462,16 +476,17 @@ namespace Projector
 					Platform.x32,
 					Platform.x64
 				};
-				Tuple<string,bool>[] names = new Tuple<string,bool>[]
+				Config[] names = new Config[]
 				{
-					new Tuple<string,bool>("Debug", false),
-					new Tuple<string,bool>("Release", true)
+					new Config("Debug", false,false),
+                    new Config("OptimizedDebug", true,false),
+					new Config("Release", true,true)
 				};
 
 
 				foreach (var p in platforms)
 					foreach (var n in names)
-						configurations.Add(new Configuration(n.Item1,p,n.Item2));
+						configurations.Add(new Configuration(n.Name,p,n.IsRelease,n.Deploy));
 			}
 			//{
 			//	new Configuration() {Name = "Debug", Platform = "Win32", IsRelease = false },
@@ -484,7 +499,7 @@ namespace Projector
             foreach (Project p in Project.All)
             {
 
-                var rs = p.SaveAs(toolset, configurations);
+                var rs = p.SaveAs(toolset, configurations, overwriteExistingVSUserConfigToolStripMenuItem.Checked);
 				LogLine("Project '" +p.Name+"' written to '"+rs.Item1.FullName+"'");
 				projects.Add(new Tuple<FileInfo, Guid, Project>(rs.Item1, rs.Item2, p));
             }
@@ -601,5 +616,10 @@ namespace Projector
 			if (!myProcess.Start())
 				LogLine("Error: Failed to start process");
 		}
-	}
+
+        private void overwriteExistingVSUserConfigToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            overwriteExistingVSUserConfigToolStripMenuItem.Checked = !overwriteExistingVSUserConfigToolStripMenuItem.Checked;
+        }
+    }
 }

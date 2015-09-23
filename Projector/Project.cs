@@ -41,14 +41,19 @@ namespace Projector
 		/// Set true to indicate that this is a fully optimized, exporting build configuration
 		/// </summary>
 		public readonly bool IsRelease;
+        /// <summary>
+        /// Set true to export debug symbols
+        /// </summary>
+        public readonly bool Deploy;
 
 
-		public Configuration(string name, Platform platform, bool isRelease)
+		public Configuration(string name, Platform platform, bool isRelease, bool deploy)
 		{
 			Name = name;
 			Platform = platform;
 			IsRelease = isRelease;
-		}
+            Deploy = deploy;
+        }
 
 		public static string TranslateForVisualStudio(Platform p)
 		{
@@ -806,7 +811,7 @@ namespace Projector
 		/// <param name="toolSetVersion">Active toolset version to use</param>
 		/// <param name="configurations"></param>
 		/// <returns></returns>
-        public Tuple<FileInfo,Guid> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations)
+        public Tuple<FileInfo,Guid> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings)
         {
             FileInfo file = OutFile;
             if (!file.Directory.Exists)
@@ -856,7 +861,7 @@ namespace Projector
                 {
                     writer.WriteLine("<PropertyGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config + "'\">");
                     writer.WriteLine("  <LinkIncremental>" + !config.IsRelease + "</LinkIncremental>");
-                    if (config.IsRelease)
+                    if (config.Deploy)
 					{ 
                         writer.WriteLine("  <OutDir>"+SourcePath.DirectoryName+Path.DirectorySeparatorChar+"</OutDir>");
 						//if (config.platform == "Win32")
@@ -933,7 +938,7 @@ namespace Projector
                     writer.WriteLine("  <Link>");
                     if (SubSystem != null)
                         writer.WriteLine("    <SubSystem>"+ SubSystem + "</SubSystem>");
-                    writer.WriteLine("    <GenerateDebugInformation>" + !config.IsRelease + "</GenerateDebugInformation>");
+                    writer.WriteLine("    <GenerateDebugInformation>" + !config.Deploy + "</GenerateDebugInformation>");
                     if (CustomStackSize != -1)
                         writer.WriteLine("    <AdditionalOptions>/STACK:" + CustomStackSize + " %(AdditionalOptions)</AdditionalOptions>");
 
@@ -1031,7 +1036,7 @@ namespace Projector
                 writer.Close();
 
             }
-            if (!File.Exists(file.FullName + ".user"))
+            if (!File.Exists(file.FullName + ".user") || overwriteUserSettings)
                 using (StreamWriter writer = File.CreateText(file.FullName + ".user"))
                 {
                     writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");

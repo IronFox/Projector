@@ -58,6 +58,7 @@
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
             this.recentSolutions = new System.Windows.Forms.Panel();
+            this.overwriteExistingVSUserConfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.solutionViewSplit)).BeginInit();
             this.solutionViewSplit.Panel1.SuspendLayout();
@@ -140,6 +141,7 @@
             this.solutionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.buildToolStripMenuItem,
             this.buildAtToolStripMenuItem,
+            this.overwriteExistingVSUserConfigToolStripMenuItem,
             this.toolStripMenuItem4,
             this.openGeneratedSolutionToolStripMenuItem});
             this.solutionToolStripMenuItem.Enabled = false;
@@ -150,27 +152,27 @@
             // buildToolStripMenuItem
             // 
             this.buildToolStripMenuItem.Name = "buildToolStripMenuItem";
-            this.buildToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
+            this.buildToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
             this.buildToolStripMenuItem.Text = "Build";
             this.buildToolStripMenuItem.Click += new System.EventHandler(this.buildToolStripMenuItem_Click);
             // 
             // buildAtToolStripMenuItem
             // 
             this.buildAtToolStripMenuItem.Name = "buildAtToolStripMenuItem";
-            this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
+            this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
             this.buildAtToolStripMenuItem.Text = "Build at...";
             this.buildAtToolStripMenuItem.Click += new System.EventHandler(this.buildAtToolStripMenuItem_Click);
             // 
             // toolStripMenuItem4
             // 
             this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-            this.toolStripMenuItem4.Size = new System.Drawing.Size(204, 6);
+            this.toolStripMenuItem4.Size = new System.Drawing.Size(248, 6);
             // 
             // openGeneratedSolutionToolStripMenuItem
             // 
             this.openGeneratedSolutionToolStripMenuItem.Enabled = false;
             this.openGeneratedSolutionToolStripMenuItem.Name = "openGeneratedSolutionToolStripMenuItem";
-            this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
+            this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
             this.openGeneratedSolutionToolStripMenuItem.Text = "Open Generated Solution";
             this.openGeneratedSolutionToolStripMenuItem.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
             // 
@@ -329,6 +331,13 @@
             this.recentSolutions.Size = new System.Drawing.Size(564, 416);
             this.recentSolutions.TabIndex = 6;
             // 
+            // overwriteExistingVSUserConfigToolStripMenuItem
+            // 
+            this.overwriteExistingVSUserConfigToolStripMenuItem.Name = "overwriteExistingVSUserConfigToolStripMenuItem";
+            this.overwriteExistingVSUserConfigToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+            this.overwriteExistingVSUserConfigToolStripMenuItem.Text = "Overwrite existing VS User-Config";
+            this.overwriteExistingVSUserConfigToolStripMenuItem.Click += new System.EventHandler(this.overwriteExistingVSUserConfigToolStripMenuItem_Click);
+            // 
             // ProjectView
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -393,6 +402,7 @@
 		private System.Windows.Forms.ToolStripMenuItem openGeneratedSolutionToolStripMenuItem;
 		private System.Windows.Forms.Button openGeneratedSolutionButton;
         private System.Windows.Forms.Panel recentSolutions;
+        private System.Windows.Forms.ToolStripMenuItem overwriteExistingVSUserConfigToolStripMenuItem;
     }
 }
 
