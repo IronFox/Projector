@@ -324,6 +324,12 @@ namespace Projector
                 recentSolutions.Controls.Add(title);
             }
 
+			ToolTip tooltip = new ToolTip();
+			//tooltip.ToolTipIcon = ToolTipIcon.Info;
+			//tooltip.IsBalloon = true;
+			tooltip.ShowAlways = true;
+			
+
             foreach (var recent in PersistentState.Recent)
             {
 				ToolStripItemCollection parent = collection;
@@ -335,10 +341,26 @@ namespace Projector
                 lrecent.Font = f;
                 lrecent.Left = 20;
                 lrecent.Text = recent.ToString();
-                top += lrecent.Height;
                 lrecent.Width = lrecent.PreferredWidth;
                 recentSolutions.Controls.Add(lrecent);
-                lrecent.ForeColor = Label.DefaultForeColor;
+
+				//Label lpath = new Label();
+				//lpath.Text = "("+recent.File.FullName+")";
+				//lpath.Height = lpath.PreferredHeight;
+				//lpath.Width = lpath.PreferredWidth;
+				////lpath.Top = top;
+				//lpath.Top = lrecent.Top + (lrecent.Font.Height - lpath.Font.Height) * 2;
+				
+				////lpath.Font = pathFont;
+				//lpath.Left = lrecent.Left + lrecent.Width;
+				//recentSolutions.Controls.Add(lpath);
+
+				//lrecent.AutoToolTip = true;
+				//lrecent.ToolTipText = recent.File.FullName;
+				tooltip.SetToolTip(lrecent,recent.File.FullName);
+
+				top += lrecent.Height;
+
                 //lrecent.Cursor = Cursor.
 
 
@@ -367,8 +389,11 @@ namespace Projector
                 //	}
                 //}
                 ToolStripItem item = new ToolStripMenuItem(recent.ToString());
+				item.AutoToolTip = true;
+				item.ToolTipText = recent.File.FullName;
                 item.Click += (sender, item2) => LoadSolution(recent.File);
                 lrecent.Click += (sender, item2) => LoadSolution(recent.File);
+				//lpath.Click += (sender, item2) => LoadSolution(recent.File);
                 parent.Add(item);
             }
             collection.Add("-");
