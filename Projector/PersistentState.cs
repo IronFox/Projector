@@ -34,7 +34,7 @@ namespace Projector
 
 			public override string ToString()
 			{
-				return Domain.Length > 0 ? Domain + "/"+Name : Name;
+				return Domain != null && Domain.Length > 0 ? Domain + "/" + Name : Name;
 			}
 
 			public override int GetHashCode()
