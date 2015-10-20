@@ -389,6 +389,11 @@ namespace Projector
 
             public Folder root;
 
+			/// <summary>
+			/// If set indicates that this source should be added to the include-directories of its own project as well as referencing external projects
+			/// </summary>
+			public bool includeDirectory = false;
+
 
 			/// <summary>
 			/// Checks whether or not a specific directory is excluded.
@@ -396,7 +401,7 @@ namespace Projector
 			/// </summary>
 			/// <param name="dir"></param>
 			/// <returns></returns>
-            public bool IsExcluded(DirectoryInfo dir)
+			public bool IsExcluded(DirectoryInfo dir)
             {
                 if (dir.Name.StartsWith("."))
                     return true;
@@ -871,14 +876,20 @@ namespace Projector
 
 
 					List<string> includes = new List<string>(), libPaths = new List<string>();
+
+					foreach (var source in sources)
+						if (source.includeDirectory)
+							includes.Add(source.path.FullName);
+
+
 					foreach (var r in references)
                     {
                         if (!r.IncludePath)
                             continue;
                         foreach (var source in r.Project.sources)
                         {
-
-                            includes.Add(source.path.FullName);
+							if (source.includeDirectory)
+	                            includes.Add(source.path.FullName);
                         }
                     }
 
@@ -1450,6 +1461,19 @@ namespace Projector
                 return;
             }
             Source s = new Source();
+
+			XmlNode xInclude = xsource.Attributes.GetNamedItem("include");
+			if (xInclude != null)
+			{
+				string value = xInclude.Value;
+				if (value.ToLower() == "true")
+					s.includeDirectory = true;
+				else
+					if (value.ToLower() == "false")
+					s.includeDirectory = false;
+				else
+					Warn("source.include expected to be either 'true' or 'false', but got '"+value+"'. Defaulting to "+s.includeDirectory);
+			}
 
             s.path = GetRelativeDir(SourcePath.Directory, xPath.Value);
             if (!s.path.Exists)
