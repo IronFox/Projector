@@ -235,7 +235,8 @@ namespace Projector
 
             {".ico", image },
             { ".rc", resource },
-        };
+			{ ".rc2", resource },
+		};
 
 		/// <summary>
 		/// Flushes all static data to prepare a new solution import
