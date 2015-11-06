@@ -99,7 +99,7 @@ namespace Projector
 				buildSolutionButton.Enabled = false;
 				openGeneratedSolutionToolStripMenuItem.Enabled = false;
 				openGeneratedSolutionButton.Enabled = openGeneratedSolutionToolStripMenuItem.Enabled;
-				tabSelected.Text = "Selected (none)";
+				tabSelected.Text = "Focused (none)";
 				//tabSelected.ac
 				return;
 			}
@@ -149,7 +149,7 @@ namespace Projector
 				TreeNode tsource = tproject.Nodes.Add("Sources");
 				foreach (var s in project.Sources)
 				{
-					s.ScanFiles();
+					s.ScanFiles(solution,project);
 					AddSourceFolder(tsource.Nodes.Add(s.root.name), s.root);
 				}
 
@@ -485,6 +485,7 @@ namespace Projector
 				//buildAtToolStripMenuItem_Click(sender, e);
 				//return;
             }
+			Solution.FlushSourceScans();
 			shownSolution.Reload(); //refresh
 			ShowSolution(shownSolution);
 
@@ -589,6 +590,7 @@ namespace Projector
 
 		private void generateSelectedButton_Click(object sender, EventArgs e)
 		{
+			Solution.FlushSourceScans();
 			FlushLog();
 			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
 			{
@@ -598,8 +600,11 @@ namespace Projector
 					FileInfo outPath = PersistentState.GetOutPathFor(solution.Source);
 					if (outPath != null && outPath.Directory.Exists)
 					{ 
+						solution.Reload(); //refresh
 						solution.Build(outPath,this.toolSet.SelectedItem.ToString(),false);
 						ReportAndFlush(solution);
+						if (solution == shownSolution)
+							ShowSolution(solution);
 					}
 					else
 						LogLine("Error: Cannot export '" + solution + "'. Out path is not known.");

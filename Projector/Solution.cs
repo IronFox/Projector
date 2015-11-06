@@ -249,7 +249,7 @@ namespace Projector
 
             foreach (Project p in list)
             {
-				var rs = p.SaveAs(toolset, configurations, overwriteExistingVSUserConfig);
+				var rs = p.SaveAs(toolset, configurations, overwriteExistingVSUserConfig,this);
 				Events.Inform(p,"Written to '"+rs.Item1.FullName+"'");
 				projects.Add(new Tuple<FileInfo, Guid, Project>(rs.Item1, rs.Item2, p));
             }
@@ -307,5 +307,14 @@ namespace Projector
         }
 
 
+
+		internal static void FlushSourceScans()
+		{
+			foreach (Project p in globalMap.Values)
+			{
+				foreach (var source in p.Sources)
+					source.root = null;
+			}
+		}
 	}
 }

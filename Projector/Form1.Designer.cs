@@ -209,7 +209,7 @@
 			this.solutionToolStripMenuItem.Enabled = false;
 			this.solutionToolStripMenuItem.Name = "solutionToolStripMenuItem";
 			this.solutionToolStripMenuItem.Size = new System.Drawing.Size(110, 20);
-			this.solutionToolStripMenuItem.Text = "Selected Solution";
+			this.solutionToolStripMenuItem.Text = "Focused Solution";
 			this.solutionToolStripMenuItem.Click += new System.EventHandler(this.solutionToolStripMenuItem_Click);
 			// 
 			// buildToolStripMenuItem
@@ -354,7 +354,7 @@
 			this.generateSelectedButton.Name = "generateSelectedButton";
 			this.generateSelectedButton.Size = new System.Drawing.Size(410, 27);
 			this.generateSelectedButton.TabIndex = 0;
-			this.generateSelectedButton.Text = "Generate Selected";
+			this.generateSelectedButton.Text = "Generate Selected Solutions";
 			this.generateSelectedButton.UseVisualStyleBackColor = true;
 			this.generateSelectedButton.Click += new System.EventHandler(this.generateSelectedButton_Click);
 			// 
@@ -407,7 +407,7 @@
 			this.tabSelected.Padding = new System.Windows.Forms.Padding(3);
 			this.tabSelected.Size = new System.Drawing.Size(556, 235);
 			this.tabSelected.TabIndex = 1;
-			this.tabSelected.Text = "Selected (none)";
+			this.tabSelected.Text = "Focused (none)";
 			this.tabSelected.UseVisualStyleBackColor = true;
 			// 
 			// solutionView

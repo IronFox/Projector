@@ -449,14 +449,15 @@ namespace Projector
 			/// <summary>
 			/// Scans for includable files. Will only search for files when called for the first time. Subsequent calls will have no effect
 			/// </summary>
-            public void ScanFiles()
+            public void ScanFiles(Solution domain, Project parent)
             {
                 if (root != null)
                     return;
+
                 root = new Folder();
                 if (path.Exists)
                 {
-
+					domain.Events.Inform(parent,"Scanning "+path.Name+"...");
                     ScanFiles(root, path, recursive);
                 }
             }
@@ -786,7 +787,7 @@ namespace Projector
 		/// <param name="toolSetVersion">Active toolset version to use</param>
 		/// <param name="configurations"></param>
 		/// <returns></returns>
-        public Tuple<FileInfo,Guid> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings)
+        public Tuple<FileInfo,Guid> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
         {
             FileInfo file = OutFile;
             if (!file.Directory.Exists)
@@ -971,7 +972,7 @@ namespace Projector
                 }
                 foreach (Source source in sources)
                 {
-					source.ScanFiles();
+					source.ScanFiles(domain,this);
 					source.WriteProjectGroup(writer);
                 }
 
