@@ -86,94 +86,43 @@ namespace Projector
             }
         }
 
-		PersistentState.SolutionDescriptor solution = new PersistentState.SolutionDescriptor();
 
+		private Solution shownSolution = null;
 
-        private bool LoadSolution(FileInfo file)
-        {
-			if (!file.Exists)
+		private void Show(Solution solution)
+		{
+			shownSolution = solution;
+			solutionView.Nodes.Clear();
+			if (solution == null)
 			{
-				return false;
+				solutionToolStripMenuItem.Enabled = false;
+				buildSolutionButton.Enabled = false;
+				openGeneratedSolutionToolStripMenuItem.Enabled = false;
+				openGeneratedSolutionButton.Enabled = openGeneratedSolutionToolStripMenuItem.Enabled;
 
+				return;
 			}
-            recentSolutions.Visible = false;
-            Project.FlushAll();
-			FlushLog();
-
-            LogLine("Importing '" + file.FullName + "'...");
-
-
-			
-            {
-                var xreader = new XmlTextReader(file.FullName);
-                //int slashAt = Math.Max(file.FullName.LastIndexOf('/'), file.FullName.LastIndexOf('\\'));
-                XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(xreader);
-
-				XmlNode xsolution = xdoc.SelectSingleNode("solution");
-				XmlNode xDomain = xsolution.Attributes.GetNamedItem("domain");
-				if (xDomain != null)
-				{
-					solution = new PersistentState.SolutionDescriptor(file,xDomain.Value);
-				}
-				else
-					solution = new PersistentState.SolutionDescriptor(file, null);
-				
-
-				PersistentState.MemorizeRecent(solution);
-				UpdateRecent();
-
-
-
-                XmlNodeList xprojects = xdoc.SelectNodes("solution/project");
-
-                foreach (XmlNode xproject in xprojects)
-                {
-                    Project.Add(xproject, file, null);
-                }
-                Directory.SetCurrentDirectory(file.DirectoryName);
-                xreader.Close();
-            }
-
-            Project p;
-            while ((p = Project.GetNextToLoad()) != null)
-            {
-                if (!p.HasSource && !p.AutoConfigureSourcePath(file))
-                    continue;
-
-                string filename = p.SourcePath.FullName;
-                var xreader = new XmlTextReader(filename);
-                XmlDocument xdoc = new XmlDocument();
-                xdoc.Load(xreader);
-                XmlNode xproject = xdoc.SelectSingleNode("project");
-                p.Load(xproject);
-                xreader.Close();
-            }
-
-
-
-            solutionView.Nodes.Clear();
-            TreeNode tsolution = solutionView.Nodes.Add(solution.ToString());
-            foreach (Project project in Project.All)
-            {
-				List<String>	options = new List<string>();
-				if (project == Project.Primary)
+			TreeNode tsolution = solutionView.Nodes.Add(solution.ToString());
+			foreach (Project project in solution.Projects)
+			{
+				List<String> options = new List<string>();
+				if (project == solution.Primary)
 					options.Add("primary");
 				if (project.PurelyImplicitlyLoaded)
 					options.Add("implicit");
-				string optionString = options.Count > 0 ? " ("+options.Fuse(",")+")":"";
+				string optionString = options.Count > 0 ? " (" + options.Fuse(",") + ")" : "";
 
-                TreeNode tproject = tsolution.Nodes.Add(project.Name + optionString + " [" + project.Type+"]");
-                foreach (var r in project.References)
-                {
-                    TreeNode treference = tproject.Nodes.Add(r.Project.Name + (r.IncludePath ? " (include)" : ""));
-                }
+				TreeNode tproject = tsolution.Nodes.Add(project.Name + optionString + " [" + project.Type + "]");
+				foreach (var r in project.References)
+				{
+					TreeNode treference = tproject.Nodes.Add(r.Project.Name + (r.IncludePath ? " (include)" : ""));
+				}
 
 				if (project.Macros.Count() > 0)
-				{ 
+				{
 					TreeNode tmacros = tproject.Nodes.Add("Macros");
 					foreach (var m in project.Macros)
-						tmacros.Nodes.Add(m.Key+"="+m.Value);
+						tmacros.Nodes.Add(m.Key + "=" + m.Value);
 				}
 				if (project.CustomManifests.Count() > 0)
 				{
@@ -183,13 +132,13 @@ namespace Projector
 				}
 				if (project.CustomStackSize > -1)
 				{
-					tproject.Nodes.Add("custom stack size (bytes): "+project.CustomStackSize);
+					tproject.Nodes.Add("custom stack size (bytes): " + project.CustomStackSize);
 				}
 				if (project.PreBuildCommands.Count() > 0)
 				{
 					TreeNode tcommands = tproject.Nodes.Add("Pre-Build Commands");
 					foreach (var m in project.PreBuildCommands)
-					{ 
+					{
 						TreeNode tparameters = tcommands.Nodes.Add(m.locatedExecutable != null ? m.locatedExecutable.FullName : m.originalExecutable);
 						foreach (var param in m.parameters)
 							tparameters.Nodes.Add(param);
@@ -198,10 +147,10 @@ namespace Projector
 
 				TreeNode tsource = tproject.Nodes.Add("Sources");
 				foreach (var s in project.Sources)
-                {
-                    s.ScanFiles();
-                    AddSourceFolder(tsource.Nodes.Add(s.root.name), s.root);
-                }
+				{
+					s.ScanFiles();
+					AddSourceFolder(tsource.Nodes.Add(s.root.name), s.root);
+				}
 
 				TreeNode ttarget = tproject.Nodes.Add("TargetNames");
 				foreach (Platform platform in Enum.GetValues(typeof(Platform)))
@@ -210,7 +159,7 @@ namespace Projector
 						continue;
 					bool isCustom;
 					string t = project.GetReleaseTargetNameFor(platform, out isCustom);
-					ttarget.Nodes.Add(platform+": \""+t+"\""+(isCustom ? " (custom)":""));
+					ttarget.Nodes.Add(platform + ": \"" + t + "\"" + (isCustom ? " (custom)" : ""));
 				}
 
 
@@ -228,7 +177,7 @@ namespace Projector
 								if (inc.Item1.AlwaysTrue)
 									tincs.Nodes.Add(inc.Item2.FullName);
 								else
-								{ 
+								{
 									TreeNode tinc = tincs.Nodes.Add(inc.Item1.ToString());
 									tinc.Nodes.Add(inc.Item2.FullName);
 								}
@@ -242,7 +191,7 @@ namespace Projector
 								if (link.Item1.AlwaysTrue)
 									tgroup.Nodes.Add(link.Item2.FullName);
 								else
-								{ 
+								{
 									TreeNode telement = tgroup.Nodes.Add(link.Item1.ToString());
 									telement.Nodes.Add(link.Item2.FullName);
 								}
@@ -256,7 +205,7 @@ namespace Projector
 								if (link.Item1.AlwaysTrue)
 									tgroup.Nodes.Add(link.Item2);
 								else
-								{ 
+								{
 									TreeNode telement = tgroup.Nodes.Add(link.Item1.ToString());
 									telement.Nodes.Add(link.Item2);
 								}
@@ -267,27 +216,88 @@ namespace Projector
 
 
 				}
-            }
+			}
 			tsolution.Expand();
 
-			foreach (var message in Project.Messages)
-			{
-				LogLine("* "+message.ToString());
-			}
-			foreach (var warning in Project.Warnings)
-            {
-                LogLine("Warning: " + warning);
-            }
-            if (Project.Warnings.Count == 0)
-                LogLine("No issues");
-            LogLine("Projects imported: " + Project.All.Count());
-            solutionToolStripMenuItem.Enabled = Project.Primary != null;
-			buildSolutionButton.Enabled = Project.Primary != null;
+			solutionToolStripMenuItem.Enabled = solution.Primary != null;
+			buildSolutionButton.Enabled = solution.Primary != null;
 
-			openGeneratedSolutionToolStripMenuItem.Enabled = PersistentState.GetOutPathFor(file) != null;
+			openGeneratedSolutionToolStripMenuItem.Enabled = PersistentState.GetOutPathFor(solution.Source) != null;
 			openGeneratedSolutionButton.Enabled = openGeneratedSolutionToolStripMenuItem.Enabled;
-			return true;
+
+		}
+
+		//PersistentState.SolutionDescriptor solution = new PersistentState.SolutionDescriptor();
+
+		Dictionary<string,Solution>	solutions = new Dictionary<string,Solution>();
+		List<Solution> loadedSolutions = new List<Solution>();
+
+
+        private Solution LoadSolution(FileInfo file)
+        {
+			FlushLog();
+			if (!file.Exists)
+			{
+				LogLine("Error: Unable to read solution file '" + file + "'");
+				return null;
+			}
+
+			Solution solution;
+			if (solutions.TryGetValue(file.FullName,out solution))
+			{
+				LogLine("Solution '" + file + "' already loaded");
+				solution.Reload();
+			}
+			else
+			{
+				solution = Solution.LoadNew(file);
+				if (solution == null)
+				{ 
+					LogLine("Error: Unable to read solution file '"+file+"'");
+					return null;
+				}
+				solutions.Add(file.FullName,solution);
+				ListViewItem item = loadedSolutionsView.Items.Add(solution.ToString());
+				loadedSolutions.Add(solution);
+				item.SubItems.Add(solution.Primary != null ? solution.Primary.ToString() : "");
+				item.SubItems.Add(solution.Projects.Count().ToString());
+				item.Checked = true;
+				
+				//solutionListBox.Items.Add(solution,true);
+				UpdateRecent();
+				mainTabControl.SelectedTab = tabLoaded;
+				//tabLoaded.Show();
+				//mainTabControl.TabIndex = 1;
+
+			}
+			
+		//	FlushLog();
+
+
+			ReportAndFlush(solution);
+
+            LogLine("Projects imported: " + solution.Projects.Count());
+			return solution;
         }
+
+		private void ReportAndFlush(Solution solution)
+		{
+			LogLine(solution+":");
+			foreach (var message in solution.Events.Messages)
+			{
+				LogLine("* " + message.ToString());
+			}
+			bool anyIssues = false;
+			foreach (var warning in solution.Events.Warnings)
+			{
+				anyIssues = true;
+				LogLine("Warning: " + warning);
+			}
+			if (!anyIssues)
+				LogLine(solution +": No issues");
+			solution.Events.Clear();
+
+		}
 
 
         private void UpdateRecent()
@@ -425,15 +435,14 @@ namespace Projector
 
 		private void LoadFromParameter(string p)
 		{
-			if (LoadSolution(new FileInfo(p)))
+			Solution solution = LoadSolution(new FileInfo(p));
+			if (solution != null)
 			{
-				FileInfo outPath = PersistentState.GetOutPathFor(solution.File);
+				FileInfo outPath = PersistentState.GetOutPathFor(solution.Source);
 				if (outPath != null && outPath.Directory.Exists)
-					BuildCurrentSolution(outPath);
+					BuildCurrentSolution(solution, outPath);
 					
 			}
-			else
-				LogLine("Error: Unable to read solution file '"+p+"'");
 		}
 
         private void quitToolStripMenuItem_Click(object sender, EventArgs e)
@@ -443,157 +452,49 @@ namespace Projector
 
         private void buildToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FileInfo outPath = PersistentState.GetOutPathFor(solution.File);
+			if (shownSolution == null)
+				return;
+            FileInfo outPath = PersistentState.GetOutPathFor(shownSolution.Source);
             if (outPath == null || !outPath.Directory.Exists)
             {
-				string solutionName = solution.Name + ".sln";
-				DirectoryInfo preferred = solution.File.Directory.CreateSubdirectory(Project.WorkSubDirectory);
+				string solutionName = shownSolution.Name + ".sln";
+				DirectoryInfo preferred = shownSolution.Source.Directory.CreateSubdirectory(Project.WorkSubDirectory);
 				outPath = new FileInfo( Path.Combine(preferred.FullName,solutionName) );
 
 
 				//buildAtToolStripMenuItem_Click(sender, e);
 				//return;
             }
+			shownSolution.Reload(); //refresh
+			Show(shownSolution);
 
-            LoadSolution(solution.File); //refresh
-
-			BuildCurrentSolution(outPath);
+			BuildCurrentSolution(shownSolution, outPath);
 		}
 
 
-        struct Config
-        {
-            public readonly string Name;
-            public readonly bool IsRelease,
-                                    Deploy;
-            public    Config(string name, bool isRelease, bool deploy)
-            {
-                Name = name;
-                IsRelease = isRelease;
-                Deploy = deploy;
-            }
-        }
 
-		private void BuildCurrentSolution(FileInfo outPath)
+		private void BuildCurrentSolution(Solution solution, FileInfo outPath)
 		{
-            LogLine("Writing solution to '" + outPath.FullName+"'");
-
-            PersistentState.Toolset = toolSet.SelectedItem.ToString();
-
-            DirectoryInfo dir = outPath.Directory;
-            //DirectoryInfo projectDir = Directory.CreateDirectory(Path.Combine(dir.FullName, ".projects"));
-            List<Tuple<FileInfo, Guid, Project>> projects = new List<Tuple<FileInfo, Guid, Project>>();
-			int toolset;
+			if (solution.Build(outPath, this.toolSet.SelectedItem.ToString(),overwriteExistingVSUserConfigToolStripMenuItem.Checked))
 			{ 
-				string toolsetStr = this.toolSet.SelectedItem.ToString();
-				toolsetStr = toolsetStr.Substring(0, toolsetStr.IndexOf(".0"));
-				if (!int.TryParse(toolsetStr,out toolset))
-				{
-					LogLine("Internal Error: Unable to decode toolset-version from specified toolset '"+this.toolSet.SelectedItem+"'");
-					return;
-				}
+				openGeneratedSolutionToolStripMenuItem.Enabled = true;
+				openGeneratedSolutionButton.Enabled = true;
 			}
-
-            List<Configuration> configurations = new List<Configuration>();
-
-			{
-				Platform[] platforms = new Platform[]{
-					Platform.x32,
-					Platform.x64
-				};
-				Config[] names = new Config[]
-				{
-					new Config("Debug", false,false),
-                    new Config("OptimizedDebug", true,false),
-					new Config("Release", true,true)
-				};
-
-
-				foreach (var p in platforms)
-					foreach (var n in names)
-						configurations.Add(new Configuration(n.Name,p,n.IsRelease,n.Deploy));
-			}
-			//{
-			//	new Configuration() {Name = "Debug", Platform = "Win32", IsRelease = false },
-			//	new Configuration() {Name = "Debug", Platform = "x64", IsRelease = false },
-			//	new Configuration() {Name = "Release", Platform = "Win32", IsRelease = true },
-			//	new Configuration() {Name = "Release", Platform = "x64", IsRelease = true },
-			//};
-
-
-            foreach (Project p in Project.All)
-            {
-
-                var rs = p.SaveAs(toolset, configurations, overwriteExistingVSUserConfigToolStripMenuItem.Checked);
-				LogLine("Project '" +p.Name+"' written to '"+rs.Item1.FullName+"'");
-				projects.Add(new Tuple<FileInfo, Guid, Project>(rs.Item1, rs.Item2, p));
-            }
-            StreamWriter writer = File.CreateText(outPath.FullName);
-
-            writer.WriteLine();
-            writer.WriteLine("Microsoft Visual Studio Solution File, Format Version " + toolset + ".00");
-            writer.WriteLine("MinimumVisualStudioVersion = 10.0.40219.1");
-            Guid solutionGuid = Guid.NewGuid();
-            foreach (var tuple in projects)
-            {
-                string path = tuple.Item1.FullName;
-				//Relativate(dir, tuple.Item1);
-                writer.WriteLine("Project(\"{" + solutionGuid + "}\") = \"" + tuple.Item3.Name + "\", \"" + path + "\", \"{"
-                    + tuple.Item2 + "}\");");
-                writer.WriteLine("EndProject");
-            }
-            writer.WriteLine("Global");
-            writer.WriteLine("\tGlobalSection(SolutionConfigurationPlatforms) = preSolution");
-            foreach (var config in configurations)
-                writer.WriteLine("\t\t"+config+" = "+config+"");
-            writer.WriteLine("\tEndGlobalSection");
-            writer.WriteLine("\tGlobalSection(ProjectConfigurationPlatforms) = postSolution");
-            foreach (var tuple in projects)
-            {
-                Guid guid = tuple.Item2;
-				foreach (var config in configurations)
-				{
-					writer.WriteLine("\t\t{" + guid + "}." + config + ".ActiveCfg = " + config);
-					writer.WriteLine("\t\t{" + guid + "}." + config + ".Build.0 = " + config);
-
-				}
-				//	writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.ActiveCfg = Debug|Win32");
-				//writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.Build.0 = Debug|Win32");
-				//writer.WriteLine("\t\t{" + guid + "}.Debug|x64.ActiveCfg = Debug|x64");
-				//writer.WriteLine("\t\t{" + guid + "}.Debug|x64.Build.0 = Debug|x64");
-				//writer.WriteLine("\t\t{" + guid + "}.Release|Win32.ActiveCfg = Release|Win32");
-				//writer.WriteLine("\t\t{" + guid + "}.Release|Win32.Build.0 = Release|Win32");
-				//writer.WriteLine("\t\t{" + guid + "}.Release|x64.ActiveCfg = Release|x64");
-				//writer.WriteLine("\t\t{" + guid + "}.Release|x64.Build.0 = Release|x64");
-            }
-            writer.WriteLine("\tEndGlobalSection");
-
-            writer.WriteLine("\tGlobalSection(SolutionProperties) = preSolution");
-            writer.WriteLine("\t\tHideSolutionNode = FALSE");
-            writer.WriteLine("\tEndGlobalSection");
-
-            writer.WriteLine("EndGlobal");
-            writer.Close();
-            LogLine("Export done.");
-
-
-			PersistentState.SetOutPathFor(solution.File,outPath);
-
-
-			openGeneratedSolutionToolStripMenuItem.Enabled = true;
-			openGeneratedSolutionButton.Enabled = true;
         }
 
         private void buildAtToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //string name = Project.Primary.Name;
+			Solution solution = shownSolution;
+			if (solution == null)
+				return;
             chooseDestination.Filter = "Solution | " + solution.Name + ".sln";
             chooseDestination.FileName = solution.Name + ".sln";
-			DirectoryInfo preferred = solution.File.Directory.CreateSubdirectory(Project.WorkSubDirectory);
+			DirectoryInfo preferred = solution.Source.Directory.CreateSubdirectory(Project.WorkSubDirectory);
 			chooseDestination.InitialDirectory = preferred.FullName;
             if (chooseDestination.ShowDialog() == DialogResult.OK)
             {
-                PersistentState.SetOutPathFor(solution.File, new FileInfo(chooseDestination.FileName));
+                PersistentState.SetOutPathFor(solution.Source, new FileInfo(chooseDestination.FileName));
                 buildToolStripMenuItem_Click(sender, e);
             }
         }
@@ -624,7 +525,15 @@ namespace Projector
 
 		private void openGeneratedSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-            FileInfo slnPath = PersistentState.GetOutPathFor(solution.File);
+			Solution solution = shownSolution;
+			OpenGeneratedSolution(solution);
+		}
+
+		private void OpenGeneratedSolution(Solution solution)
+		{
+			if (solution == null)
+				return;
+            FileInfo slnPath = PersistentState.GetOutPathFor(solution.Source);
 			if (slnPath == null)
 			{
 				LogLine("Error: Received null while trying to retrieve sln location for '"+solution+"'. This should never happen...");
@@ -635,16 +544,83 @@ namespace Projector
 				LogLine("Error: '"+slnPath.FullName+"' does not exist");
 				return;
 			}
-			Process myProcess = new Process();
-			myProcess.StartInfo.FileName = "devenv.exe"; //not the full application path
-			myProcess.StartInfo.Arguments = "\""+slnPath.FullName+"\"";
-			if (!myProcess.Start())
-				LogLine("Error: Failed to start process");
+			if (solution.visualStudioProcess == null || solution.visualStudioProcess.HasExited)
+			{ 
+				Process myProcess = new Process();
+				myProcess.StartInfo.FileName = "devenv.exe"; //not the full application path
+				myProcess.StartInfo.Arguments = "\""+slnPath.FullName+"\"";
+				if (!myProcess.Start())
+					LogLine("Error: Failed to start process");
+				else
+					solution.visualStudioProcess = myProcess;
+				
+			}
 		}
 
         private void overwriteExistingVSUserConfigToolStripMenuItem_Click(object sender, EventArgs e)
         {
             overwriteExistingVSUserConfigToolStripMenuItem.Checked = !overwriteExistingVSUserConfigToolStripMenuItem.Checked;
         }
+
+		private void solutionListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+		{
+			if (e.Index == 0)
+			{
+				for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
+					loadedSolutionsView.Items[i].Checked = e.NewValue == CheckState.Checked;
+			}
+		}
+
+		private void generateSelectedButton_Click(object sender, EventArgs e)
+		{
+			FlushLog();
+			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
+			{
+				if (loadedSolutionsView.Items[i].Checked)
+				{
+					Solution solution = loadedSolutions[i-1];
+					FileInfo outPath = PersistentState.GetOutPathFor(solution.Source);
+					if (outPath != null && outPath.Directory.Exists)
+					{ 
+						solution.Build(outPath,this.toolSet.SelectedItem.ToString(),false);
+						ReportAndFlush(solution);
+					}
+					else
+						LogLine("Error: Cannot export '" + solution + "'. Out path is not known.");
+				}
+			}
+
+
+		}
+
+		private void openSelectedButton_Click(object sender, EventArgs e)
+		{
+			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
+			{
+				if (loadedSolutionsView.Items[i].Checked)
+				{
+					Solution solution = loadedSolutions[i - 1];
+					OpenGeneratedSolution(solution);
+				}
+			}
+
+		}
+
+		private void unloadSelectedToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
+			{
+				if (loadedSolutionsView.Items[i].Checked)
+				{
+					loadedSolutionsView.Items.RemoveAt(i);
+					Solution sol = loadedSolutions[i-1];
+					solutions.Remove(sol.Source.FullName);
+					loadedSolutions.RemoveAt(i-1);
+					i--;
+				}
+			}
+
+
+		}
     }
 }

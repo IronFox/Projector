@@ -5,7 +5,7 @@ using System.Xml;
 
 namespace Projector
 {
-    internal class PersistentState
+    public static class PersistentState
     {
 
 		/// <summary>
