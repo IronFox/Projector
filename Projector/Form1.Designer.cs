@@ -368,10 +368,13 @@
             this.solutionNameHeader,
             this.columnHeader1,
             this.columnHeader2});
+			this.loadedSolutionsView.FullRowSelect = true;
+			this.loadedSolutionsView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
 			listViewItem1.StateImageIndex = 0;
 			this.loadedSolutionsView.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
             listViewItem1});
 			this.loadedSolutionsView.Location = new System.Drawing.Point(0, 0);
+			this.loadedSolutionsView.MultiSelect = false;
 			this.loadedSolutionsView.Name = "loadedSolutionsView";
 			this.loadedSolutionsView.Size = new System.Drawing.Size(556, 199);
 			this.loadedSolutionsView.TabIndex = 0;
@@ -384,12 +387,12 @@
 			// solutionNameHeader
 			// 
 			this.solutionNameHeader.Text = "Name";
-			this.solutionNameHeader.Width = 200;
+			this.solutionNameHeader.Width = 270;
 			// 
 			// columnHeader1
 			// 
 			this.columnHeader1.Text = "Primary";
-			this.columnHeader1.Width = 100;
+			this.columnHeader1.Width = 180;
 			// 
 			// columnHeader2
 			// 
