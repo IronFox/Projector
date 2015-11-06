@@ -661,10 +661,14 @@ namespace Projector
 			if (loadedViewLock)
 				return;
 			int index = loadedSolutionsView.Items.IndexOf(e.Item);
-			if (index == 0)
+			if (index == 0 && e.Item != null)
 			{
 				for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
-					loadedSolutionsView.Items[i].Checked = e.Item.Checked;
+				{ 
+					var item = loadedSolutionsView.Items[i];
+					if (item != null)
+						item.Checked = e.Item.Checked;
+				}
 			}
 			else
 				UpdateAllNoneCheckbox();
