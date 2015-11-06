@@ -45,12 +45,25 @@
 			this.overwriteExistingVSUserConfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
 			this.openGeneratedSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.loadedSolutionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.generateSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.openGeneratedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
+			this.unloadSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.openSolutionDialog = new System.Windows.Forms.OpenFileDialog();
 			this.openProjectDialog = new System.Windows.Forms.OpenFileDialog();
 			this.solutionViewSplit = new System.Windows.Forms.SplitContainer();
 			this.mainTabControl = new System.Windows.Forms.TabControl();
 			this.tabRecent = new System.Windows.Forms.TabPage();
 			this.recentSolutions = new System.Windows.Forms.Panel();
+			this.tabLoaded = new System.Windows.Forms.TabPage();
+			this.panel3 = new System.Windows.Forms.Panel();
+			this.openSelectedButton = new System.Windows.Forms.Button();
+			this.generateSelectedButton = new System.Windows.Forms.Button();
+			this.loadedSolutionsView = new System.Windows.Forms.ListView();
+			this.solutionNameHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.tabSelected = new System.Windows.Forms.TabPage();
 			this.solutionView = new System.Windows.Forms.TreeView();
 			this.panel1 = new System.Windows.Forms.Panel();
@@ -64,19 +77,6 @@
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.label1 = new System.Windows.Forms.Label();
 			this.toolSet = new System.Windows.Forms.ComboBox();
-			this.tabLoaded = new System.Windows.Forms.TabPage();
-			this.loadedSolutionsView = new System.Windows.Forms.ListView();
-			this.solutionNameHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.panel3 = new System.Windows.Forms.Panel();
-			this.generateSelectedButton = new System.Windows.Forms.Button();
-			this.openSelectedButton = new System.Windows.Forms.Button();
-			this.loadedSolutionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.generateSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.openGeneratedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
-			this.unloadSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.solutionViewSplit)).BeginInit();
 			this.solutionViewSplit.Panel1.SuspendLayout();
@@ -84,20 +84,20 @@
 			this.solutionViewSplit.SuspendLayout();
 			this.mainTabControl.SuspendLayout();
 			this.tabRecent.SuspendLayout();
+			this.tabLoaded.SuspendLayout();
+			this.panel3.SuspendLayout();
 			this.tabSelected.SuspendLayout();
 			this.panel1.SuspendLayout();
 			this.statusStrip.SuspendLayout();
 			this.panel2.SuspendLayout();
-			this.tabLoaded.SuspendLayout();
-			this.panel3.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// menuStrip1
 			// 
 			this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
-            this.solutionToolStripMenuItem,
-            this.loadedSolutionsToolStripMenuItem});
+            this.loadedSolutionsToolStripMenuItem,
+            this.solutionToolStripMenuItem});
 			this.menuStrip1.Location = new System.Drawing.Point(0, 0);
 			this.menuStrip1.Name = "menuStrip1";
 			this.menuStrip1.Size = new System.Drawing.Size(564, 24);
@@ -171,8 +171,9 @@
             this.openGeneratedSolutionToolStripMenuItem});
 			this.solutionToolStripMenuItem.Enabled = false;
 			this.solutionToolStripMenuItem.Name = "solutionToolStripMenuItem";
-			this.solutionToolStripMenuItem.Size = new System.Drawing.Size(63, 20);
-			this.solutionToolStripMenuItem.Text = "Solution";
+			this.solutionToolStripMenuItem.Size = new System.Drawing.Size(110, 20);
+			this.solutionToolStripMenuItem.Text = "Selected Solution";
+			this.solutionToolStripMenuItem.Click += new System.EventHandler(this.solutionToolStripMenuItem_Click);
 			// 
 			// buildToolStripMenuItem
 			// 
@@ -207,6 +208,43 @@
 			this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
 			this.openGeneratedSolutionToolStripMenuItem.Text = "Open Generated Solution";
 			this.openGeneratedSolutionToolStripMenuItem.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
+			// 
+			// loadedSolutionsToolStripMenuItem
+			// 
+			this.loadedSolutionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.generateSelectedToolStripMenuItem,
+            this.openGeneratedToolStripMenuItem,
+            this.toolStripMenuItem6,
+            this.unloadSelectedToolStripMenuItem});
+			this.loadedSolutionsToolStripMenuItem.Name = "loadedSolutionsToolStripMenuItem";
+			this.loadedSolutionsToolStripMenuItem.Size = new System.Drawing.Size(110, 20);
+			this.loadedSolutionsToolStripMenuItem.Text = "Loaded Solutions";
+			// 
+			// generateSelectedToolStripMenuItem
+			// 
+			this.generateSelectedToolStripMenuItem.Name = "generateSelectedToolStripMenuItem";
+			this.generateSelectedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+			this.generateSelectedToolStripMenuItem.Text = "Generate Selected";
+			this.generateSelectedToolStripMenuItem.Click += new System.EventHandler(this.generateSelectedButton_Click);
+			// 
+			// openGeneratedToolStripMenuItem
+			// 
+			this.openGeneratedToolStripMenuItem.Name = "openGeneratedToolStripMenuItem";
+			this.openGeneratedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+			this.openGeneratedToolStripMenuItem.Text = "Open Generated";
+			this.openGeneratedToolStripMenuItem.Click += new System.EventHandler(this.openSelectedButton_Click);
+			// 
+			// toolStripMenuItem6
+			// 
+			this.toolStripMenuItem6.Name = "toolStripMenuItem6";
+			this.toolStripMenuItem6.Size = new System.Drawing.Size(165, 6);
+			// 
+			// unloadSelectedToolStripMenuItem
+			// 
+			this.unloadSelectedToolStripMenuItem.Name = "unloadSelectedToolStripMenuItem";
+			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+			this.unloadSelectedToolStripMenuItem.Text = "Unload Selected";
+			this.unloadSelectedToolStripMenuItem.Click += new System.EventHandler(this.unloadSelectedToolStripMenuItem_Click);
 			// 
 			// openSolutionDialog
 			// 
@@ -274,6 +312,89 @@
 			this.recentSolutions.Size = new System.Drawing.Size(550, 229);
 			this.recentSolutions.TabIndex = 7;
 			// 
+			// tabLoaded
+			// 
+			this.tabLoaded.Controls.Add(this.panel3);
+			this.tabLoaded.Controls.Add(this.loadedSolutionsView);
+			this.tabLoaded.Location = new System.Drawing.Point(4, 22);
+			this.tabLoaded.Name = "tabLoaded";
+			this.tabLoaded.Size = new System.Drawing.Size(556, 235);
+			this.tabLoaded.TabIndex = 2;
+			this.tabLoaded.Text = "Loaded";
+			this.tabLoaded.UseVisualStyleBackColor = true;
+			// 
+			// panel3
+			// 
+			this.panel3.AutoSize = true;
+			this.panel3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+			this.panel3.Controls.Add(this.openSelectedButton);
+			this.panel3.Controls.Add(this.generateSelectedButton);
+			this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
+			this.panel3.Location = new System.Drawing.Point(0, 205);
+			this.panel3.Name = "panel3";
+			this.panel3.Size = new System.Drawing.Size(556, 30);
+			this.panel3.TabIndex = 1;
+			// 
+			// openSelectedButton
+			// 
+			this.openSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.openSelectedButton.Location = new System.Drawing.Point(415, 0);
+			this.openSelectedButton.Name = "openSelectedButton";
+			this.openSelectedButton.Size = new System.Drawing.Size(141, 27);
+			this.openSelectedButton.TabIndex = 1;
+			this.openSelectedButton.Text = "Open Generated";
+			this.openSelectedButton.UseVisualStyleBackColor = true;
+			this.openSelectedButton.Click += new System.EventHandler(this.openSelectedButton_Click);
+			// 
+			// generateSelectedButton
+			// 
+			this.generateSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.generateSelectedButton.Location = new System.Drawing.Point(-1, 0);
+			this.generateSelectedButton.Name = "generateSelectedButton";
+			this.generateSelectedButton.Size = new System.Drawing.Size(410, 27);
+			this.generateSelectedButton.TabIndex = 0;
+			this.generateSelectedButton.Text = "Generate Selected";
+			this.generateSelectedButton.UseVisualStyleBackColor = true;
+			this.generateSelectedButton.Click += new System.EventHandler(this.generateSelectedButton_Click);
+			// 
+			// loadedSolutionsView
+			// 
+			this.loadedSolutionsView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.loadedSolutionsView.CheckBoxes = true;
+			this.loadedSolutionsView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.solutionNameHeader,
+            this.columnHeader1,
+            this.columnHeader2});
+			listViewItem1.StateImageIndex = 0;
+			this.loadedSolutionsView.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
+            listViewItem1});
+			this.loadedSolutionsView.Location = new System.Drawing.Point(0, 0);
+			this.loadedSolutionsView.Name = "loadedSolutionsView";
+			this.loadedSolutionsView.Size = new System.Drawing.Size(557, 199);
+			this.loadedSolutionsView.TabIndex = 0;
+			this.loadedSolutionsView.UseCompatibleStateImageBehavior = false;
+			this.loadedSolutionsView.View = System.Windows.Forms.View.Details;
+			this.loadedSolutionsView.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.solutionListBox_ItemCheck);
+			this.loadedSolutionsView.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.loadedSolutionsView_ItemChecked);
+			this.loadedSolutionsView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.loadedSolutionsView_ItemSelectionChanged);
+			// 
+			// solutionNameHeader
+			// 
+			this.solutionNameHeader.Text = "Name";
+			this.solutionNameHeader.Width = 200;
+			// 
+			// columnHeader1
+			// 
+			this.columnHeader1.Text = "Primary";
+			this.columnHeader1.Width = 100;
+			// 
+			// columnHeader2
+			// 
+			this.columnHeader2.Text = "#Projects";
+			// 
 			// tabSelected
 			// 
 			this.tabSelected.Controls.Add(this.solutionView);
@@ -283,7 +404,7 @@
 			this.tabSelected.Padding = new System.Windows.Forms.Padding(3);
 			this.tabSelected.Size = new System.Drawing.Size(556, 235);
 			this.tabSelected.TabIndex = 1;
-			this.tabSelected.Text = "Selected";
+			this.tabSelected.Text = "Selected (none)";
 			this.tabSelected.UseVisualStyleBackColor = true;
 			// 
 			// solutionView
@@ -322,7 +443,7 @@
 			this.buildSolutionButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.buildSolutionButton.Enabled = false;
-			this.buildSolutionButton.Location = new System.Drawing.Point(0, -1);
+			this.buildSolutionButton.Location = new System.Drawing.Point(0, 0);
 			this.buildSolutionButton.Name = "buildSolutionButton";
 			this.buildSolutionButton.Size = new System.Drawing.Size(275, 23);
 			this.buildSolutionButton.TabIndex = 2;
@@ -404,122 +525,6 @@
 			this.toolSet.TabIndex = 2;
 			this.toolSet.ValueMember = "14.0 (VS 2015)";
 			// 
-			// tabLoaded
-			// 
-			this.tabLoaded.Controls.Add(this.panel3);
-			this.tabLoaded.Controls.Add(this.loadedSolutionsView);
-			this.tabLoaded.Location = new System.Drawing.Point(4, 22);
-			this.tabLoaded.Name = "tabLoaded";
-			this.tabLoaded.Size = new System.Drawing.Size(556, 235);
-			this.tabLoaded.TabIndex = 2;
-			this.tabLoaded.Text = "Loaded";
-			this.tabLoaded.UseVisualStyleBackColor = true;
-			// 
-			// loadedSolutionsView
-			// 
-			this.loadedSolutionsView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.loadedSolutionsView.CheckBoxes = true;
-			this.loadedSolutionsView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.solutionNameHeader,
-            this.columnHeader1,
-            this.columnHeader2});
-			listViewItem1.StateImageIndex = 0;
-			this.loadedSolutionsView.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem1});
-			this.loadedSolutionsView.Location = new System.Drawing.Point(0, 0);
-			this.loadedSolutionsView.Name = "loadedSolutionsView";
-			this.loadedSolutionsView.Size = new System.Drawing.Size(557, 196);
-			this.loadedSolutionsView.TabIndex = 0;
-			this.loadedSolutionsView.UseCompatibleStateImageBehavior = false;
-			this.loadedSolutionsView.View = System.Windows.Forms.View.Details;
-			this.loadedSolutionsView.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.solutionListBox_ItemCheck);
-			// 
-			// solutionNameHeader
-			// 
-			this.solutionNameHeader.Text = "Name";
-			this.solutionNameHeader.Width = 200;
-			// 
-			// columnHeader1
-			// 
-			this.columnHeader1.Text = "Primary";
-			this.columnHeader1.Width = 100;
-			// 
-			// columnHeader2
-			// 
-			this.columnHeader2.Text = "#Projects";
-			// 
-			// panel3
-			// 
-			this.panel3.Controls.Add(this.openSelectedButton);
-			this.panel3.Controls.Add(this.generateSelectedButton);
-			this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.panel3.Location = new System.Drawing.Point(0, 202);
-			this.panel3.Name = "panel3";
-			this.panel3.Size = new System.Drawing.Size(556, 33);
-			this.panel3.TabIndex = 1;
-			// 
-			// generateSelectedButton
-			// 
-			this.generateSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.generateSelectedButton.Location = new System.Drawing.Point(-1, 0);
-			this.generateSelectedButton.Name = "generateSelectedButton";
-			this.generateSelectedButton.Size = new System.Drawing.Size(410, 23);
-			this.generateSelectedButton.TabIndex = 0;
-			this.generateSelectedButton.Text = "Generate Selected";
-			this.generateSelectedButton.UseVisualStyleBackColor = true;
-			this.generateSelectedButton.Click += new System.EventHandler(this.generateSelectedButton_Click);
-			// 
-			// openSelectedButton
-			// 
-			this.openSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.openSelectedButton.Location = new System.Drawing.Point(415, 0);
-			this.openSelectedButton.Name = "openSelectedButton";
-			this.openSelectedButton.Size = new System.Drawing.Size(141, 23);
-			this.openSelectedButton.TabIndex = 1;
-			this.openSelectedButton.Text = "Open Generated";
-			this.openSelectedButton.UseVisualStyleBackColor = true;
-			this.openSelectedButton.Click += new System.EventHandler(this.openSelectedButton_Click);
-			// 
-			// loadedSolutionsToolStripMenuItem
-			// 
-			this.loadedSolutionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.generateSelectedToolStripMenuItem,
-            this.openGeneratedToolStripMenuItem,
-            this.toolStripMenuItem6,
-            this.unloadSelectedToolStripMenuItem});
-			this.loadedSolutionsToolStripMenuItem.Name = "loadedSolutionsToolStripMenuItem";
-			this.loadedSolutionsToolStripMenuItem.Size = new System.Drawing.Size(110, 20);
-			this.loadedSolutionsToolStripMenuItem.Text = "Loaded Solutions";
-			// 
-			// generateSelectedToolStripMenuItem
-			// 
-			this.generateSelectedToolStripMenuItem.Name = "generateSelectedToolStripMenuItem";
-			this.generateSelectedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
-			this.generateSelectedToolStripMenuItem.Text = "Generate Selected";
-			this.generateSelectedToolStripMenuItem.Click += new System.EventHandler(this.generateSelectedButton_Click);
-			// 
-			// openGeneratedToolStripMenuItem
-			// 
-			this.openGeneratedToolStripMenuItem.Name = "openGeneratedToolStripMenuItem";
-			this.openGeneratedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
-			this.openGeneratedToolStripMenuItem.Text = "Open Generated";
-			this.openGeneratedToolStripMenuItem.Click += new System.EventHandler(this.openSelectedButton_Click);
-			// 
-			// toolStripMenuItem6
-			// 
-			this.toolStripMenuItem6.Name = "toolStripMenuItem6";
-			this.toolStripMenuItem6.Size = new System.Drawing.Size(165, 6);
-			// 
-			// unloadSelectedToolStripMenuItem
-			// 
-			this.unloadSelectedToolStripMenuItem.Name = "unloadSelectedToolStripMenuItem";
-			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
-			this.unloadSelectedToolStripMenuItem.Text = "Unload Selected";
-			this.unloadSelectedToolStripMenuItem.Click += new System.EventHandler(this.unloadSelectedToolStripMenuItem_Click);
-			// 
 			// ProjectView
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -546,14 +551,15 @@
 			this.solutionViewSplit.ResumeLayout(false);
 			this.mainTabControl.ResumeLayout(false);
 			this.tabRecent.ResumeLayout(false);
+			this.tabLoaded.ResumeLayout(false);
+			this.tabLoaded.PerformLayout();
+			this.panel3.ResumeLayout(false);
 			this.tabSelected.ResumeLayout(false);
 			this.panel1.ResumeLayout(false);
 			this.statusStrip.ResumeLayout(false);
 			this.statusStrip.PerformLayout();
 			this.panel2.ResumeLayout(false);
 			this.panel2.PerformLayout();
-			this.tabLoaded.ResumeLayout(false);
-			this.panel3.ResumeLayout(false);
 			this.ResumeLayout(false);
 			this.PerformLayout();
 

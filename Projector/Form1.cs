@@ -89,7 +89,7 @@ namespace Projector
 
 		private Solution shownSolution = null;
 
-		private void Show(Solution solution)
+		private void ShowSolution(Solution solution)
 		{
 			shownSolution = solution;
 			solutionView.Nodes.Clear();
@@ -99,7 +99,8 @@ namespace Projector
 				buildSolutionButton.Enabled = false;
 				openGeneratedSolutionToolStripMenuItem.Enabled = false;
 				openGeneratedSolutionButton.Enabled = openGeneratedSolutionToolStripMenuItem.Enabled;
-
+				tabSelected.Text = "Selected (none)";
+				//tabSelected.ac
 				return;
 			}
 			TreeNode tsolution = solutionView.Nodes.Add(solution.ToString());
@@ -221,6 +222,7 @@ namespace Projector
 
 			solutionToolStripMenuItem.Enabled = solution.Primary != null;
 			buildSolutionButton.Enabled = solution.Primary != null;
+			tabSelected.Text = solution.ToString();
 
 			openGeneratedSolutionToolStripMenuItem.Enabled = PersistentState.GetOutPathFor(solution.Source) != null;
 			openGeneratedSolutionButton.Enabled = openGeneratedSolutionToolStripMenuItem.Enabled;
@@ -232,6 +234,22 @@ namespace Projector
 		Dictionary<string,Solution>	solutions = new Dictionary<string,Solution>();
 		List<Solution> loadedSolutions = new List<Solution>();
 
+		bool loadedViewLock = false;
+
+		private void UpdateAllNoneCheckbox()
+		{
+			bool anyFalse = false;
+			bool anyTrue = false;
+			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
+				if (loadedSolutionsView.Items[i].Checked)
+					anyTrue = true;
+				else
+					anyFalse = true;
+			loadedViewLock = true;
+			loadedSolutionsView.Items[0].Checked = anyTrue && !anyFalse;
+			loadedViewLock = false;
+
+		}
 
         private Solution LoadSolution(FileInfo file)
         {
@@ -262,10 +280,12 @@ namespace Projector
 				item.SubItems.Add(solution.Primary != null ? solution.Primary.ToString() : "");
 				item.SubItems.Add(solution.Projects.Count().ToString());
 				item.Checked = true;
+				UpdateAllNoneCheckbox();
 				
 				//solutionListBox.Items.Add(solution,true);
 				UpdateRecent();
 				mainTabControl.SelectedTab = tabLoaded;
+
 				//tabLoaded.Show();
 				//mainTabControl.TabIndex = 1;
 
@@ -466,7 +486,7 @@ namespace Projector
 				//return;
             }
 			shownSolution.Reload(); //refresh
-			Show(shownSolution);
+			ShowSolution(shownSolution);
 
 			BuildCurrentSolution(shownSolution, outPath);
 		}
@@ -564,11 +584,7 @@ namespace Projector
 
 		private void solutionListBox_ItemCheck(object sender, ItemCheckEventArgs e)
 		{
-			if (e.Index == 0)
-			{
-				for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
-					loadedSolutionsView.Items[i].Checked = e.NewValue == CheckState.Checked;
-			}
+
 		}
 
 		private void generateSelectedButton_Click(object sender, EventArgs e)
@@ -614,13 +630,44 @@ namespace Projector
 				{
 					loadedSolutionsView.Items.RemoveAt(i);
 					Solution sol = loadedSolutions[i-1];
+					if (shownSolution == sol)
+						ShowSolution(null);
 					solutions.Remove(sol.Source.FullName);
 					loadedSolutions.RemoveAt(i-1);
 					i--;
 				}
 			}
+			UpdateAllNoneCheckbox();
+		}
 
+		private void loadedSolutionsView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
+		{
+			if (e.ItemIndex > 0 && e.ItemIndex <= loadedSolutions.Count)
+			{
+				ShowSolution(loadedSolutions[e.ItemIndex-1]);
+			}
+			else
+				ShowSolution(null);
 
+		}
+
+		private void solutionToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+
+		}
+
+		private void loadedSolutionsView_ItemChecked(object sender, ItemCheckedEventArgs e)
+		{
+			if (loadedViewLock)
+				return;
+			int index = loadedSolutionsView.Items.IndexOf(e.Item);
+			if (index == 0)
+			{
+				for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
+					loadedSolutionsView.Items[i].Checked = e.Item.Checked;
+			}
+			else
+				UpdateAllNoneCheckbox();
 		}
     }
 }
