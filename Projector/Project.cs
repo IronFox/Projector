@@ -97,12 +97,14 @@ namespace Projector
 			XmlNode ifPlatform = node.Attributes.GetNamedItem("if_platform");
 			try
 			{
-				IfPlatform = (Platform)Enum.Parse(typeof(Platform),ifPlatform.Value);
+				if (ifPlatform != null && ifPlatform.Value.Length > 0)
+					IfPlatform = (Platform)Enum.Parse(typeof(Platform),ifPlatform.Value);
+				else
+					IfPlatform = Platform.None;
 			}
 			catch
 			{
-				if (ifPlatform != null && ifPlatform.Value.Length > 0)
-					warnWhom.Warn(domain,"Unable to decode condition platform '"+ifPlatform.Value+"'. Supported values are ARM, x32, and x64");
+				warnWhom.Warn(domain,"Unable to decode condition platform '"+ifPlatform.Value+"'. Supported values are ARM, x32, and x64");
 				IfPlatform = Platform.None;
 			}
 			XmlNode ifConfig = node.Attributes.GetNamedItem("if_config");
