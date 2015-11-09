@@ -313,14 +313,9 @@ namespace Projector
         }
 
 
-
-		internal static void FlushSourceScans()
+		internal static void FlushGlobalProjects()
 		{
-			foreach (Project p in globalMap.Values)
-			{
-				foreach (var source in p.Sources)
-					source.root = null;
-			}
+			globalMap.Clear();
 		}
 	}
 }

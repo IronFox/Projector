@@ -449,7 +449,7 @@ namespace Projector
 				//buildAtToolStripMenuItem_Click(sender, e);
 				//return;
             }
-			Solution.FlushSourceScans();
+			FlushProjects();
 			bool newRecent;
 			shownSolution.Reload(out newRecent); //refresh
 			ShowSolution(shownSolution);
@@ -457,6 +457,14 @@ namespace Projector
 			BuildCurrentSolution(shownSolution, outPath);
 		}
 
+		void FlushProjects()
+		{
+			foreach (Solution s in loadedSolutions)
+			{
+				s.Clear();
+			}
+			Solution.FlushGlobalProjects();
+		}
 
 
 		private void BuildCurrentSolution(Solution solution, FileInfo outPath)
@@ -558,7 +566,7 @@ namespace Projector
 
 		private void generateSelectedButton_Click(object sender, EventArgs e)
 		{
-			Solution.FlushSourceScans();
+			FlushProjects();
 			FlushLog();
 			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
 			{
