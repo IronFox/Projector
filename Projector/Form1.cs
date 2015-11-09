@@ -99,6 +99,7 @@ namespace Projector
 				buildSolutionButton.Enabled = false;
 				openGeneratedSolutionToolStripMenuItem.Enabled = false;
 				openGeneratedSolutionButton.Enabled = openGeneratedSolutionToolStripMenuItem.Enabled;
+				
 				tabSelected.Text = "Focused (none)";
 				//tabSelected.ac
 				return;
@@ -241,7 +242,7 @@ namespace Projector
 			bool anyFalse = false;
 			bool anyTrue = false;
 			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
-				if (loadedSolutionsView.Items[i].Checked)
+				if (loadedSolutionsView.Items[i] != null && loadedSolutionsView.Items[i].Checked)
 					anyTrue = true;
 				else
 					anyFalse = true;
@@ -259,16 +260,16 @@ namespace Projector
 				LogLine("Error: Unable to read solution file '" + file + "'");
 				return null;
 			}
-
+			bool newRecent;
 			Solution solution;
 			if (solutions.TryGetValue(file.FullName,out solution))
 			{
 				LogLine("Solution '" + file + "' already loaded");
-				solution.Reload();
+				solution.Reload(out newRecent);
 			}
 			else
 			{
-				solution = Solution.LoadNew(file);
+				solution = Solution.LoadNew(file, out newRecent);
 				if (solution == null)
 				{ 
 					LogLine("Error: Unable to read solution file '"+file+"'");
@@ -281,10 +282,11 @@ namespace Projector
 				item.SubItems.Add(solution.Projects.Count().ToString());
 				item.Checked = true;
 				UpdateAllNoneCheckbox();
-				
+
 				//solutionListBox.Items.Add(solution,true);
-				UpdateRecent();
-				mainTabControl.SelectedTab = tabLoaded;
+				if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
+					mainTabControl.SelectedTab = tabLoaded;
+				UpdateRecent(newRecent);
 
 				//tabLoaded.Show();
 				//mainTabControl.TabIndex = 1;
@@ -320,116 +322,78 @@ namespace Projector
 		}
 
 
-        private void UpdateRecent()
+        private void UpdateRecent(bool recentListChanged)
         {
             var collection = recentSolutionsToolStripMenuItem.DropDown.Items;
             collection.Clear();
 
 
-            //bool anyHaveDomains = false;
-            //foreach (var recent in PersistentState.Recent)
-            //	if (recent.Domain != null)
-            //	{
-            //		anyHaveDomains = true;
-            //		break;
-            //	}
+			//bool anyHaveDomains = false;
+			//foreach (var recent in PersistentState.Recent)
+			//	if (recent.Domain != null)
+			//	{
+			//		anyHaveDomains = true;
+			//		break;
+			//	}
 
 
+			bool rebuildPanel = recentListChanged || mainTabControl.SelectedTab != tabRecent;
 
-            recentSolutions.Controls.Clear();
+			int top = 10;
+			Font f = null;
+			if (rebuildPanel)
+			{
+				recentSolutions.Controls.Clear();
 
-            int top = 10;
 
-            Font f;
-            {
-                Label title = new Label();
+				{
+					Label title = new Label();
 
-                f = new Font(title.Font.FontFamily, title.Font.Size * 1.2f);
-                title.Font = f;
-                title.Text = "Recent Solutions:";
-                title.Left = 15;
-                title.Top = top;
-                top += title.Height;
-                title.Width = title.PreferredWidth;
-                recentSolutions.Controls.Add(title);
-            }
+					f = new Font(title.Font.FontFamily, title.Font.Size * 1.2f);
+					title.Font = f;
+					title.Text = "Recent Solutions:";
+					title.Left = 15;
+					title.Top = top;
+					top += title.Height;
+					title.Width = title.PreferredWidth;
+					recentSolutions.Controls.Add(title);
+				}
+
+			}
 
 			ToolTip tooltip = new ToolTip();
-			//tooltip.ToolTipIcon = ToolTipIcon.Info;
-			//tooltip.IsBalloon = true;
 			tooltip.ShowAlways = true;
-			
-
-            foreach (var recent in PersistentState.Recent)
-            {
+			foreach (var recent in PersistentState.Recent)
+			{
 				ToolStripItemCollection parent = collection;
 
-                LinkLabel lrecent = new LinkLabel();
-                lrecent.Top = top;
-                //lrecent.Font;
+				if (rebuildPanel)
+				{
+					LinkLabel lrecent = new LinkLabel();
+					lrecent.Top = top;
+					//lrecent.Font;
 
-                lrecent.Font = f;
-                lrecent.Left = 20;
-                lrecent.Text = recent.ToString();
-                lrecent.Width = lrecent.PreferredWidth;
-                recentSolutions.Controls.Add(lrecent);
+					lrecent.Font = f;
+					lrecent.Left = 20;
+					lrecent.Text = recent.ToString();
+					lrecent.Width = lrecent.PreferredWidth;
+					recentSolutions.Controls.Add(lrecent);
+					tooltip.SetToolTip(lrecent, recent.File.FullName);
+					top += lrecent.Height;
+					lrecent.Click += (sender, item2) => LoadSolution(recent.File);
+				}
 
-				//Label lpath = new Label();
-				//lpath.Text = "("+recent.File.FullName+")";
-				//lpath.Height = lpath.PreferredHeight;
-				//lpath.Width = lpath.PreferredWidth;
-				////lpath.Top = top;
-				//lpath.Top = lrecent.Top + (lrecent.Font.Height - lpath.Font.Height) * 2;
-				
-				////lpath.Font = pathFont;
-				//lpath.Left = lrecent.Left + lrecent.Width;
-				//recentSolutions.Controls.Add(lpath);
-
-				//lrecent.AutoToolTip = true;
-				//lrecent.ToolTipText = recent.File.FullName;
-				tooltip.SetToolTip(lrecent,recent.File.FullName);
-
-				top += lrecent.Height;
-
-                //lrecent.Cursor = Cursor.
-
-
-                //if (anyHaveDomains)
-                //{
-                //	string lookFor = recent.Domain ?? "<No Domain>";
-
-                //	ToolStripMenuItem found = null;
-                //	for (int i = 0; i < collection.Count; i++)
-                //		if (collection[i].Text == lookFor)
-                //		{ 
-                //			found = (ToolStripMenuItem)collection[i];
-                //			break;
-                //		}
-
-                //	if (found != null)
-                //	{
-                //		//ToolStripMenuItem child = (ToolStripMenuItem)(collection[index]);
-                //		parent = found.DropDown.Items;
-                //	}
-                //	else
-                //	{
-                //		ToolStripMenuItem child = new ToolStripMenuItem(lookFor);
-                //		parent = child.DropDown.Items;
-                //		collection.Add(child);
-                //	}
-                //}
-                ToolStripItem item = new ToolStripMenuItem(recent.ToString());
+				ToolStripItem item = new ToolStripMenuItem(recent.ToString());
 				item.AutoToolTip = true;
 				item.ToolTipText = recent.File.FullName;
                 item.Click += (sender, item2) => LoadSolution(recent.File);
-                lrecent.Click += (sender, item2) => LoadSolution(recent.File);
 				//lpath.Click += (sender, item2) => LoadSolution(recent.File);
                 parent.Add(item);
             }
             collection.Add("-");
             {
                 ToolStripItem item = new ToolStripMenuItem("Clear List");
-                item.Click += (sender, item2) => { PersistentState.ClearRecent(); UpdateRecent(); };
+                item.Click += (sender, item2) => { PersistentState.ClearRecent(); UpdateRecent(true); };
                 collection.Add(item);
 
             }
@@ -446,7 +410,7 @@ namespace Projector
         {
 			statusStrip.Items[0].Text = "Persistent state stored in " + PersistentState.StateFile.FullName;
 
-            UpdateRecent();
+            UpdateRecent(true);
 
 			string[] parameters = Environment.GetCommandLineArgs();
 			if (parameters.Length > 1)
@@ -486,7 +450,8 @@ namespace Projector
 				//return;
             }
 			Solution.FlushSourceScans();
-			shownSolution.Reload(); //refresh
+			bool newRecent;
+			shownSolution.Reload(out newRecent); //refresh
 			ShowSolution(shownSolution);
 
 			BuildCurrentSolution(shownSolution, outPath);
@@ -497,9 +462,12 @@ namespace Projector
 		private void BuildCurrentSolution(Solution solution, FileInfo outPath)
 		{
 			if (solution.Build(outPath, this.toolSet.SelectedItem.ToString(),overwriteExistingVSUserConfigToolStripMenuItem.Checked))
-			{ 
-				openGeneratedSolutionToolStripMenuItem.Enabled = true;
-				openGeneratedSolutionButton.Enabled = true;
+			{
+				if (solution == shownSolution)
+				{
+					openGeneratedSolutionToolStripMenuItem.Enabled = true;
+					openGeneratedSolutionButton.Enabled = true;
+				}
 			}
         }
 
@@ -599,8 +567,9 @@ namespace Projector
 					Solution solution = loadedSolutions[i-1];
 					FileInfo outPath = PersistentState.GetOutPathFor(solution.Source);
 					if (outPath != null && outPath.Directory.Exists)
-					{ 
-						solution.Reload(); //refresh
+					{
+						bool newRecent;
+						solution.Reload(out newRecent); //refresh
 						solution.Build(outPath,this.toolSet.SelectedItem.ToString(),false);
 						ReportAndFlush(solution);
 						if (solution == shownSolution)

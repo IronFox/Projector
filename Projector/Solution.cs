@@ -133,19 +133,25 @@ namespace Projector
 			Primary = p;
 		}
 
-
-		public static Solution LoadNew(FileInfo file)
+		/// <summary>
+		/// Loads a new solution
+		/// </summary>
+		/// <param name="file">.solution file to load</param>
+		/// <param name="newRecent">Set to true if the solution is not listed in recent solutions, false otherwise</param>
+		/// <returns>New solution or null, if the specified file could not be loaded</returns>
+		public static Solution LoadNew(FileInfo file, out bool newRecent)
 		{
 			Solution solution = new Solution(file);
-			if (!solution.Reload())
+			if (!solution.Reload(out newRecent))
 				return null;
 			return solution;
 		}
 
 
-		public bool Reload()
+		public bool Reload(out bool newRecent)
 		{
-			if (!Source.Exists)
+			newRecent = false;
+            if (!Source.Exists)
 			{
 				return false;
 			}
@@ -170,7 +176,7 @@ namespace Projector
 					solutionDesc = new PersistentState.SolutionDescriptor(Source, null);
 				
 
-				PersistentState.MemorizeRecent(solutionDesc);
+				PersistentState.MemorizeRecent(solutionDesc, out newRecent);
 
 				XmlNodeList xprojects = xdoc.SelectNodes("solution/project");
 

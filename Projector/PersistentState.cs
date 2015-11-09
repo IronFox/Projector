@@ -164,9 +164,9 @@ namespace Projector
             }
         }
 
-        public static void MemorizeRecent(SolutionDescriptor desc)
+        public static void MemorizeRecent(SolutionDescriptor desc, out bool newRecent)
         {
-			recent.Remove(desc);
+			newRecent = !recent.Remove(desc);
 			recent.Insert(0, desc);
             Backup();
         }

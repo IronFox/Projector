@@ -440,7 +440,7 @@
 			this.openGeneratedSolutionButton.TabIndex = 3;
 			this.openGeneratedSolutionButton.Text = "Open Generated";
 			this.openGeneratedSolutionButton.UseVisualStyleBackColor = true;
-			this.openGeneratedSolutionButton.Click += new System.EventHandler(this.openSelectedButton_Click);
+			this.openGeneratedSolutionButton.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
 			// 
 			// buildSolutionButton
 			// 
