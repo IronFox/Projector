@@ -104,6 +104,7 @@ namespace Projector
 				//tabSelected.ac
 				return;
 			}
+			solution.ScanEmptySources();
 			TreeNode tsolution = solutionView.Nodes.Add(solution.ToString());
 			foreach (Project project in solution.Projects)
 			{
@@ -533,7 +534,7 @@ namespace Projector
             FileInfo slnPath = PersistentState.GetOutPathFor(solution.Source);
 			if (slnPath == null)
 			{
-				LogLine("Error: Received null while trying to retrieve sln location for '"+solution+"'. This should never happen...");
+				LogLine("Error: Out location unknown for '"+solution+"'. Chances are, this solution has not been generated.");
 				return;
 			}
 			if (!slnPath.Exists)
@@ -564,6 +565,35 @@ namespace Projector
 
 		}
 
+		private void Generate(Solution solution)
+		{
+			FileInfo outPath = PersistentState.GetOutPathFor(solution.Source);
+			if (outPath == null)
+			{
+				DirectoryInfo preferred = solution.Source.Directory.CreateSubdirectory(Project.WorkSubDirectory);
+				if (preferred != null)
+				{
+					string outName = Path.Combine(preferred.FullName, solution.Name + ".sln");
+					LogLine("Notify: Out path for '" + solution + "' not known. Defaulting to " + outName);
+					outPath = new FileInfo(outName);
+					PersistentState.SetOutPathFor(solution.Source, outPath);
+				}
+			}
+
+
+			if (outPath != null && outPath.Directory.Exists)
+			{
+				bool newRecent;
+				solution.Reload(out newRecent); //refresh
+				solution.Build(outPath, this.toolSet.SelectedItem.ToString(), false);
+				ReportAndFlush(solution);
+				if (solution == shownSolution)
+					ShowSolution(solution);
+			}
+			else
+				LogLine("Error: Cannot export '" + solution + "'. Out path is not known.");
+		}
+
 		private void generateSelectedButton_Click(object sender, EventArgs e)
 		{
 			FlushProjects();
@@ -573,18 +603,7 @@ namespace Projector
 				if (loadedSolutionsView.Items[i].Checked)
 				{
 					Solution solution = loadedSolutions[i-1];
-					FileInfo outPath = PersistentState.GetOutPathFor(solution.Source);
-					if (outPath != null && outPath.Directory.Exists)
-					{
-						bool newRecent;
-						solution.Reload(out newRecent); //refresh
-						solution.Build(outPath,this.toolSet.SelectedItem.ToString(),false);
-						ReportAndFlush(solution);
-						if (solution == shownSolution)
-							ShowSolution(solution);
-					}
-					else
-						LogLine("Error: Cannot export '" + solution + "'. Out path is not known.");
+					Generate(solution);
 				}
 			}
 
@@ -655,5 +674,18 @@ namespace Projector
 			else
 				UpdateAllNoneCheckbox();
 		}
-    }
+
+		private void buildSolutionButton_Click(object sender, EventArgs e)
+		{
+			FlushProjects();
+			FlushLog();
+			if (shownSolution == null)
+			{
+				LogLine("Error: No solution focused.");
+				return;
+			}
+			Generate(shownSolution);
+			ShowSolution(shownSolution);
+		}
+	}
 }

@@ -124,6 +124,16 @@ namespace Projector
 			return p;
 		}
 
+		public void ScanEmptySources()
+		{
+			foreach (Project p in list)
+			{
+				foreach (Project.Source s in p.Sources)
+					s.ScanFiles(this, p);
+
+			}
+		}
+
 		public void SetPrimary(Project p)
 		{
 			if (Primary != null)

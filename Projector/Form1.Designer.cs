@@ -338,9 +338,9 @@
 			// openSelectedButton
 			// 
 			this.openSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.openSelectedButton.Location = new System.Drawing.Point(410, 0);
+			this.openSelectedButton.Location = new System.Drawing.Point(283, 0);
 			this.openSelectedButton.Name = "openSelectedButton";
-			this.openSelectedButton.Size = new System.Drawing.Size(146, 27);
+			this.openSelectedButton.Size = new System.Drawing.Size(273, 27);
 			this.openSelectedButton.TabIndex = 1;
 			this.openSelectedButton.Text = "Open Generated";
 			this.openSelectedButton.UseVisualStyleBackColor = true;
@@ -352,7 +352,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.generateSelectedButton.Location = new System.Drawing.Point(-1, 0);
 			this.generateSelectedButton.Name = "generateSelectedButton";
-			this.generateSelectedButton.Size = new System.Drawing.Size(410, 27);
+			this.generateSelectedButton.Size = new System.Drawing.Size(283, 27);
 			this.generateSelectedButton.TabIndex = 0;
 			this.generateSelectedButton.Text = "Generate Selected Solutions";
 			this.generateSelectedButton.UseVisualStyleBackColor = true;
@@ -453,7 +453,7 @@
 			this.buildSolutionButton.TabIndex = 2;
 			this.buildSolutionButton.Text = "Build Solution";
 			this.buildSolutionButton.UseVisualStyleBackColor = true;
-			this.buildSolutionButton.Click += new System.EventHandler(this.generateSelectedButton_Click);
+			this.buildSolutionButton.Click += new System.EventHandler(this.buildSolutionButton_Click);
 			// 
 			// log
 			// 

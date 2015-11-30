@@ -37,9 +37,17 @@ namespace Projector
 					}
 					catch (Exception)
 					{ }
-
-					pipeServer.WaitForPipeDrain();
-					if (pipeServer.IsConnected) { pipeServer.Disconnect(); }
+					if (pipeServer != null)
+						try
+						{
+							pipeServer.WaitForPipeDrain();
+							if (pipeServer.IsConnected)
+							{
+								pipeServer.Disconnect();
+							}
+						}
+						catch (Exception)
+						{ }
 				} while (pipeServer != null);
 			}
 			catch (Exception)
