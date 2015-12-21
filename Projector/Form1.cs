@@ -253,7 +253,21 @@ namespace Projector
 
 		}
 
-        private Solution LoadSolution(FileInfo file)
+		private void LoadDomain(String domainName)
+		{
+			var list = PersistentState.Recent.ToArray();
+			foreach (var recent in list)
+			{
+				if (recent.Domain ==domainName)
+					LoadSolution(recent.File,true);
+			}
+			mainTabControl.SelectedTab = tabLoaded;
+			UpdateAllNoneCheckbox();
+			UpdateRecent(true);
+
+		}
+
+        private Solution LoadSolution(FileInfo file, bool batchLoad=false)
         {
 			FlushLog();
 			if (!file.Exists)
@@ -282,12 +296,15 @@ namespace Projector
 				item.SubItems.Add(solution.Primary != null ? solution.Primary.ToString() : "");
 				item.SubItems.Add(solution.Projects.Count().ToString());
 				item.Checked = true;
-				UpdateAllNoneCheckbox();
 
 				//solutionListBox.Items.Add(solution,true);
-				if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
-					mainTabControl.SelectedTab = tabLoaded;
-				UpdateRecent(newRecent);
+				if (!batchLoad)
+				{
+					UpdateAllNoneCheckbox();
+					if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
+						mainTabControl.SelectedTab = tabLoaded;
+					UpdateRecent(newRecent);
+				}
 
 				//tabLoaded.Show();
 				//mainTabControl.TabIndex = 1;
@@ -352,7 +369,7 @@ namespace Projector
 
 					f = new Font(title.Font.FontFamily, title.Font.Size * 1.2f);
 					title.Font = f;
-					title.Text = "Recent Solutions:";
+					title.Text = "Recent Solutions: (shift+click to load but stay on this tab)";
 					title.Left = 15;
 					title.Top = top;
 					top += title.Height;
@@ -364,24 +381,50 @@ namespace Projector
 
 			ToolTip tooltip = new ToolTip();
 			tooltip.ShowAlways = true;
+			int left = 20;
+			//string lastDomain = null;
 			foreach (var recent in PersistentState.Recent)
 			{
 				ToolStripItemCollection parent = collection;
 
 				if (rebuildPanel)
 				{
-					LinkLabel lrecent = new LinkLabel();
-					lrecent.Top = top;
-					//lrecent.Font;
+					//int lineHeight = 0;
+					bool hasDomain = recent.Domain != null && recent.Domain.Length != 0;
+					if (hasDomain)//&& lastDomain != recent.Domain
+					{
+						LinkLabel ldomain = new LinkLabel();
+						ldomain.Top = top;
 
-					lrecent.Font = f;
-					lrecent.Left = 20;
-					lrecent.Text = recent.ToString();
-					lrecent.Width = lrecent.PreferredWidth;
-					recentSolutions.Controls.Add(lrecent);
-					tooltip.SetToolTip(lrecent, recent.File.FullName);
-					top += lrecent.Height;
-					lrecent.Click += (sender, item2) => LoadSolution(recent.File);
+						ldomain.Font = f;
+						ldomain.Left = 20;
+						ldomain.Text = recent.Domain+"/";
+						ldomain.Width = ldomain.PreferredWidth;
+						left = 20 + ldomain.Width;
+						recentSolutions.Controls.Add(ldomain);
+						tooltip.SetToolTip(ldomain, "Load all recent projects of domain '"+recent.Domain+"'");
+						//top += lrecent.Height;
+						ldomain.Click += (sender, item2) => LoadDomain(recent.Domain);
+					}
+					else
+						left = 20;
+					//lastDomain = recent.Domain;
+
+					{ 
+						LinkLabel lrecent = new LinkLabel();
+						lrecent.Top = top;
+						//lrecent.Font;
+
+						lrecent.Font = f;
+						lrecent.Left = left;
+						lrecent.Text = recent.Name;
+						lrecent.Width = lrecent.PreferredWidth;
+						recentSolutions.Controls.Add(lrecent);
+						tooltip.SetToolTip(lrecent, recent.File.FullName);
+						top += lrecent.Height;
+						lrecent.Click += (sender, item2) => LoadSolution(recent.File);
+					}
+
 				}
 
 				ToolStripItem item = new ToolStripMenuItem(recent.ToString());

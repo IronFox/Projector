@@ -839,6 +839,7 @@ namespace Projector
                 {
                     writer.WriteLine("<PropertyGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config + "'\">");
                     writer.WriteLine("  <LinkIncremental>" + !config.IsRelease + "</LinkIncremental>");
+					//writer.WriteLine("  <IntDir>" + Path.Combine(file.Directory.FullName, config.Platform.ToString(), config.Name) + Path.DirectorySeparatorChar + "</IntDir>");
                     if (config.Deploy)
 					{ 
                         writer.WriteLine("  <OutDir>"+SourcePath.DirectoryName+Path.DirectorySeparatorChar+"</OutDir>");
