@@ -232,11 +232,23 @@ namespace Projector
 		};
 
 
+		/// <summary>
+		/// Additionally included path
+		/// </summary>
+		public class PathInclusion
+		{
+			/// <summary>
+			/// Root directory to search from
+			/// </summary>
+			public DirectoryInfo path;
+
+
+		}
 
 		/// <summary>
 		/// Project source declaration. Each source targets a directory and may provide any number of exclusion-rules
 		/// </summary>
-        public class Source
+		public class Source
         {
 			/// <summary>
 			/// Root directory to search from
@@ -593,7 +605,13 @@ namespace Projector
 							Root = info;
 					}
 				}
-                if (Root == null)
+				if (Root == null && missed.Count == 0)
+				{
+					Root = domain.Source.Directory;
+				}
+
+
+				if (Root == null)
                 {
                     warn.Warn(domain,Name + ": None of the " + missed.Count + " root locations could be evaluated. Is this library installed on your machine?");
                 }
@@ -677,6 +695,10 @@ namespace Projector
 		/// </summary>
         public IEnumerable<Source> Sources { get { return sources; } }
 		/// <summary>
+		/// Retrieves all includes directories. May be empty, but never null
+		/// </summary>
+		public IEnumerable<PathInclusion> IncludedPaths { get { return includedPaths; } }
+		/// <summary>
 		/// Retrieves all command line instructions to be executed ahead of building the local project. May be empty, but never null
 		/// </summary>
 		public IEnumerable<Command> PreBuildCommands { get { return preBuildCommands; } }
@@ -730,6 +752,7 @@ namespace Projector
         List<Source> sources = new List<Source>();
         Dictionary<string, string> macros = new Dictionary<string, string>();
         List<Reference> references = new List<Reference>();
+		List<PathInclusion> includedPaths = new List<PathInclusion>();
 		Dictionary<Platform,string>customTargetNames = new Dictionary<Platform,string>();
 		int customStackSize = -1;
         int roundTrip = 0;
@@ -878,6 +901,9 @@ namespace Projector
 							if (linkDir.Item1.Test(config))
 								libPaths.Add(linkDir.Item2.FullName);
 					}
+
+					foreach (var inc in includedPaths)
+						includes.Add(inc.path.FullName);
 					if (includes.Count > 0)
 						writer.WriteLine("  <IncludePath>" + includes.Fuse(";") + ";$(IncludePath)</IncludePath>");
 					if (libPaths.Count > 0)
@@ -1132,7 +1158,8 @@ namespace Projector
 						includedLibraries.Add(lib);
                 preBuildCommands.AddRange(p.preBuildCommands);
                 sources.AddRange(p.sources);
-                foreach (var pair in p.macros)
+				includedPaths.AddRange(p.includedPaths);
+				foreach (var pair in p.macros)
                     macros.Add(pair.Key, pair.Value);
                 references.AddRange(p.references);
 
@@ -1172,6 +1199,12 @@ namespace Projector
             {
                 AddSource(xsource, domain);
             }
+
+			XmlNodeList xincludes = xproject.SelectNodes("include");
+			foreach (XmlNode xinclude in xincludes)
+			{
+				AddInclude(xinclude, domain);
+			}
 
 			XmlNodeList xtargets = xproject.SelectNodes("targetName");
 			foreach (XmlNode xtarget in xtargets)
@@ -1469,8 +1502,28 @@ namespace Projector
             }
             sources.Add(s);
         }
+		private void AddInclude(XmlNode xinc, Solution domain)
+		{
 
-        public Project(string name)
+			XmlNode xPath = xinc.Attributes.GetNamedItem("path");
+			if (xPath == null)
+			{
+				Warn(domain, "'path' attribute missing while parsing include entry");
+				return;
+			}
+			PathInclusion inc = new PathInclusion();
+
+
+			inc.path = GetRelativeDir(SourcePath.Directory, xPath.Value);
+			if (!inc.path.Exists)
+			{
+				Warn(domain, "Include path '" + xPath.Value + "' does not exist relative to '" + SourcePath.FullName + "'");
+				return;
+			}
+			includedPaths.Add(inc);
+		}
+
+		public Project(string name)
         { 
 			PurelyImplicitlyLoaded = true;
 			Name = name;
