@@ -281,6 +281,8 @@ namespace Projector
 			{
 				LogLine("Solution '" + file + "' already loaded");
 				solution.Reload(out newRecent);
+
+				RefreshListView(solution);
 			}
 			else
 			{
@@ -296,6 +298,7 @@ namespace Projector
 				item.SubItems.Add(solution.Primary != null ? solution.Primary.ToString() : "");
 				item.SubItems.Add(solution.Projects.Count().ToString());
 				item.Checked = true;
+				solution.ListViewItem = item;
 
 				//solutionListBox.Items.Add(solution,true);
 				if (!batchLoad)
@@ -520,6 +523,8 @@ namespace Projector
 					openGeneratedSolutionToolStripMenuItem.Enabled = true;
 					openGeneratedSolutionButton.Enabled = true;
 				}
+
+				RefreshListView(solution);
 			}
         }
 
@@ -632,9 +637,20 @@ namespace Projector
 				ReportAndFlush(solution);
 				if (solution == shownSolution)
 					ShowSolution(solution);
+
+				RefreshListView(solution);
 			}
 			else
 				LogLine("Error: Cannot export '" + solution + "'. Out path is not known.");
+		}
+
+		private void RefreshListView(Solution solution)
+		{
+			ListViewItem item = solution.ListViewItem;
+			if (item != null)
+			{
+				item.SubItems[2].Text = solution.Projects.Count().ToString();
+			}
 		}
 
 		private void generateSelectedButton_Click(object sender, EventArgs e)

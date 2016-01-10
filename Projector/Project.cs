@@ -1462,8 +1462,8 @@ namespace Projector
                 s.exclude = new List<Source.Exclude>();
                 foreach (XmlNode xExclude in xExcludes)
                 {
-                    
-                    XmlNode xFind = xExclude.Attributes.GetNamedItem("find");
+
+					XmlNode xFind = xExclude.Attributes.GetNamedItem("find") ?? xExclude.Attributes.GetNamedItem("substr");
                     if (xFind != null)
                     {
                         var ex = new Source.Exclude();
@@ -1494,7 +1494,7 @@ namespace Projector
                                 s.exclude.Add(ex);
                             }
                             else
-								Warn(domain, "Unable to determine exclusion of type");
+								Warn(domain, "Unable to determine type of exclusion in source '" + xPath.Value + "' (supported types are 'find'/'substr', 'dir', and 'file')");
                         }
 
                     }

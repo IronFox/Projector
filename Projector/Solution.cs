@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Xml;
 
 namespace Projector
@@ -22,6 +23,8 @@ namespace Projector
 				Deploy = deploy;
 			}
 		}
+
+		public ListViewItem ListViewItem {  get; set; }
 
 
 		private Dictionary<string, Project> map = new Dictionary<string, Project>();
