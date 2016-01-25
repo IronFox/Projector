@@ -18,13 +18,23 @@ namespace Projector
 		static NamedPipeServerStream pipeServer;
 		static Thread pipeServerThread;
 		static ProjectView view;
+		static object pipeServerLock = new object();
+
+
+		private static void CreatePipeServer()
+		{
+			pipeServer = new NamedPipeServerStream(PipeName, PipeDirection.In, 1);
+			pipeServerThread = new Thread(new ThreadStart(PipeServerThread));
+			pipeServerThread.Start();
+		}
 
 		private static void PipeServerThread()
 		{
 	
 			StreamReader sr = new StreamReader(pipeServer);
 			try
-			{ 
+			{
+				int loopCnt = 0;
 				do
 				{
 					try
@@ -48,6 +58,26 @@ namespace Projector
 						}
 						catch (Exception)
 						{ }
+					Thread.Sleep(10);
+
+					if (++loopCnt > 10)
+					{
+						loopCnt = 0;
+
+						lock(pipeServerLock)
+						{
+							try
+							{
+								sr.Close();
+							}
+							catch { }
+							try
+							{
+								CreatePipeServer();
+							}
+							catch { }
+						}
+					}
 				} while (pipeServer != null);
 			}
 			catch (Exception)
@@ -63,23 +93,26 @@ namespace Projector
 
 		public static void End()
 		{
-            if (pipeServer != null)
-            {
-                pipeServer.Close();
-                pipeServer = null;
+			lock(pipeServerLock)
+			{
+				if (pipeServer != null)
+				{
+					pipeServer.Close();
+					pipeServer = null;
 
-                using (NamedPipeClientStream npcs = new NamedPipeClientStream(".", PipeName, PipeDirection.Out, PipeOptions.None))
-                {
-                    try
-                    {
-                        npcs.Connect(100);
-                    }
-                    catch (Exception)
-                    { }
-                }
+					using (NamedPipeClientStream npcs = new NamedPipeClientStream(".", PipeName, PipeDirection.Out, PipeOptions.None))
+					{
+						try
+						{
+							npcs.Connect(100);
+						}
+						catch (Exception)
+						{ }
+					}
 
-                pipeServerThread.Join();
-            }
+					pipeServerThread.Join();
+				}
+			}
 			Application.Exit();
 		}
 
@@ -101,9 +134,7 @@ namespace Projector
 					Application.EnableVisualStyles();
 					Application.SetCompatibleTextRenderingDefault(false);
 
-					pipeServer = new NamedPipeServerStream(PipeName, PipeDirection.In, 1);
-					pipeServerThread = new Thread(new ThreadStart(PipeServerThread));
-					pipeServerThread.Start();
+					CreatePipeServer();
 
 					view = new ProjectView();
 					Application.Run(view);
