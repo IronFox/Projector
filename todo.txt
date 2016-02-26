@@ -2,3 +2,4 @@ Fix all<->none
 'About' dialog
 Batch build
 Optional libraries
+*.hlsli support
