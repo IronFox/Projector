@@ -4,3 +4,4 @@ Batch build
 Optional libraries
 *.hlsli support
 Remove logic to only start one instance of the program (it's really not useful)
+When hovering over a domain name in Recent, make all potentially loaded solutions fat or underlined
