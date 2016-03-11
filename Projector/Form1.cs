@@ -746,5 +746,11 @@ namespace Projector
 			Generate(shownSolution);
 			ShowSolution(shownSolution);
 		}
+
+		private void toolSet_SelectedIndexChanged_1(object sender, EventArgs e)
+		{
+			PersistentState.Toolset = toolSet.SelectedItem.ToString();
+		}
+
 	}
 }
