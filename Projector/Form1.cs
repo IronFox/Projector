@@ -752,5 +752,9 @@ namespace Projector
 			PersistentState.Toolset = toolSet.SelectedItem.ToString();
 		}
 
+		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			new About().Show();
+		}
 	}
 }

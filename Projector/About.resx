@@ -117,8 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="Projector" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Projector.ico;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="richTextBox1.Text" xml:space="preserve">
+    <value>
+Projector is a tool to simplify the management of Visual Studio solutions.
+Solutions and projects are created as simple XML files which are converted into Visual Studio files on the fly.
+Projector tries to hide much of the complexity of Visual Studio solutions, and manage varying path constellations on different computers.
+
+Copyright (C) 2016 Stefan Elsen</value>
   </data>
 </root>
