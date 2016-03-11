@@ -1,2 +1,3 @@
 Batch build
 Optional libraries
+Solution designer
