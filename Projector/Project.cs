@@ -221,8 +221,9 @@ namespace Projector
             {".c", c },
 
             {".hlsl", shader },
+			{".hlsli", shader },
 
-            {".cpp", cpp },
+			{".cpp", cpp },
             {".c++", cpp },
             {".cc", cpp },
 
