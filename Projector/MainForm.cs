@@ -347,7 +347,7 @@ namespace Projector
 		{
 			List<LinkLabel> allLabels = new List<LinkLabel>();
 			Dictionary<string, List<LinkLabel>> domainMap = new Dictionary<string, List<LinkLabel>>();
-			Font defaultFont, boldFont;
+			Font defaultFont, litFont;
 
 			public void Clear()
 			{
@@ -360,7 +360,7 @@ namespace Projector
 				if (defaultFont == null)
 				{
 					defaultFont = label.Font;
-					boldFont = new Font(defaultFont, FontStyle.Bold);
+					litFont = new Font(defaultFont, FontStyle.Italic);
 				}
 				allLabels.Add(label);
 				if (domain != null)
@@ -375,7 +375,10 @@ namespace Projector
 			internal void ClearHighlight()
 			{
 				foreach (var label in allLabels)
+				{ 
 					label.Font = defaultFont;
+					label.Width = label.PreferredWidth;
+				}
 			}
 
 			internal void HighlightDomain(string domain)
@@ -385,7 +388,7 @@ namespace Projector
 				if (domainMap.TryGetValue(domain, out hightlighted))
 					foreach (var label in hightlighted)
 					{
-						label.Font = boldFont;
+						label.Font = litFont;
 						label.Width = label.PreferredWidth;
 					}
 			}
