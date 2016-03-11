@@ -343,6 +343,56 @@ namespace Projector
 		}
 
 
+		class RecentItems
+		{
+			List<LinkLabel> allLabels = new List<LinkLabel>();
+			Dictionary<string, List<LinkLabel>> domainMap = new Dictionary<string, List<LinkLabel>>();
+			Font defaultFont, boldFont;
+
+			public void Clear()
+			{
+				allLabels.Clear();
+				domainMap.Clear();
+			}
+
+			public void Add(string domain, LinkLabel label)
+			{
+				if (defaultFont == null)
+				{
+					defaultFont = label.Font;
+					boldFont = new Font(defaultFont, FontStyle.Bold);
+				}
+				allLabels.Add(label);
+				if (domain != null)
+				{
+					if (domainMap.ContainsKey(domain))
+						domainMap[domain].Add(label);
+					else
+						domainMap.Add(domain, new List<LinkLabel>(new LinkLabel[]{ label }));
+				}
+			}
+
+			internal void ClearHighlight()
+			{
+				foreach (var label in allLabels)
+					label.Font = defaultFont;
+			}
+
+			internal void HighlightDomain(string domain)
+			{
+				ClearHighlight();
+				List<LinkLabel> hightlighted;
+				if (domainMap.TryGetValue(domain, out hightlighted))
+					foreach (var label in hightlighted)
+					{
+						label.Font = boldFont;
+						label.Width = label.PreferredWidth;
+					}
+			}
+		}
+
+		RecentItems recentItems = new RecentItems();
+
         private void UpdateRecent(bool recentListChanged)
         {
             var collection = recentSolutionsToolStripMenuItem.DropDown.Items;
@@ -365,6 +415,7 @@ namespace Projector
 			if (rebuildPanel)
 			{
 				recentSolutions.Controls.Clear();
+				recentItems.Clear();
 
 
 				{
@@ -406,6 +457,8 @@ namespace Projector
 						left = 20 + ldomain.Width;
 						recentSolutions.Controls.Add(ldomain);
 						tooltip.SetToolTip(ldomain, "Load all recent projects of domain '"+recent.Domain+"'");
+						ldomain.MouseEnter += (sender, item2) => recentItems.HighlightDomain(recent.Domain);
+						ldomain.MouseLeave += (sender, item2) => recentItems.ClearHighlight();
 						//top += lrecent.Height;
 						ldomain.Click += (sender, item2) => LoadDomain(recent.Domain);
 					}
@@ -426,6 +479,8 @@ namespace Projector
 						tooltip.SetToolTip(lrecent, recent.File.FullName);
 						top += lrecent.Height;
 						lrecent.Click += (sender, item2) => LoadSolution(recent.File);
+
+						recentItems.Add(hasDomain ? recent.Domain : null, lrecent);
 					}
 
 				}
@@ -448,7 +503,8 @@ namespace Projector
 
         }
 
-        private void toolSet_SelectedIndexChanged(object sender, EventArgs e)
+
+		private void toolSet_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
