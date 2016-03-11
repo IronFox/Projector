@@ -1,3 +1,2 @@
 Batch build
 Optional libraries
-Remove logic to only start one instance of the program (it's really not useful)

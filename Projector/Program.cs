@@ -93,26 +93,26 @@ namespace Projector
 
 		public static void End()
 		{
-			lock(pipeServerLock)
-			{
-				if (pipeServer != null)
-				{
-					pipeServer.Close();
-					pipeServer = null;
+			//lock(pipeServerLock)
+			//{
+			//	if (pipeServer != null)
+			//	{
+			//		pipeServer.Close();
+			//		pipeServer = null;
 
-					using (NamedPipeClientStream npcs = new NamedPipeClientStream(".", PipeName, PipeDirection.Out, PipeOptions.None))
-					{
-						try
-						{
-							npcs.Connect(100);
-						}
-						catch (Exception)
-						{ }
-					}
+			//		using (NamedPipeClientStream npcs = new NamedPipeClientStream(".", PipeName, PipeDirection.Out, PipeOptions.None))
+			//		{
+			//			try
+			//			{
+			//				npcs.Connect(100);
+			//			}
+			//			catch (Exception)
+			//			{ }
+			//		}
 
-					pipeServerThread.Join();
-				}
-			}
+			//		pipeServerThread.Join();
+			//	}
+			//}
 			Application.Exit();
 		}
 
@@ -127,51 +127,51 @@ namespace Projector
         static void Main()
         {
 			bool createdNew = true;
-			using (Mutex mutex = new Mutex(true, MutexName, out createdNew))
-			{
-				if (createdNew)
-				{
+			//using (Mutex mutex = new Mutex(true, MutexName, out createdNew))
+			//{
+			//	if (createdNew)
+			//	{
 					Application.EnableVisualStyles();
 					Application.SetCompatibleTextRenderingDefault(false);
 
-					CreatePipeServer();
+				//	CreatePipeServer();
 
 					view = new ProjectView();
 					Application.Run(view);
-				}
-				else
-				{
-					Process current = Process.GetCurrentProcess();
-					foreach (Process process in Process.GetProcessesByName(current.ProcessName))
-					{
-						if (process.Id != current.Id)
-						{
-							SetForegroundWindow(process.MainWindowHandle);
+				//}
+				//else
+				//{
+				//	Process current = Process.GetCurrentProcess();
+				//	foreach (Process process in Process.GetProcessesByName(current.ProcessName))
+				//	{
+				//		if (process.Id != current.Id)
+				//		{
+				//			SetForegroundWindow(process.MainWindowHandle);
 
-							string[] parameters = Environment.GetCommandLineArgs();
-							if (parameters.Length > 1)
-							{ 
-								NamedPipeClientStream pipeClient = new NamedPipeClientStream(".",PipeName, PipeDirection.Out, PipeOptions.None);
+				//			string[] parameters = Environment.GetCommandLineArgs();
+				//			if (parameters.Length > 1)
+				//			{ 
+				//				NamedPipeClientStream pipeClient = new NamedPipeClientStream(".",PipeName, PipeDirection.Out, PipeOptions.None);
 
-								if (pipeClient.IsConnected != true)
-									pipeClient.Connect();
+				//				if (pipeClient.IsConnected != true)
+				//					pipeClient.Connect();
 
-								StreamWriter sw = new StreamWriter(pipeClient);
+				//				StreamWriter sw = new StreamWriter(pipeClient);
 
-								try
-								{
-									sw.WriteLine(parameters[1]);
-									sw.Flush();
-									pipeClient.Close();
-								}
-								catch (Exception ex) { throw ex; }
-							}
+				//				try
+				//				{
+				//					sw.WriteLine(parameters[1]);
+				//					sw.Flush();
+				//					pipeClient.Close();
+				//				}
+				//				catch (Exception ex) { throw ex; }
+				//			}
 
-							break;
-						}
-					}
-				}
-			}
+				//			break;
+				//		}
+				//	}
+				//}
+			//}
         }
     }
 }
