@@ -117,7 +117,7 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="richTextBox1.Text" xml:space="preserve">
+  <data name="textBox.Text" xml:space="preserve">
     <value>
 Projector is a tool to simplify the management of Visual Studio solutions.
 Solutions and projects are created as simple XML files which are converted into Visual Studio files on the fly.

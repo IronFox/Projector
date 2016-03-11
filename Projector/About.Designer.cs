@@ -30,7 +30,7 @@
 		{
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(About));
 			this.aboutTitle = new System.Windows.Forms.Label();
-			this.richTextBox1 = new System.Windows.Forms.RichTextBox();
+			this.textBox = new System.Windows.Forms.TextBox();
 			this.SuspendLayout();
 			// 
 			// aboutTitle
@@ -46,33 +46,39 @@
 			this.aboutTitle.Text = "Projector";
 			this.aboutTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
-			// richTextBox1
+			// textBox
 			// 
-			this.richTextBox1.BorderStyle = System.Windows.Forms.BorderStyle.None;
-			this.richTextBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.richTextBox1.Location = new System.Drawing.Point(0, 30);
-			this.richTextBox1.Name = "richTextBox1";
-			this.richTextBox1.ReadOnly = true;
-			this.richTextBox1.Size = new System.Drawing.Size(284, 149);
-			this.richTextBox1.TabIndex = 1;
-			this.richTextBox1.Text = resources.GetString("richTextBox1.Text");
+			this.textBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
+			this.textBox.Dock = System.Windows.Forms.DockStyle.Fill;
+			this.textBox.Location = new System.Drawing.Point(0, 30);
+			this.textBox.Multiline = true;
+			this.textBox.Name = "textBox";
+			this.textBox.ReadOnly = true;
+			this.textBox.Size = new System.Drawing.Size(284, 149);
+			this.textBox.TabIndex = 1;
+			this.textBox.TabStop = false;
+			this.textBox.Text = resources.GetString("textBox.Text");
 			// 
 			// About
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(284, 179);
-			this.Controls.Add(this.richTextBox1);
+			this.Controls.Add(this.textBox);
 			this.Controls.Add(this.aboutTitle);
+			this.MinimumSize = new System.Drawing.Size(300, 217);
 			this.Name = "About";
 			this.Text = "About";
+			this.Load += new System.EventHandler(this.About_Load);
+			this.Shown += new System.EventHandler(this.About_Shown);
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 
 		#endregion
 
 		private System.Windows.Forms.Label aboutTitle;
-		private System.Windows.Forms.RichTextBox richTextBox1;
+		private System.Windows.Forms.TextBox textBox;
 	}
 }
