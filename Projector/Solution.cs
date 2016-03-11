@@ -275,7 +275,7 @@ namespace Projector
             StreamWriter writer = File.CreateText(outPath.FullName);
 
             writer.WriteLine();
-            writer.WriteLine("Microsoft Visual Studio Solution File, Format Version " + toolset + ".00");
+            writer.WriteLine("Microsoft Visual Studio Solution File, Format Version 12.00");
             writer.WriteLine("MinimumVisualStudioVersion = 10.0.40219.1");
             Guid solutionGuid = Guid.NewGuid();
             foreach (var tuple in projects)
