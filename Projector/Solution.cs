@@ -274,16 +274,19 @@ namespace Projector
             }
             StreamWriter writer = File.CreateText(outPath.FullName);
 
-            writer.WriteLine();
             writer.WriteLine("Microsoft Visual Studio Solution File, Format Version 12.00");
-            writer.WriteLine("MinimumVisualStudioVersion = 10.0.40219.1");
-            Guid solutionGuid = Guid.NewGuid();
-            foreach (var tuple in projects)
+			writer.WriteLine("# Visual Studio "+toolset);
+			writer.WriteLine("VisualStudioVersion = " + toolset);
+			writer.WriteLine("MinimumVisualStudioVersion = 10.0.40219.1");
+			//Guid solutionGuid = Guid.NewGuid();
+			string typeGUID = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942";   //C++. see http://www.codeproject.com/Reference/720512/List-of-Visual-Studio-Project-Type-GUIDs
+
+			foreach (var tuple in projects)
             {
                 string path = tuple.Item1.FullName;
 				//Relativate(dir, tuple.Item1);
-                writer.WriteLine("Project(\"{" + solutionGuid + "}\") = \"" + tuple.Item3.Name + "\", \"" + path + "\", \"{"
-                    + tuple.Item2 + "}\");");
+                writer.WriteLine("Project(\"{" + typeGUID + "}\") = \"" + tuple.Item3.Name + "\", \"" + path + "\", \"{"
+                    + tuple.Item2 + "}\"");
                 writer.WriteLine("EndProject");
             }
             writer.WriteLine("Global");
@@ -292,14 +295,14 @@ namespace Projector
                 writer.WriteLine("\t\t"+config+" = "+config+"");
             writer.WriteLine("\tEndGlobalSection");
             writer.WriteLine("\tGlobalSection(ProjectConfigurationPlatforms) = postSolution");
+			List<string> lines = new List<string>();
             foreach (var tuple in projects)
             {
-                Guid guid = tuple.Item2;
+                string guid = tuple.Item2.ToString().ToUpper();
 				foreach (var config in configurations)
 				{
-					writer.WriteLine("\t\t{" + guid + "}." + config + ".ActiveCfg = " + config);
-					writer.WriteLine("\t\t{" + guid + "}." + config + ".Build.0 = " + config);
-
+					lines.Add("\t\t{" + guid + "}." + config + ".ActiveCfg = " + config);
+					lines.Add("\t\t{" + guid + "}." + config + ".Build.0 = " + config);
 				}
 				//	writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.ActiveCfg = Debug|Win32");
 				//writer.WriteLine("\t\t{" + guid + "}.Debug|Win32.Build.0 = Debug|Win32");
@@ -310,6 +313,9 @@ namespace Projector
 				//writer.WriteLine("\t\t{" + guid + "}.Release|x64.ActiveCfg = Release|x64");
 				//writer.WriteLine("\t\t{" + guid + "}.Release|x64.Build.0 = Release|x64");
             }
+			lines.Sort();
+			foreach (var line in lines)
+				writer.WriteLine(line);
             writer.WriteLine("\tEndGlobalSection");
 
             writer.WriteLine("\tGlobalSection(SolutionProperties) = preSolution");
