@@ -1,4 +1,3 @@
-Fix all<->none
 Batch build
 Optional libraries
 *.hlsli support
