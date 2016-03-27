@@ -10,11 +10,19 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 
+	
+
 
 namespace Projector
 {
+
     static class Program
     {
+
+		[System.Runtime.InteropServices.DllImport("user32.dll")]
+		private static extern bool SetProcessDPIAware();
+
+
 		static NamedPipeServerStream pipeServer;
 		static Thread pipeServerThread;
 		static ProjectView view;
@@ -126,6 +134,12 @@ namespace Projector
         [STAThread]
         static void Main()
         {
+			if (Environment.OSVersion.Version.Major >= 6)
+				SetProcessDPIAware();
+			//Application.EnableVisualStyles();
+			//Application.SetCompatibleTextRenderingDefault(false);
+			//Application.Run(new Form1());             // Edit as needed
+
 			bool createdNew = true;
 			//using (Mutex mutex = new Mutex(true, MutexName, out createdNew))
 			//{
