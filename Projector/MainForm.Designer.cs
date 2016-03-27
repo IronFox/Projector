@@ -50,6 +50,8 @@
 			this.overwriteExistingVSUserConfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
 			this.openGeneratedSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.openSolutionDialog = new System.Windows.Forms.OpenFileDialog();
 			this.openProjectDialog = new System.Windows.Forms.OpenFileDialog();
 			this.solutionViewSplit = new System.Windows.Forms.SplitContainer();
@@ -75,10 +77,8 @@
 			this.statusStrip = new System.Windows.Forms.StatusStrip();
 			this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
 			this.panel2 = new System.Windows.Forms.Panel();
-			this.label1 = new System.Windows.Forms.Label();
+			this.toolsetLabel = new System.Windows.Forms.Label();
 			this.toolSet = new System.Windows.Forms.ComboBox();
-			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.solutionViewSplit)).BeginInit();
 			this.solutionViewSplit.Panel1.SuspendLayout();
@@ -96,6 +96,7 @@
 			// 
 			// menuStrip1
 			// 
+			this.menuStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
 			this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.fileToolStripMenuItem,
             this.loadedSolutionsToolStripMenuItem,
@@ -103,7 +104,8 @@
             this.helpToolStripMenuItem});
 			this.menuStrip1.Location = new System.Drawing.Point(0, 0);
 			this.menuStrip1.Name = "menuStrip1";
-			this.menuStrip1.Size = new System.Drawing.Size(564, 24);
+			this.menuStrip1.Padding = new System.Windows.Forms.Padding(8, 2, 0, 2);
+			this.menuStrip1.Size = new System.Drawing.Size(752, 28);
 			this.menuStrip1.TabIndex = 2;
 			this.menuStrip1.Text = "menuStrip1";
 			this.menuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.menuStrip1_ItemClicked);
@@ -117,20 +119,20 @@
             this.toolStripMenuItem1,
             this.quitToolStripMenuItem});
 			this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-			this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
+			this.fileToolStripMenuItem.Size = new System.Drawing.Size(44, 24);
 			this.fileToolStripMenuItem.Text = "File";
 			// 
 			// loadProjectToolStripMenuItem
 			// 
 			this.loadProjectToolStripMenuItem.Name = "loadProjectToolStripMenuItem";
-			this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+			this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(194, 26);
 			this.loadProjectToolStripMenuItem.Text = "Load Solution...";
 			this.loadProjectToolStripMenuItem.Click += new System.EventHandler(this.loadProjectToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem3
 			// 
 			this.toolStripMenuItem3.Name = "toolStripMenuItem3";
-			this.toolStripMenuItem3.Size = new System.Drawing.Size(159, 6);
+			this.toolStripMenuItem3.Size = new System.Drawing.Size(191, 6);
 			// 
 			// recentSolutionsToolStripMenuItem
 			// 
@@ -138,29 +140,29 @@
             this.toolStripMenuItem2,
             this.clearListToolStripMenuItem});
 			this.recentSolutionsToolStripMenuItem.Name = "recentSolutionsToolStripMenuItem";
-			this.recentSolutionsToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+			this.recentSolutionsToolStripMenuItem.Size = new System.Drawing.Size(194, 26);
 			this.recentSolutionsToolStripMenuItem.Text = "Recent Solutions";
 			// 
 			// toolStripMenuItem2
 			// 
 			this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-			this.toolStripMenuItem2.Size = new System.Drawing.Size(119, 6);
+			this.toolStripMenuItem2.Size = new System.Drawing.Size(141, 6);
 			// 
 			// clearListToolStripMenuItem
 			// 
 			this.clearListToolStripMenuItem.Name = "clearListToolStripMenuItem";
-			this.clearListToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+			this.clearListToolStripMenuItem.Size = new System.Drawing.Size(144, 26);
 			this.clearListToolStripMenuItem.Text = "Clear List";
 			// 
 			// toolStripMenuItem1
 			// 
 			this.toolStripMenuItem1.Name = "toolStripMenuItem1";
-			this.toolStripMenuItem1.Size = new System.Drawing.Size(159, 6);
+			this.toolStripMenuItem1.Size = new System.Drawing.Size(191, 6);
 			// 
 			// quitToolStripMenuItem
 			// 
 			this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
-			this.quitToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+			this.quitToolStripMenuItem.Size = new System.Drawing.Size(194, 26);
 			this.quitToolStripMenuItem.Text = "Quit";
 			this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
 			// 
@@ -172,32 +174,32 @@
             this.toolStripMenuItem6,
             this.unloadSelectedToolStripMenuItem});
 			this.loadedSolutionsToolStripMenuItem.Name = "loadedSolutionsToolStripMenuItem";
-			this.loadedSolutionsToolStripMenuItem.Size = new System.Drawing.Size(110, 20);
+			this.loadedSolutionsToolStripMenuItem.Size = new System.Drawing.Size(136, 24);
 			this.loadedSolutionsToolStripMenuItem.Text = "Loaded Solutions";
 			// 
 			// generateSelectedToolStripMenuItem
 			// 
 			this.generateSelectedToolStripMenuItem.Name = "generateSelectedToolStripMenuItem";
-			this.generateSelectedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+			this.generateSelectedToolStripMenuItem.Size = new System.Drawing.Size(205, 26);
 			this.generateSelectedToolStripMenuItem.Text = "Generate Selected";
 			this.generateSelectedToolStripMenuItem.Click += new System.EventHandler(this.generateSelectedButton_Click);
 			// 
 			// openGeneratedToolStripMenuItem
 			// 
 			this.openGeneratedToolStripMenuItem.Name = "openGeneratedToolStripMenuItem";
-			this.openGeneratedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+			this.openGeneratedToolStripMenuItem.Size = new System.Drawing.Size(205, 26);
 			this.openGeneratedToolStripMenuItem.Text = "Open Generated";
 			this.openGeneratedToolStripMenuItem.Click += new System.EventHandler(this.openSelectedButton_Click);
 			// 
 			// toolStripMenuItem6
 			// 
 			this.toolStripMenuItem6.Name = "toolStripMenuItem6";
-			this.toolStripMenuItem6.Size = new System.Drawing.Size(165, 6);
+			this.toolStripMenuItem6.Size = new System.Drawing.Size(202, 6);
 			// 
 			// unloadSelectedToolStripMenuItem
 			// 
 			this.unloadSelectedToolStripMenuItem.Name = "unloadSelectedToolStripMenuItem";
-			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(205, 26);
 			this.unloadSelectedToolStripMenuItem.Text = "Unload Selected";
 			this.unloadSelectedToolStripMenuItem.Click += new System.EventHandler(this.unloadSelectedToolStripMenuItem_Click);
 			// 
@@ -211,43 +213,58 @@
             this.openGeneratedSolutionToolStripMenuItem});
 			this.solutionToolStripMenuItem.Enabled = false;
 			this.solutionToolStripMenuItem.Name = "solutionToolStripMenuItem";
-			this.solutionToolStripMenuItem.Size = new System.Drawing.Size(110, 20);
+			this.solutionToolStripMenuItem.Size = new System.Drawing.Size(134, 24);
 			this.solutionToolStripMenuItem.Text = "Focused Solution";
 			this.solutionToolStripMenuItem.Click += new System.EventHandler(this.solutionToolStripMenuItem_Click);
 			// 
 			// buildToolStripMenuItem
 			// 
 			this.buildToolStripMenuItem.Name = "buildToolStripMenuItem";
-			this.buildToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+			this.buildToolStripMenuItem.Size = new System.Drawing.Size(307, 26);
 			this.buildToolStripMenuItem.Text = "Build";
 			this.buildToolStripMenuItem.Click += new System.EventHandler(this.buildToolStripMenuItem_Click);
 			// 
 			// buildAtToolStripMenuItem
 			// 
 			this.buildAtToolStripMenuItem.Name = "buildAtToolStripMenuItem";
-			this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+			this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(307, 26);
 			this.buildAtToolStripMenuItem.Text = "Build at...";
 			this.buildAtToolStripMenuItem.Click += new System.EventHandler(this.buildAtToolStripMenuItem_Click);
 			// 
 			// overwriteExistingVSUserConfigToolStripMenuItem
 			// 
 			this.overwriteExistingVSUserConfigToolStripMenuItem.Name = "overwriteExistingVSUserConfigToolStripMenuItem";
-			this.overwriteExistingVSUserConfigToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+			this.overwriteExistingVSUserConfigToolStripMenuItem.Size = new System.Drawing.Size(307, 26);
 			this.overwriteExistingVSUserConfigToolStripMenuItem.Text = "Overwrite existing VS User-Config";
 			this.overwriteExistingVSUserConfigToolStripMenuItem.Click += new System.EventHandler(this.overwriteExistingVSUserConfigToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem4
 			// 
 			this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-			this.toolStripMenuItem4.Size = new System.Drawing.Size(248, 6);
+			this.toolStripMenuItem4.Size = new System.Drawing.Size(304, 6);
 			// 
 			// openGeneratedSolutionToolStripMenuItem
 			// 
 			this.openGeneratedSolutionToolStripMenuItem.Enabled = false;
 			this.openGeneratedSolutionToolStripMenuItem.Name = "openGeneratedSolutionToolStripMenuItem";
-			this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+			this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(307, 26);
 			this.openGeneratedSolutionToolStripMenuItem.Text = "Open Generated Solution";
 			this.openGeneratedSolutionToolStripMenuItem.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
+			// 
+			// helpToolStripMenuItem
+			// 
+			this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutToolStripMenuItem});
+			this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+			this.helpToolStripMenuItem.Size = new System.Drawing.Size(53, 24);
+			this.helpToolStripMenuItem.Text = "Help";
+			// 
+			// aboutToolStripMenuItem
+			// 
+			this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
+			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(125, 26);
+			this.aboutToolStripMenuItem.Text = "About";
+			this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
 			// 
 			// openSolutionDialog
 			// 
@@ -266,7 +283,8 @@
 			this.solutionViewSplit.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.solutionViewSplit.Location = new System.Drawing.Point(0, 55);
+			this.solutionViewSplit.Location = new System.Drawing.Point(0, 68);
+			this.solutionViewSplit.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.solutionViewSplit.Name = "solutionViewSplit";
 			this.solutionViewSplit.Orientation = System.Windows.Forms.Orientation.Horizontal;
 			// 
@@ -279,8 +297,9 @@
 			// 
 			this.solutionViewSplit.Panel2.Controls.Add(this.log);
 			this.solutionViewSplit.Panel2.Controls.Add(this.label2);
-			this.solutionViewSplit.Size = new System.Drawing.Size(564, 382);
-			this.solutionViewSplit.SplitterDistance = 261;
+			this.solutionViewSplit.Size = new System.Drawing.Size(752, 470);
+			this.solutionViewSplit.SplitterDistance = 321;
+			this.solutionViewSplit.SplitterWidth = 5;
 			this.solutionViewSplit.TabIndex = 3;
 			// 
 			// mainTabControl
@@ -290,18 +309,20 @@
 			this.mainTabControl.Controls.Add(this.tabSelected);
 			this.mainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.mainTabControl.Location = new System.Drawing.Point(0, 0);
+			this.mainTabControl.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.mainTabControl.Name = "mainTabControl";
 			this.mainTabControl.SelectedIndex = 0;
-			this.mainTabControl.Size = new System.Drawing.Size(564, 261);
+			this.mainTabControl.Size = new System.Drawing.Size(752, 321);
 			this.mainTabControl.TabIndex = 3;
 			// 
 			// tabRecent
 			// 
 			this.tabRecent.Controls.Add(this.recentSolutions);
-			this.tabRecent.Location = new System.Drawing.Point(4, 22);
+			this.tabRecent.Location = new System.Drawing.Point(4, 25);
+			this.tabRecent.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.tabRecent.Name = "tabRecent";
-			this.tabRecent.Padding = new System.Windows.Forms.Padding(3);
-			this.tabRecent.Size = new System.Drawing.Size(556, 235);
+			this.tabRecent.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.tabRecent.Size = new System.Drawing.Size(744, 292);
 			this.tabRecent.TabIndex = 0;
 			this.tabRecent.Text = "Recent";
 			this.tabRecent.UseVisualStyleBackColor = true;
@@ -310,18 +331,20 @@
 			// 
 			this.recentSolutions.AutoScroll = true;
 			this.recentSolutions.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.recentSolutions.Location = new System.Drawing.Point(3, 3);
+			this.recentSolutions.Location = new System.Drawing.Point(4, 4);
+			this.recentSolutions.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.recentSolutions.Name = "recentSolutions";
-			this.recentSolutions.Size = new System.Drawing.Size(550, 229);
+			this.recentSolutions.Size = new System.Drawing.Size(736, 284);
 			this.recentSolutions.TabIndex = 7;
 			// 
 			// tabLoaded
 			// 
 			this.tabLoaded.Controls.Add(this.panel3);
 			this.tabLoaded.Controls.Add(this.loadedSolutionsView);
-			this.tabLoaded.Location = new System.Drawing.Point(4, 22);
+			this.tabLoaded.Location = new System.Drawing.Point(4, 25);
+			this.tabLoaded.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.tabLoaded.Name = "tabLoaded";
-			this.tabLoaded.Size = new System.Drawing.Size(556, 235);
+			this.tabLoaded.Size = new System.Drawing.Size(744, 292);
 			this.tabLoaded.TabIndex = 2;
 			this.tabLoaded.Text = "Loaded";
 			this.tabLoaded.UseVisualStyleBackColor = true;
@@ -333,17 +356,19 @@
 			this.panel3.Controls.Add(this.openSelectedButton);
 			this.panel3.Controls.Add(this.generateSelectedButton);
 			this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.panel3.Location = new System.Drawing.Point(0, 205);
+			this.panel3.Location = new System.Drawing.Point(0, 255);
+			this.panel3.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.panel3.Name = "panel3";
-			this.panel3.Size = new System.Drawing.Size(556, 30);
+			this.panel3.Size = new System.Drawing.Size(744, 37);
 			this.panel3.TabIndex = 1;
 			// 
 			// openSelectedButton
 			// 
 			this.openSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.openSelectedButton.Location = new System.Drawing.Point(283, 0);
+			this.openSelectedButton.Location = new System.Drawing.Point(380, 0);
+			this.openSelectedButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.openSelectedButton.Name = "openSelectedButton";
-			this.openSelectedButton.Size = new System.Drawing.Size(273, 27);
+			this.openSelectedButton.Size = new System.Drawing.Size(364, 33);
 			this.openSelectedButton.TabIndex = 1;
 			this.openSelectedButton.Text = "Open Generated";
 			this.openSelectedButton.UseVisualStyleBackColor = true;
@@ -354,8 +379,9 @@
 			this.generateSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.generateSelectedButton.Location = new System.Drawing.Point(-1, 0);
+			this.generateSelectedButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.generateSelectedButton.Name = "generateSelectedButton";
-			this.generateSelectedButton.Size = new System.Drawing.Size(283, 27);
+			this.generateSelectedButton.Size = new System.Drawing.Size(380, 33);
 			this.generateSelectedButton.TabIndex = 0;
 			this.generateSelectedButton.Text = "Generate Selected Solutions";
 			this.generateSelectedButton.UseVisualStyleBackColor = true;
@@ -377,9 +403,10 @@
 			this.loadedSolutionsView.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
             listViewItem1});
 			this.loadedSolutionsView.Location = new System.Drawing.Point(0, 0);
+			this.loadedSolutionsView.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.loadedSolutionsView.MultiSelect = false;
 			this.loadedSolutionsView.Name = "loadedSolutionsView";
-			this.loadedSolutionsView.Size = new System.Drawing.Size(556, 199);
+			this.loadedSolutionsView.Size = new System.Drawing.Size(740, 240);
 			this.loadedSolutionsView.TabIndex = 0;
 			this.loadedSolutionsView.UseCompatibleStateImageBehavior = false;
 			this.loadedSolutionsView.View = System.Windows.Forms.View.Details;
@@ -405,10 +432,11 @@
 			// 
 			this.tabSelected.Controls.Add(this.solutionView);
 			this.tabSelected.Controls.Add(this.panel1);
-			this.tabSelected.Location = new System.Drawing.Point(4, 22);
+			this.tabSelected.Location = new System.Drawing.Point(4, 25);
+			this.tabSelected.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.tabSelected.Name = "tabSelected";
-			this.tabSelected.Padding = new System.Windows.Forms.Padding(3);
-			this.tabSelected.Size = new System.Drawing.Size(556, 235);
+			this.tabSelected.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.tabSelected.Size = new System.Drawing.Size(744, 292);
 			this.tabSelected.TabIndex = 1;
 			this.tabSelected.Text = "Focused (none)";
 			this.tabSelected.UseVisualStyleBackColor = true;
@@ -417,10 +445,11 @@
 			// 
 			this.solutionView.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.solutionView.FullRowSelect = true;
-			this.solutionView.Location = new System.Drawing.Point(3, 26);
+			this.solutionView.Location = new System.Drawing.Point(4, 32);
+			this.solutionView.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.solutionView.Name = "solutionView";
 			this.solutionView.ShowLines = false;
-			this.solutionView.Size = new System.Drawing.Size(550, 206);
+			this.solutionView.Size = new System.Drawing.Size(736, 256);
 			this.solutionView.TabIndex = 6;
 			// 
 			// panel1
@@ -428,18 +457,20 @@
 			this.panel1.Controls.Add(this.openGeneratedSolutionButton);
 			this.panel1.Controls.Add(this.buildSolutionButton);
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-			this.panel1.Location = new System.Drawing.Point(3, 3);
+			this.panel1.Location = new System.Drawing.Point(4, 4);
+			this.panel1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.panel1.Name = "panel1";
-			this.panel1.Size = new System.Drawing.Size(550, 23);
+			this.panel1.Size = new System.Drawing.Size(736, 28);
 			this.panel1.TabIndex = 5;
 			// 
 			// openGeneratedSolutionButton
 			// 
 			this.openGeneratedSolutionButton.Dock = System.Windows.Forms.DockStyle.Right;
 			this.openGeneratedSolutionButton.Enabled = false;
-			this.openGeneratedSolutionButton.Location = new System.Drawing.Point(275, 0);
+			this.openGeneratedSolutionButton.Location = new System.Drawing.Point(369, 0);
+			this.openGeneratedSolutionButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.openGeneratedSolutionButton.Name = "openGeneratedSolutionButton";
-			this.openGeneratedSolutionButton.Size = new System.Drawing.Size(275, 23);
+			this.openGeneratedSolutionButton.Size = new System.Drawing.Size(367, 28);
 			this.openGeneratedSolutionButton.TabIndex = 3;
 			this.openGeneratedSolutionButton.Text = "Open Generated";
 			this.openGeneratedSolutionButton.UseVisualStyleBackColor = true;
@@ -451,8 +482,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.buildSolutionButton.Enabled = false;
 			this.buildSolutionButton.Location = new System.Drawing.Point(0, 0);
+			this.buildSolutionButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.buildSolutionButton.Name = "buildSolutionButton";
-			this.buildSolutionButton.Size = new System.Drawing.Size(275, 23);
+			this.buildSolutionButton.Size = new System.Drawing.Size(370, 28);
 			this.buildSolutionButton.TabIndex = 2;
 			this.buildSolutionButton.Text = "Build Solution";
 			this.buildSolutionButton.UseVisualStyleBackColor = true;
@@ -463,59 +495,65 @@
 			this.log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.log.Location = new System.Drawing.Point(0, 22);
+			this.log.Location = new System.Drawing.Point(0, 27);
+			this.log.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.log.MaxLength = 65536;
 			this.log.Multiline = true;
 			this.log.Name = "log";
 			this.log.ReadOnly = true;
 			this.log.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.log.Size = new System.Drawing.Size(564, 95);
+			this.log.Size = new System.Drawing.Size(751, 116);
 			this.log.TabIndex = 1;
 			// 
 			// label2
 			// 
 			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(3, 6);
+			this.label2.Location = new System.Drawing.Point(4, 7);
+			this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(25, 13);
+			this.label2.Size = new System.Drawing.Size(32, 17);
 			this.label2.TabIndex = 0;
 			this.label2.Text = "Log";
 			// 
 			// statusStrip
 			// 
+			this.statusStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
 			this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-			this.statusStrip.Location = new System.Drawing.Point(0, 440);
+			this.statusStrip.Location = new System.Drawing.Point(0, 544);
 			this.statusStrip.Name = "statusStrip";
-			this.statusStrip.Size = new System.Drawing.Size(564, 22);
+			this.statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 19, 0);
+			this.statusStrip.Size = new System.Drawing.Size(752, 25);
 			this.statusStrip.TabIndex = 5;
 			this.statusStrip.Text = "statusStrip1";
 			// 
 			// toolStripStatusLabel1
 			// 
 			this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-			this.toolStripStatusLabel1.Size = new System.Drawing.Size(118, 17);
+			this.toolStripStatusLabel1.Size = new System.Drawing.Size(151, 20);
 			this.toolStripStatusLabel1.Text = "toolStripStatusLabel1";
 			// 
 			// panel2
 			// 
 			this.panel2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.panel2.Controls.Add(this.label1);
+			this.panel2.Controls.Add(this.toolsetLabel);
 			this.panel2.Controls.Add(this.toolSet);
-			this.panel2.Location = new System.Drawing.Point(0, 24);
+			this.panel2.Location = new System.Drawing.Point(0, 30);
+			this.panel2.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.panel2.Name = "panel2";
-			this.panel2.Size = new System.Drawing.Size(563, 31);
+			this.panel2.Size = new System.Drawing.Size(751, 38);
 			this.panel2.TabIndex = 6;
 			// 
-			// label1
+			// toolsetLabel
 			// 
-			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(0, 7);
-			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(80, 13);
-			this.label1.TabIndex = 3;
-			this.label1.Text = "Toolset Version";
+			this.toolsetLabel.AutoSize = true;
+			this.toolsetLabel.Location = new System.Drawing.Point(0, 9);
+			this.toolsetLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+			this.toolsetLabel.Name = "toolsetLabel";
+			this.toolsetLabel.Size = new System.Drawing.Size(107, 17);
+			this.toolsetLabel.TabIndex = 3;
+			this.toolsetLabel.Text = "Toolset Version";
 			// 
 			// toolSet
 			// 
@@ -527,40 +565,27 @@
 			this.toolSet.Items.AddRange(new object[] {
             "12.0 (VS 2013)",
             "14.0 (VS 2015)"});
-			this.toolSet.Location = new System.Drawing.Point(86, 4);
+			this.toolSet.Location = new System.Drawing.Point(115, 6);
+			this.toolSet.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.toolSet.Name = "toolSet";
-			this.toolSet.Size = new System.Drawing.Size(178, 21);
+			this.toolSet.Size = new System.Drawing.Size(236, 24);
 			this.toolSet.TabIndex = 2;
 			this.toolSet.ValueMember = "14.0 (VS 2015)";
 			this.toolSet.SelectedIndexChanged += new System.EventHandler(this.toolSet_SelectedIndexChanged_1);
 			// 
-			// helpToolStripMenuItem
-			// 
-			this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.aboutToolStripMenuItem});
-			this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-			this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-			this.helpToolStripMenuItem.Text = "Help";
-			// 
-			// aboutToolStripMenuItem
-			// 
-			this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-			this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-			this.aboutToolStripMenuItem.Text = "About";
-			this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-			// 
 			// ProjectView
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(564, 462);
+			this.ClientSize = new System.Drawing.Size(752, 569);
 			this.Controls.Add(this.panel2);
 			this.Controls.Add(this.statusStrip);
 			this.Controls.Add(this.solutionViewSplit);
 			this.Controls.Add(this.menuStrip1);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MainMenuStrip = this.menuStrip1;
-			this.MinimumSize = new System.Drawing.Size(580, 500);
+			this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.MinimumSize = new System.Drawing.Size(767, 605);
 			this.Name = "ProjectView";
 			this.Text = "Projector";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ProjectView_FormClosed);
@@ -622,7 +647,7 @@
 		private System.Windows.Forms.Button openGeneratedSolutionButton;
 		private System.Windows.Forms.Button buildSolutionButton;
 		private System.Windows.Forms.Panel panel2;
-		private System.Windows.Forms.Label label1;
+		private System.Windows.Forms.Label toolsetLabel;
 		private System.Windows.Forms.ComboBox toolSet;
 		private System.Windows.Forms.TabPage tabLoaded;
 		private System.Windows.Forms.ListView loadedSolutionsView;

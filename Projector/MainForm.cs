@@ -74,9 +74,36 @@ namespace Projector
 
         }
 
-        private void ProjectView_Load(object sender, EventArgs e)
+		private void ResizeFont(Control.ControlCollection coll, float scaleFactor)
+		{
+			foreach (Control c in coll)
+			{
+				if (c.HasChildren)
+				{
+					ResizeFont(c.Controls, scaleFactor);
+				}
+				c.Font = new Font(c.Font.FontFamily.Name, c.Font.Size * scaleFactor);
+			}
+		}
+
+		public  float FontScaleFactor
+		{
+			get
+			{
+				Graphics graphics = this.CreateGraphics();
+				float dpiX = graphics.DpiX;
+				return dpiX / 96.0f;
+			}
+
+		}
+
+		private void ProjectView_Load(object sender, EventArgs e)
         {
-            PersistentState.Restore();
+			ResizeFont(this.Controls, FontScaleFactor);
+			toolsetLabel.Size = toolsetLabel.PreferredSize;
+			toolSet.Left = toolsetLabel.Right + 4;
+
+			PersistentState.Restore();
             if (PersistentState.Toolset != null)
                 toolSet.SelectedIndex = toolSet.Items.IndexOf(PersistentState.Toolset);
             else
@@ -424,7 +451,7 @@ namespace Projector
 				{
 					Label title = new Label();
 
-					f = new Font(title.Font.FontFamily, title.Font.Size * 1.2f);
+					f = new Font(title.Font.FontFamily, title.Font.Size * 1.2f * FontScaleFactor);
 					title.Font = f;
 					title.Text = "Recent Solutions: (shift+click to load but stay on this tab)";
 					title.Left = 15;
