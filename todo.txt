@@ -1,3 +1,4 @@
+Drop solution files onto window
 Batch build
 Optional libraries
 Solution designer
