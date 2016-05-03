@@ -145,10 +145,11 @@ namespace Projector
 				TreeNode tproject = tsolution.Nodes.Add(project.Name + optionString + " [" + project.Type + "]");
 
 				tproject.Nodes.Add("Path").Nodes.Add(  project.SourcePath.FullName );
+				TreeNode tdepedencies = tproject.Nodes.Add("Dependencies");
 
 				foreach (var r in project.References)
 				{
-					TreeNode treference = tproject.Nodes.Add(r.Project.Name + (r.IncludePath ? " (include)" : ""));
+					TreeNode treference = tdepedencies.Nodes.Add(r.Project.Name + (r.IncludePath ? " (include)" : ""));
 				}
 
 				if (project.Macros.Count() > 0)
