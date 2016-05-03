@@ -34,6 +34,10 @@
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.loadProjectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripMenuItem3 = new System.Windows.Forms.ToolStripSeparator();
+			this.flushPathRegistryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.locationOfProjectFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
+			this.pathRegistryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.recentSolutionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripSeparator();
 			this.clearListToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -79,10 +83,6 @@
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.toolsetLabel = new System.Windows.Forms.Label();
 			this.toolSet = new System.Windows.Forms.ComboBox();
-			this.flushPathRegistryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.pathRegistryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.locationOfProjectFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItem5 = new System.Windows.Forms.ToolStripSeparator();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.solutionViewSplit)).BeginInit();
 			this.solutionViewSplit.Panel1.SuspendLayout();
@@ -138,6 +138,35 @@
 			this.toolStripMenuItem3.Name = "toolStripMenuItem3";
 			this.toolStripMenuItem3.Size = new System.Drawing.Size(159, 6);
 			// 
+			// flushPathRegistryToolStripMenuItem
+			// 
+			this.flushPathRegistryToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.locationOfProjectFileToolStripMenuItem,
+            this.toolStripMenuItem5,
+            this.pathRegistryToolStripMenuItem});
+			this.flushPathRegistryToolStripMenuItem.Name = "flushPathRegistryToolStripMenuItem";
+			this.flushPathRegistryToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
+			this.flushPathRegistryToolStripMenuItem.Text = "Flush";
+			// 
+			// locationOfProjectFileToolStripMenuItem
+			// 
+			this.locationOfProjectFileToolStripMenuItem.Enabled = false;
+			this.locationOfProjectFileToolStripMenuItem.Name = "locationOfProjectFileToolStripMenuItem";
+			this.locationOfProjectFileToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+			this.locationOfProjectFileToolStripMenuItem.Text = "Location of Project File";
+			// 
+			// toolStripMenuItem5
+			// 
+			this.toolStripMenuItem5.Name = "toolStripMenuItem5";
+			this.toolStripMenuItem5.Size = new System.Drawing.Size(192, 6);
+			// 
+			// pathRegistryToolStripMenuItem
+			// 
+			this.pathRegistryToolStripMenuItem.Name = "pathRegistryToolStripMenuItem";
+			this.pathRegistryToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
+			this.pathRegistryToolStripMenuItem.Text = "Entire Path Registry";
+			this.pathRegistryToolStripMenuItem.Click += new System.EventHandler(this.pathRegistryToolStripMenuItem_Click_1);
+			// 
 			// recentSolutionsToolStripMenuItem
 			// 
 			this.recentSolutionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -150,12 +179,12 @@
 			// toolStripMenuItem2
 			// 
 			this.toolStripMenuItem2.Name = "toolStripMenuItem2";
-			this.toolStripMenuItem2.Size = new System.Drawing.Size(149, 6);
+			this.toolStripMenuItem2.Size = new System.Drawing.Size(119, 6);
 			// 
 			// clearListToolStripMenuItem
 			// 
 			this.clearListToolStripMenuItem.Name = "clearListToolStripMenuItem";
-			this.clearListToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+			this.clearListToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
 			this.clearListToolStripMenuItem.Text = "Clear List";
 			// 
 			// toolStripMenuItem1
@@ -321,7 +350,7 @@
 			this.tabRecent.Controls.Add(this.recentSolutions);
 			this.tabRecent.Location = new System.Drawing.Point(4, 22);
 			this.tabRecent.Name = "tabRecent";
-			this.tabRecent.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
+			this.tabRecent.Padding = new System.Windows.Forms.Padding(3);
 			this.tabRecent.Size = new System.Drawing.Size(556, 234);
 			this.tabRecent.TabIndex = 0;
 			this.tabRecent.Text = "Recent";
@@ -329,12 +358,15 @@
 			// 
 			// recentSolutions
 			// 
+			this.recentSolutions.AllowDrop = true;
 			this.recentSolutions.AutoScroll = true;
 			this.recentSolutions.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.recentSolutions.Location = new System.Drawing.Point(3, 3);
 			this.recentSolutions.Name = "recentSolutions";
 			this.recentSolutions.Size = new System.Drawing.Size(550, 228);
 			this.recentSolutions.TabIndex = 7;
+			this.recentSolutions.DragDrop += new System.Windows.Forms.DragEventHandler(this.recentSolutions_DragDrop);
+			this.recentSolutions.DragEnter += new System.Windows.Forms.DragEventHandler(this.recentSolutions_DragEnter);
 			// 
 			// tabLoaded
 			// 
@@ -342,7 +374,7 @@
 			this.tabLoaded.Controls.Add(this.loadedSolutionsView);
 			this.tabLoaded.Location = new System.Drawing.Point(4, 22);
 			this.tabLoaded.Name = "tabLoaded";
-			this.tabLoaded.Size = new System.Drawing.Size(556, 235);
+			this.tabLoaded.Size = new System.Drawing.Size(556, 234);
 			this.tabLoaded.TabIndex = 2;
 			this.tabLoaded.Text = "Loaded";
 			this.tabLoaded.UseVisualStyleBackColor = true;
@@ -354,7 +386,7 @@
 			this.panel3.Controls.Add(this.openSelectedButton);
 			this.panel3.Controls.Add(this.generateSelectedButton);
 			this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.panel3.Location = new System.Drawing.Point(0, 205);
+			this.panel3.Location = new System.Drawing.Point(0, 204);
 			this.panel3.Name = "panel3";
 			this.panel3.Size = new System.Drawing.Size(556, 30);
 			this.panel3.TabIndex = 1;
@@ -384,6 +416,7 @@
 			// 
 			// loadedSolutionsView
 			// 
+			this.loadedSolutionsView.AllowDrop = true;
 			this.loadedSolutionsView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -400,13 +433,15 @@
 			this.loadedSolutionsView.Location = new System.Drawing.Point(0, 0);
 			this.loadedSolutionsView.MultiSelect = false;
 			this.loadedSolutionsView.Name = "loadedSolutionsView";
-			this.loadedSolutionsView.Size = new System.Drawing.Size(556, 198);
+			this.loadedSolutionsView.Size = new System.Drawing.Size(556, 197);
 			this.loadedSolutionsView.TabIndex = 0;
 			this.loadedSolutionsView.UseCompatibleStateImageBehavior = false;
 			this.loadedSolutionsView.View = System.Windows.Forms.View.Details;
 			this.loadedSolutionsView.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.solutionListBox_ItemCheck);
 			this.loadedSolutionsView.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.loadedSolutionsView_ItemChecked);
 			this.loadedSolutionsView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.loadedSolutionsView_ItemSelectionChanged);
+			this.loadedSolutionsView.DragDrop += new System.Windows.Forms.DragEventHandler(this.recentSolutions_DragDrop);
+			this.loadedSolutionsView.DragEnter += new System.Windows.Forms.DragEventHandler(this.recentSolutions_DragEnter);
 			// 
 			// solutionNameHeader
 			// 
@@ -428,8 +463,8 @@
 			this.tabSelected.Controls.Add(this.panel1);
 			this.tabSelected.Location = new System.Drawing.Point(4, 22);
 			this.tabSelected.Name = "tabSelected";
-			this.tabSelected.Padding = new System.Windows.Forms.Padding(3, 3, 3, 3);
-			this.tabSelected.Size = new System.Drawing.Size(556, 235);
+			this.tabSelected.Padding = new System.Windows.Forms.Padding(3);
+			this.tabSelected.Size = new System.Drawing.Size(556, 234);
 			this.tabSelected.TabIndex = 1;
 			this.tabSelected.Text = "Focused (none)";
 			this.tabSelected.UseVisualStyleBackColor = true;
@@ -441,7 +476,7 @@
 			this.solutionView.Location = new System.Drawing.Point(3, 26);
 			this.solutionView.Name = "solutionView";
 			this.solutionView.ShowLines = false;
-			this.solutionView.Size = new System.Drawing.Size(550, 206);
+			this.solutionView.Size = new System.Drawing.Size(550, 205);
 			this.solutionView.TabIndex = 6;
 			// 
 			// panel1
@@ -555,35 +590,6 @@
 			this.toolSet.TabIndex = 2;
 			this.toolSet.ValueMember = "14.0 (VS 2015)";
 			this.toolSet.SelectedIndexChanged += new System.EventHandler(this.toolSet_SelectedIndexChanged_1);
-			// 
-			// flushPathRegistryToolStripMenuItem
-			// 
-			this.flushPathRegistryToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.locationOfProjectFileToolStripMenuItem,
-            this.toolStripMenuItem5,
-            this.pathRegistryToolStripMenuItem});
-			this.flushPathRegistryToolStripMenuItem.Name = "flushPathRegistryToolStripMenuItem";
-			this.flushPathRegistryToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
-			this.flushPathRegistryToolStripMenuItem.Text = "Flush";
-			// 
-			// pathRegistryToolStripMenuItem
-			// 
-			this.pathRegistryToolStripMenuItem.Name = "pathRegistryToolStripMenuItem";
-			this.pathRegistryToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
-			this.pathRegistryToolStripMenuItem.Text = "Entire Path Registry";
-			this.pathRegistryToolStripMenuItem.Click += new System.EventHandler(this.pathRegistryToolStripMenuItem_Click_1);
-			// 
-			// locationOfProjectFileToolStripMenuItem
-			// 
-			this.locationOfProjectFileToolStripMenuItem.Enabled = false;
-			this.locationOfProjectFileToolStripMenuItem.Name = "locationOfProjectFileToolStripMenuItem";
-			this.locationOfProjectFileToolStripMenuItem.Size = new System.Drawing.Size(195, 22);
-			this.locationOfProjectFileToolStripMenuItem.Text = "Location of Project File";
-			// 
-			// toolStripMenuItem5
-			// 
-			this.toolStripMenuItem5.Name = "toolStripMenuItem5";
-			this.toolStripMenuItem5.Size = new System.Drawing.Size(192, 6);
 			// 
 			// ProjectView
 			// 

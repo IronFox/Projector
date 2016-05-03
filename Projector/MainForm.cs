@@ -875,5 +875,34 @@ namespace Projector
 			PathRegistry.Clear();
 			UpdateRecentAndPaths(false);
 		}
+
+		private void recentSolutions_DragEnter(object sender, DragEventArgs e)
+		{
+			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			{
+				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+				foreach (string file in files)
+					if (!file.ToLower().EndsWith(".solution"))
+						return;
+
+				e.Effect = DragDropEffects.Copy;
+			}
+		}
+
+		private void recentSolutions_DragDrop(object sender, DragEventArgs e)
+		{
+			string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+			foreach (string file in files)
+			{
+				LoadSolution(new FileInfo(file), true);
+
+			}
+
+			UpdateAllNoneCheckbox();
+			if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
+				mainTabControl.SelectedTab = tabLoaded;
+			UpdateRecentAndPaths(true);
+
+		}
 	}
 }
