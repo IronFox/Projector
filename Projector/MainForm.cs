@@ -143,6 +143,9 @@ namespace Projector
 				string optionString = options.Count > 0 ? " (" + options.Fuse(",") + ")" : "";
 
 				TreeNode tproject = tsolution.Nodes.Add(project.Name + optionString + " [" + project.Type + "]");
+
+				tproject.Nodes.Add("Path").Nodes.Add(  project.SourcePath.FullName );
+
 				foreach (var r in project.References)
 				{
 					TreeNode treference = tproject.Nodes.Add(r.Project.Name + (r.IncludePath ? " (include)" : ""));
