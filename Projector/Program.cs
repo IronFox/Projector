@@ -140,7 +140,7 @@ namespace Projector
 			//Application.SetCompatibleTextRenderingDefault(false);
 			//Application.Run(new Form1());             // Edit as needed
 
-			bool createdNew = true;
+			//bool createdNew = true;
 			//using (Mutex mutex = new Mutex(true, MutexName, out createdNew))
 			//{
 			//	if (createdNew)

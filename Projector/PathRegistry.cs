@@ -112,5 +112,23 @@ namespace Projector
 
 
         }
-    }
+
+		internal static IEnumerable<string> GetAllProjectNames()
+		{
+			LoadMap();
+			return map.Keys;
+		}
+
+		internal static void UnsetPathFor(string name)
+		{
+			if (map.Remove(name))
+				SaveMap();
+		}
+
+		internal static void Clear()
+		{
+			map.Clear();
+			SaveMap();
+		}
+	}
 }

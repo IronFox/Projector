@@ -290,7 +290,7 @@ namespace Projector
 			}
 			mainTabControl.SelectedTab = tabLoaded;
 			UpdateAllNoneCheckbox();
-			UpdateRecent(true);
+			UpdateRecentAndPaths(true);
 
 		}
 
@@ -333,7 +333,7 @@ namespace Projector
 					UpdateAllNoneCheckbox();
 					if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
 						mainTabControl.SelectedTab = tabLoaded;
-					UpdateRecent(newRecent);
+					UpdateRecentAndPaths(newRecent);
 				}
 
 				//tabLoaded.Show();
@@ -423,9 +423,24 @@ namespace Projector
 
 		RecentItems recentItems = new RecentItems();
 
-        private void UpdateRecent(bool recentListChanged)
+        private void UpdateRecentAndPaths(bool recentListChanged)
         {
-            var collection = recentSolutionsToolStripMenuItem.DropDown.Items;
+			var fileList = locationOfProjectFileToolStripMenuItem.DropDown.Items;
+			fileList.Clear();
+			bool any = false;
+			foreach (string name in PathRegistry.GetAllProjectNames())
+			{
+				ToolStripItem item = new ToolStripMenuItem(name);
+				item.Click += (sender, item2) => { PathRegistry.UnsetPathFor(name); UpdateRecentAndPaths(false); };
+				fileList.Add(item);
+				any = true;
+
+
+			}
+
+			locationOfProjectFileToolStripMenuItem.Enabled = any;
+
+			var collection = recentSolutionsToolStripMenuItem.DropDown.Items;
             collection.Clear();
 
 
@@ -525,7 +540,7 @@ namespace Projector
             collection.Add("-");
             {
                 ToolStripItem item = new ToolStripMenuItem("Clear List");
-                item.Click += (sender, item2) => { PersistentState.ClearRecent(); UpdateRecent(true); };
+                item.Click += (sender, item2) => { PersistentState.ClearRecent(); UpdateRecentAndPaths(true); };
                 collection.Add(item);
 
             }
@@ -543,7 +558,7 @@ namespace Projector
         {
 			statusStrip.Items[0].Text = "Persistent state stored in " + PersistentState.StateFile.FullName;
 
-            UpdateRecent(true);
+            UpdateRecentAndPaths(true);
 
 			string[] parameters = Environment.GetCommandLineArgs();
 			if (parameters.Length > 1)
@@ -843,6 +858,19 @@ namespace Projector
 		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			new About().Show();
+		}
+
+		private void fileHistoryToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			PersistentState.ClearRecent();
+			UpdateRecentAndPaths(true);
+		}
+		
+
+		private void pathRegistryToolStripMenuItem_Click_1(object sender, EventArgs e)
+		{
+			PathRegistry.Clear();
+			UpdateRecentAndPaths(false);
 		}
 	}
 }
