@@ -1,4 +1,3 @@
 Batch build
 Optional libraries
 Solution designer
-When loading multiple solutions at once log only shows the last

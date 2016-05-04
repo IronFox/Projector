@@ -286,6 +286,7 @@ namespace Projector
 
 		private void LoadDomain(String domainName)
 		{
+			FlushLog();
 			var list = PersistentState.Recent.ToArray();
 			foreach (var recent in list)
 			{
@@ -295,12 +296,13 @@ namespace Projector
 			mainTabControl.SelectedTab = tabLoaded;
 			UpdateAllNoneCheckbox();
 			UpdateRecentAndPaths(true);
-
+			ReportAndFlush();
 		}
 
         private Solution LoadSolution(FileInfo file, bool batchLoad=false)
         {
-			FlushLog();
+			if (!batchLoad)
+				FlushLog();
 			if (!file.Exists)
 			{
 				LogLine("Error: Unable to read solution file '" + file + "'");
@@ -344,32 +346,32 @@ namespace Projector
 				//mainTabControl.TabIndex = 1;
 
 			}
-			
-		//	FlushLog();
 
+			//	FlushLog();
 
-			ReportAndFlush(solution);
+			EventLog.Inform(solution, null, solution.Projects.Count().ToString()+ " project(s) imported");
+			if (!batchLoad)
+				ReportAndFlush();
 
-            LogLine("Projects imported: " + solution.Projects.Count());
 			return solution;
         }
 
-		private void ReportAndFlush(Solution solution)
+		private void ReportAndFlush()
 		{
-			LogLine(solution+":");
-			foreach (var message in solution.Events.Messages)
+			//LogLine(solution+":");
+			foreach (var message in EventLog.Messages)
 			{
 				LogLine("* " + message.ToString());
 			}
 			bool anyIssues = false;
-			foreach (var warning in solution.Events.Warnings)
+			foreach (var warning in EventLog.Warnings)
 			{
 				anyIssues = true;
 				LogLine("Warning: " + warning);
 			}
 			if (!anyIssues)
-				LogLine(solution +": No issues");
-			solution.Events.Clear();
+				LogLine("No issues");
+			EventLog.Clear();
 
 		}
 
@@ -739,7 +741,7 @@ namespace Projector
 				bool newRecent;
 				solution.Reload(out newRecent); //refresh
 				solution.Build(outPath, this.toolSet.SelectedItem.ToString(), false);
-				ReportAndFlush(solution);
+				ReportAndFlush();
 				if (solution == shownSolution)
 					ShowSolution(solution);
 
@@ -892,6 +894,7 @@ namespace Projector
 
 		private void recentSolutions_DragDrop(object sender, DragEventArgs e)
 		{
+			FlushLog();
 			string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 			foreach (string file in files)
 			{
@@ -903,7 +906,7 @@ namespace Projector
 			if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
 				mainTabControl.SelectedTab = tabLoaded;
 			UpdateRecentAndPaths(true);
-
+			ReportAndFlush();
 		}
 	}
 }

@@ -472,7 +472,7 @@ namespace Projector
                 root = new Folder();
                 if (path.Exists)
                 {
-					domain.Events.Inform(parent,"Scanning "+path.Name+"...");
+					EventLog.Inform(domain, parent,"Scanning "+path.Name+"...");
                     ScanFiles(root, path, recursive);
                 }
             }
@@ -635,7 +635,7 @@ namespace Projector
                         if (dir.Exists)
 							LinkDirectories.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xLinkDir, domain, warn), dir));
                         else
-							warn.Warn(domain, Name + ": Declared link directory '" + xLinkDir.InnerText + "' does not exist");
+							warn.Warn(domain, Name + ": Declared link directory '" + xLinkDir.InnerText + "' does not exist relative to "+Root.FullName);
                     }
                 }
 
@@ -1392,13 +1392,13 @@ namespace Projector
 
         public void Warn(Solution domain, string message)
         {
-			domain.Events.Warn(this, message);
+			EventLog.Warn(domain, this, message);
         }
 
 
 		private void Inform(Solution domain, string message)
 		{
-			domain.Events.Inform(this, message);
+			EventLog.Inform(domain, this, message);
 		}
 
         private void AddMacro(XmlNode xmacro, Solution domain)

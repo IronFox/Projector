@@ -41,7 +41,6 @@ namespace Projector
 		/// </summary>
 		public Project Primary { get; private set; }
 
-		public EventLog Events { get; private set; }
 
 		private PersistentState.SolutionDescriptor solutionDesc;
 
@@ -55,7 +54,7 @@ namespace Projector
 		public Solution(FileInfo source)
 		{
 			this.Source = source;
-			this.Events = new EventLog();
+			//this.Events = new EventLog();
 		}
 
 
@@ -70,7 +69,6 @@ namespace Projector
 		public void Clear()
 		{
 			Primary = null;
-			Events.Clear();
 			map.Clear();
 			list.Clear();
 			unloaded.Clear();
@@ -169,7 +167,7 @@ namespace Projector
 				return false;
 			}
 			Clear();
-			Events.Inform(null,"Loading solution '" + Source.FullName + "'...");
+			EventLog.Inform(null,null,"Loading solution '" + Source.FullName + "'...");
 
 
 			{
@@ -221,7 +219,7 @@ namespace Projector
 
 		public bool Build(FileInfo outPath, string strToolset, bool overwriteExistingVSUserConfig)
 		{
-			Events.Inform(null,"Writing solution to '" + outPath.FullName+"'");
+			EventLog.Inform(this,null,"Writing solution to '" + outPath.FullName+"'");
 
             //PersistentState.Toolset = toolSet.SelectedItem.ToString();
 
@@ -234,7 +232,7 @@ namespace Projector
 				toolsetStr = toolsetStr.Substring(0, toolsetStr.IndexOf(".0"));
 				if (!int.TryParse(toolsetStr,out toolset))
 				{
-					Events.Warn(null,"Internal Error: Unable to decode toolset-version from specified toolset '" + strToolset + "'");
+					EventLog.Warn(this,null,"Internal Error: Unable to decode toolset-version from specified toolset '" + strToolset + "'");
 					return false;
 				}
 			}
@@ -269,7 +267,7 @@ namespace Projector
             foreach (Project p in list)
             {
 				var rs = p.SaveAs(toolset, configurations, overwriteExistingVSUserConfig,this);
-				Events.Inform(p,"Written to '"+rs.Item1.FullName+"'");
+				EventLog.Inform(this,p,"Written to '"+rs.Item1.FullName+"'");
 				projects.Add(new Tuple<FileInfo, Guid, Project>(rs.Item1, rs.Item2, p));
             }
             StreamWriter writer = File.CreateText(outPath.FullName);
@@ -324,7 +322,7 @@ namespace Projector
 
             writer.WriteLine("EndGlobal");
             writer.Close();
-			Events.Inform(null,"Export done.");
+			EventLog.Inform(this,null,"Export done.");
 
 
 			PersistentState.SetOutPathFor(Source,outPath);

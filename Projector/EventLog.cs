@@ -6,76 +6,80 @@ using System.Threading.Tasks;
 
 namespace Projector
 {
-	public class EventLog
+	public static class EventLog
 	{
-		public enum EventType
-		{
-			Message,
-			Warning
-		}
+		//public enum EventType
+		//{
+		//	Message,
+		//	Warning
+		//}
 
 		public struct Notification
 		{
 			public readonly string Text;
+			public readonly Solution Solution;
 			public readonly Project Project;
-			public readonly EventType Type;
+			//public readonly EventType Type;
 
 			public override string ToString()
 			{
-				return (Type == EventType.Warning ? "WARNING: " : "") + (Project != null ? Project.Name +": ": "") + Text;
+				return (Project != null ? (Solution != null ? Solution.Name + "/" : "") + Project.Name +": ": (Solution != null ? Solution.Name + ": " : "") ) + Text;
 			}
 
-			public Notification(Project p, string message, EventType type)
+			public Notification(Solution s, Project p, string message/*, EventType type*/)
 			{
 				this.Project = p;
 				this.Text = message;
-				this.Type = type;
+				Solution = s;
+				//this.Type = type;
 			}
 		}
 
-		private List<Notification> events = new List<Notification>();
+		private static List<Notification> warnings = new List<Notification>(),
+								messages = new List<Notification>(); 
 
 
-		public void Warn(Project p, string message)
+		public static void Warn(Solution s, Project p, string message)
 		{
-			events.Add(new Notification(p, message, EventType.Warning));
+			warnings.Add(new Notification(s, p, message));
 		}
 
-		public void Inform(Project p, string message)
+		public static void Inform(Solution s, Project p, string message)
 		{
-			events.Add(new Notification(p, message, EventType.Message));
+			messages.Add(new Notification(s, p, message));
 		}
 
 
 
-		public IEnumerable<Notification> Events { get { return events; } }
+		//public IEnumerable<Notification> Events { get { return events; } }
 
 
-		public void Clear()
+		public static void Clear()
 		{
-			events.Clear();
+			warnings.Clear();
+			messages.Clear();
 		}
 
-		public IEnumerable<Notification> All(EventType type)
-		{
-			foreach (var ev in events)
-				if (ev.Type == type)
-					yield return ev;
-		}
+		//public IEnumerable<Notification> All(EventType type)
+		//{
+		//	foreach (var ev in events)
+		//		if (ev.Type == type)
+		//			yield return ev;
+		//}
 
-		public IEnumerable<Notification> Messages
+		public static IEnumerable<Notification> Messages
 		{
 			get
 			{
-				return All(EventType.Message);
+				return messages;
 			}
 		}
 
-		public IEnumerable<Notification> Warnings
+		public static IEnumerable<Notification> Warnings
 		{
 			get
 			{
-				return All(EventType.Warning);
+				return warnings;
 			}
 		}
 	}
