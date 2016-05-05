@@ -167,7 +167,7 @@ namespace Projector
 				return false;
 			}
 			Clear();
-			EventLog.Inform(null,null,"Loading solution '" + Source.FullName + "'...");
+			EventLog.Inform(this,null,"Loading '" + Source.FullName + "'...");
 
 
 			{

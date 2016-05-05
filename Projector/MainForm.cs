@@ -286,7 +286,7 @@ namespace Projector
 
 		private void LoadDomain(String domainName)
 		{
-			FlushLog();
+			BeginLogSession();
 			var list = PersistentState.Recent.ToArray();
 			foreach (var recent in list)
 			{
@@ -296,23 +296,47 @@ namespace Projector
 			mainTabControl.SelectedTab = tabLoaded;
 			UpdateAllNoneCheckbox();
 			UpdateRecentAndPaths(true);
-			ReportAndFlush();
+			EndLogSession();
 		}
 
-        private Solution LoadSolution(FileInfo file, bool batchLoad=false)
-        {
-			if (!batchLoad)
+
+		int logDepth = 0;
+
+		private void BeginLogSession()
+		{
+			logDepth++;
+			Debug.Assert(logDepth <= 10);
+			if (logDepth ==1)
 				FlushLog();
+		}
+
+		private void EndLogSession()
+		{
+			logDepth--;
+			Debug.Assert(logDepth >= 0);
+			if (logDepth == 0)
+				ReportAndFlush();
+		}
+
+		private void AbortLogSession(string errorMsg)
+		{
+			EventLog.Warn(null,null, errorMsg);
+			EndLogSession();
+		}
+
+		private Solution LoadSolution(FileInfo file, bool batchLoad=false)
+        {
+			BeginLogSession();
 			if (!file.Exists)
 			{
-				LogLine("Error: Unable to read solution file '" + file + "'");
+				AbortLogSession("Error: Unable to read solution file '" + file + "'");
 				return null;
 			}
 			bool newRecent;
 			Solution solution;
 			if (solutions.TryGetValue(file.FullName,out solution))
 			{
-				LogLine("Solution '" + file + "' already loaded");
+				EventLog.Inform(solution,null, "Solution '" + file + "' already loaded");
 				solution.Reload(out newRecent);
 
 				RefreshListView(solution);
@@ -322,7 +346,7 @@ namespace Projector
 				solution = Solution.LoadNew(file, out newRecent);
 				if (solution == null)
 				{ 
-					LogLine("Error: Unable to read solution file '"+file+"'");
+					AbortLogSession("Error: Unable to read solution file '"+file+"'");
 					return null;
 				}
 				solutions.Add(file.FullName,solution);
@@ -350,19 +374,50 @@ namespace Projector
 			//	FlushLog();
 
 			EventLog.Inform(solution, null, solution.Projects.Count().ToString()+ " project(s) imported");
-			if (!batchLoad)
-				ReportAndFlush();
+			EndLogSession();
 
 			return solution;
         }
 
+		private string LogNextEvent(ref Solution currentSolution, EventLog.Notification n)
+		{
+			string head0 = "", head1 = "";
+			if (currentSolution != n.Solution)
+			{
+				if (n.Solution != null)
+				{
+					head0 += n.Solution.Name;
+					if (n.Project != null)
+						head0 += "/";
+				}
+				currentSolution = n.Solution;
+			}
+			else
+			{
+				if (n.Solution != null)
+				{
+					//if (n.Project != null)
+						//head0 += "/";
+					head1 ="  ";
+				}
+			}
+			if (n.Project != null)
+			{
+				head0 += n.Project.Name;
+			}
+			if (head0.Length != 0)
+				head0 += ": ";
+			return head1 + head0 + n.Text; 
+		}
 		private void ReportAndFlush()
 		{
 			//LogLine(solution+":");
+			Solution current = null;
 			foreach (var message in EventLog.Messages)
 			{
-				LogLine("* " + message.ToString());
+				LogLine(LogNextEvent(ref current , message));
 			}
+			LogLine("");
 			bool anyIssues = false;
 			foreach (var warning in EventLog.Warnings)
 			{
@@ -722,6 +777,7 @@ namespace Projector
 
 		private void Generate(Solution solution)
 		{
+			BeginLogSession();
 			FileInfo outPath = PersistentState.GetOutPathFor(solution.Source);
 			if (outPath == null)
 			{
@@ -729,7 +785,7 @@ namespace Projector
 				if (preferred != null)
 				{
 					string outName = Path.Combine(preferred.FullName, solution.Name + ".sln");
-					LogLine("Notify: Out path for '" + solution + "' not known. Defaulting to " + outName);
+					EventLog.Warn(solution,null,"Notify: Out path for '" + solution + "' not known. Defaulting to " + outName);
 					outPath = new FileInfo(outName);
 					PersistentState.SetOutPathFor(solution.Source, outPath);
 				}
@@ -741,14 +797,14 @@ namespace Projector
 				bool newRecent;
 				solution.Reload(out newRecent); //refresh
 				solution.Build(outPath, this.toolSet.SelectedItem.ToString(), false);
-				ReportAndFlush();
 				if (solution == shownSolution)
 					ShowSolution(solution);
 
 				RefreshListView(solution);
 			}
 			else
-				LogLine("Error: Cannot export '" + solution + "'. Out path is not known.");
+				EventLog.Warn(solution,null, "Error: Cannot export '" + solution + "'. Out path is not known.");
+			EndLogSession();
 		}
 
 		private void RefreshListView(Solution solution)
@@ -763,7 +819,7 @@ namespace Projector
 		private void generateSelectedButton_Click(object sender, EventArgs e)
 		{
 			FlushProjects();
-			FlushLog();
+			BeginLogSession();
 			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
 			{
 				if (loadedSolutionsView.Items[i].Checked)
@@ -772,8 +828,7 @@ namespace Projector
 					Generate(solution);
 				}
 			}
-
-
+			EndLogSession();
 		}
 
 		private void openSelectedButton_Click(object sender, EventArgs e)
@@ -846,7 +901,6 @@ namespace Projector
 		private void buildSolutionButton_Click(object sender, EventArgs e)
 		{
 			FlushProjects();
-			FlushLog();
 			if (shownSolution == null)
 			{
 				LogLine("Error: No solution focused.");
@@ -894,7 +948,7 @@ namespace Projector
 
 		private void recentSolutions_DragDrop(object sender, DragEventArgs e)
 		{
-			FlushLog();
+			BeginLogSession();
 			string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 			foreach (string file in files)
 			{
@@ -906,7 +960,7 @@ namespace Projector
 			if ((Control.ModifierKeys & Keys.Shift) != Keys.Shift)
 				mainTabControl.SelectedTab = tabLoaded;
 			UpdateRecentAndPaths(true);
-			ReportAndFlush();
+			EndLogSession();
 		}
 	}
 }
