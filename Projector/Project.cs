@@ -1120,6 +1120,8 @@ namespace Projector
             foreach (XmlNode xClone in xClones)
             {
                 Project p = Add(xClone, SourcePath,domain, this);
+				if (p == null)
+					continue;
 				if (p == this)
 				{
 					Warn(domain, "Cannot clone self.");

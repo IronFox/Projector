@@ -210,7 +210,14 @@ namespace Projector
 				XmlDocument xdoc = new XmlDocument();
 				xdoc.Load(xreader);
 				XmlNode xproject = xdoc.SelectSingleNode("project");
-				p.Load(xproject,this);
+				try
+				{
+					p.Load(xproject, this);
+				}
+				catch (Exception e)
+				{
+					EventLog.Warn(this, p, e.ToString());
+				}
 				xreader.Close();
 			}
 			return true;
