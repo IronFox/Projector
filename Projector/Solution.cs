@@ -27,15 +27,15 @@ namespace Projector
 		public ListViewItem ListViewItem {  get; set; }
 
 
-		private Dictionary<string, Project> map = new Dictionary<string, Project>();
-		private static Dictionary<string, Project> globalMap = new Dictionary<string, Project>();
-		private List<Project> list = new List<Project>();
-		private Queue<Project> unloaded = new Queue<Project>();
+		private Dictionary<string, Project> localProjectMap = new Dictionary<string, Project>();
+		private static Dictionary<string, Project> globalProjectMap = new Dictionary<string, Project>();
+		private List<Project> localProjects = new List<Project>();
+		private Queue<Project> localProjectLoadQueue = new Queue<Project>();
 
 		/// <summary>
 		/// Fetches a list of all currently loaded projects
 		/// </summary>
-		public IEnumerable<Project> Projects { get { return list; } }
+		public IEnumerable<Project> Projects { get { return localProjects; } }
 		/// <summary>
 		/// Currently chosen primary project. Can be null, but should not with a loaded solution
 		/// </summary>
@@ -69,14 +69,14 @@ namespace Projector
 		public void Clear()
 		{
 			Primary = null;
-			map.Clear();
-			list.Clear();
-			unloaded.Clear();
+			localProjectMap.Clear();
+			localProjects.Clear();
+			localProjectLoadQueue.Clear();
 		}
 
 		public void EnqueueUnloaded(Project project)
 		{
-			unloaded.Enqueue(project);
+			localProjectLoadQueue.Enqueue(project);
 		}
 
 		/// <summary>
@@ -85,49 +85,55 @@ namespace Projector
 		/// <returns>Project to load, or null if the queue is empty</returns>
 		public Project GetNextToLoad()
 		{
-			if (unloaded.Count == 0)
+			if (localProjectLoadQueue.Count == 0)
 				return null;
-			return unloaded.Dequeue();
+			return localProjectLoadQueue.Dequeue();
 		}
 
-		private Project FetchKnownProject(string name)
+		private Project FetchKnownProject(string name, bool listAsLocalProject)
 		{
 			Project p;
-			if (map.TryGetValue(name, out p))
+			if (localProjectMap.TryGetValue(name, out p))
 				return p;
-			if (globalMap.TryGetValue(name, out p))
+			if (globalProjectMap.TryGetValue(name, out p))
 			{
-				map.Add(name,p);
-				list.Add(p);
-				foreach (var r in p.References)
-					FetchKnownProject(r.Project.Name);
+				if (listAsLocalProject)
+				{
+					localProjectMap.Add(name, p);
+					localProjects.Add(p);
+					foreach (var r in p.References)
+						FetchKnownProject(r.Project.Name, true);
+				}
 				return p;
 			}
 			return null;
 		}
 
-		private Project CreateNewProject(string name)
+		private Project CreateNewProject(string name, bool listAsLocalProject)
 		{
 			Project p = new Project(name);
-			map.Add(name, p);
-			globalMap.Add(name,p);
-			list.Add(p);
-			unloaded.Enqueue(p);
+			if (listAsLocalProject)
+			{
+				localProjectMap.Add(name, p);
+				localProjects.Add(p);
+			}
+			localProjectLoadQueue.Enqueue(p);
+			globalProjectMap.Add(name,p);
 			return p;
 		}
 
-		public Project GetOrCreateProject(string name)
+		public Project GetOrCreateProject(string name, bool listAsLocalProject)
 		{
-			Project p = FetchKnownProject(name);
+			Project p = FetchKnownProject(name, listAsLocalProject);
 			if (p != null)
 				return p;
-			p = CreateNewProject(name);
+			p = CreateNewProject(name, listAsLocalProject);
 			return p;
 		}
 
 		public void ScanEmptySources()
 		{
-			foreach (Project p in list)
+			foreach (Project p in localProjects)
 			{
 				foreach (Project.Source s in p.Sources)
 					s.ScanFiles(this, p);
@@ -193,7 +199,7 @@ namespace Projector
 
 				foreach (XmlNode xproject in xprojects)
 				{
-					Project.Add(xproject, Source, this, null);
+					Project.AddProjectReference(xproject, Source, this, null,true);
 				}
 				Directory.SetCurrentDirectory(Source.DirectoryName);
 				xreader.Close();
@@ -271,7 +277,7 @@ namespace Projector
 			//};
 
 
-            foreach (Project p in list)
+            foreach (Project p in localProjects)
             {
 				var rs = p.SaveAs(toolset, configurations, overwriteExistingVSUserConfig,this);
 				EventLog.Inform(this,p,"Written to '"+rs.Item1.FullName+"'");
@@ -339,7 +345,7 @@ namespace Projector
 
 		internal static void FlushGlobalProjects()
 		{
-			globalMap.Clear();
+			globalProjectMap.Clear();
 		}
 	}
 }

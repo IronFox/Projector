@@ -1119,7 +1119,7 @@ namespace Projector
             List<Project> clone = new List<Project>();
             foreach (XmlNode xClone in xClones)
             {
-                Project p = Add(xClone, SourcePath,domain, this);
+                Project p = AddProjectReference(xClone, SourcePath,domain, this,false);
 				if (p == null)
 					continue;
 				if (p == this)
@@ -1353,7 +1353,7 @@ namespace Projector
 		/// <param name="searchScope">Source path to look from when looking up relative paths</param>
 		/// <param name="warningsGoTo">Project that is supposed to collect warnings. May be null</param>
 		/// <returns>New or already existing project</returns>
-        public static Project Add(XmlNode xproject, FileInfo searchScope, Solution domain, Project warningsGoTo)
+        public static Project AddProjectReference(XmlNode xproject, FileInfo searchScope, Solution domain, Project warningsGoTo, bool listAsLocalProject)
         {
 			//Debug.Assert(warningsGoTo == null || warningsGoTo.Solution == domain);
             XmlNode xname = xproject.Attributes.GetNamedItem("name");
@@ -1363,7 +1363,7 @@ namespace Projector
                 return null;
             }
             string name = xname.Value;
-            Project p = domain.GetOrCreateProject(name);
+            Project p = domain.GetOrCreateProject(name, listAsLocalProject);
 			if (warningsGoTo == null)
 				p.PurelyImplicitlyLoaded = false;
 
@@ -1422,7 +1422,7 @@ namespace Projector
             if (xinclude == null)
                 xinclude = xreference.Attributes.GetNamedItem("include");
             Reference re = new Reference(
-									Add(xreference, SourcePath,domain,this),
+									AddProjectReference(xreference, SourcePath,domain,this,true),
 									xinclude != null ? xinclude.Value == "true" : true
 									);
             references.Add(re);
