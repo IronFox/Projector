@@ -19,6 +19,7 @@ namespace Projector
 			public readonly string Text;
 			public readonly Solution Solution;
 			public readonly Project Project;
+			public readonly DateTime Stamp;
 			//public readonly EventType Type;
 
 			public override string ToString()
@@ -31,22 +32,25 @@ namespace Projector
 				this.Project = p;
 				this.Text = message;
 				Solution = s;
+				Stamp = DateTime.Now;
 				//this.Type = type;
 			}
 		}
 
 		private static List<Notification> warnings = new List<Notification>(),
-								messages = new List<Notification>(); 
-
+								messages = new List<Notification>();
+		private static DateTime lastEvent = DateTime.Now;
 
 		public static void Warn(Solution s, Project p, string message)
 		{
 			warnings.Add(new Notification(s, p, message));
+			lastEvent = DateTime.Now;
 		}
 
 		public static void Inform(Solution s, Project p, string message)
 		{
 			messages.Add(new Notification(s, p, message));
+			lastEvent = DateTime.Now;
 		}
 
 
@@ -80,6 +84,14 @@ namespace Projector
 			get
 			{
 				return warnings;
+			}
+		}
+
+		public static DateTime LastEvent
+		{
+			get
+			{
+				return lastEvent;
 			}
 		}
 	}

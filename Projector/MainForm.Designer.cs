@@ -51,7 +51,6 @@
 			this.solutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.buildToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.buildAtToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.overwriteExistingVSUserConfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripMenuItem4 = new System.Windows.Forms.ToolStripSeparator();
 			this.openGeneratedSolutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -76,13 +75,16 @@
 			this.openGeneratedSolutionButton = new System.Windows.Forms.Button();
 			this.buildSolutionButton = new System.Windows.Forms.Button();
 			this.log = new System.Windows.Forms.TextBox();
-			this.label2 = new System.Windows.Forms.Label();
+			this.logLabel = new System.Windows.Forms.Label();
 			this.chooseDestination = new System.Windows.Forms.SaveFileDialog();
 			this.statusStrip = new System.Windows.Forms.StatusStrip();
 			this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.toolsetLabel = new System.Windows.Forms.Label();
 			this.toolSet = new System.Windows.Forms.ComboBox();
+			this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.overwriteExistingVSUserConfigToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.forceOverwriteProjectFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.solutionViewSplit)).BeginInit();
 			this.solutionViewSplit.Panel1.SuspendLayout();
@@ -105,6 +107,7 @@
             this.fileToolStripMenuItem,
             this.loadedSolutionsToolStripMenuItem,
             this.solutionToolStripMenuItem,
+            this.optionsToolStripMenuItem,
             this.helpToolStripMenuItem});
 			this.menuStrip1.Location = new System.Drawing.Point(0, 0);
 			this.menuStrip1.Name = "menuStrip1";
@@ -241,7 +244,6 @@
 			this.solutionToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.buildToolStripMenuItem,
             this.buildAtToolStripMenuItem,
-            this.overwriteExistingVSUserConfigToolStripMenuItem,
             this.toolStripMenuItem4,
             this.openGeneratedSolutionToolStripMenuItem});
 			this.solutionToolStripMenuItem.Enabled = false;
@@ -253,34 +255,27 @@
 			// buildToolStripMenuItem
 			// 
 			this.buildToolStripMenuItem.Name = "buildToolStripMenuItem";
-			this.buildToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+			this.buildToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
 			this.buildToolStripMenuItem.Text = "Build";
 			this.buildToolStripMenuItem.Click += new System.EventHandler(this.buildToolStripMenuItem_Click);
 			// 
 			// buildAtToolStripMenuItem
 			// 
 			this.buildAtToolStripMenuItem.Name = "buildAtToolStripMenuItem";
-			this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+			this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
 			this.buildAtToolStripMenuItem.Text = "Build at...";
 			this.buildAtToolStripMenuItem.Click += new System.EventHandler(this.buildAtToolStripMenuItem_Click);
-			// 
-			// overwriteExistingVSUserConfigToolStripMenuItem
-			// 
-			this.overwriteExistingVSUserConfigToolStripMenuItem.Name = "overwriteExistingVSUserConfigToolStripMenuItem";
-			this.overwriteExistingVSUserConfigToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
-			this.overwriteExistingVSUserConfigToolStripMenuItem.Text = "Overwrite existing VS User-Config";
-			this.overwriteExistingVSUserConfigToolStripMenuItem.Click += new System.EventHandler(this.overwriteExistingVSUserConfigToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem4
 			// 
 			this.toolStripMenuItem4.Name = "toolStripMenuItem4";
-			this.toolStripMenuItem4.Size = new System.Drawing.Size(248, 6);
+			this.toolStripMenuItem4.Size = new System.Drawing.Size(204, 6);
 			// 
 			// openGeneratedSolutionToolStripMenuItem
 			// 
 			this.openGeneratedSolutionToolStripMenuItem.Enabled = false;
 			this.openGeneratedSolutionToolStripMenuItem.Name = "openGeneratedSolutionToolStripMenuItem";
-			this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+			this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
 			this.openGeneratedSolutionToolStripMenuItem.Text = "Open Generated Solution";
 			this.openGeneratedSolutionToolStripMenuItem.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
 			// 
@@ -328,7 +323,7 @@
 			// solutionViewSplit.Panel2
 			// 
 			this.solutionViewSplit.Panel2.Controls.Add(this.log);
-			this.solutionViewSplit.Panel2.Controls.Add(this.label2);
+			this.solutionViewSplit.Panel2.Controls.Add(this.logLabel);
 			this.solutionViewSplit.Size = new System.Drawing.Size(564, 382);
 			this.solutionViewSplit.SplitterDistance = 260;
 			this.solutionViewSplit.TabIndex = 3;
@@ -528,14 +523,14 @@
 			this.log.Size = new System.Drawing.Size(564, 95);
 			this.log.TabIndex = 1;
 			// 
-			// label2
+			// logLabel
 			// 
-			this.label2.AutoSize = true;
-			this.label2.Location = new System.Drawing.Point(3, 6);
-			this.label2.Name = "label2";
-			this.label2.Size = new System.Drawing.Size(25, 13);
-			this.label2.TabIndex = 0;
-			this.label2.Text = "Log";
+			this.logLabel.AutoSize = true;
+			this.logLabel.Location = new System.Drawing.Point(3, 6);
+			this.logLabel.Name = "logLabel";
+			this.logLabel.Size = new System.Drawing.Size(25, 13);
+			this.logLabel.TabIndex = 0;
+			this.logLabel.Text = "Log";
 			// 
 			// statusStrip
 			// 
@@ -591,6 +586,28 @@
 			this.toolSet.ValueMember = "14.0 (VS 2015)";
 			this.toolSet.SelectedIndexChanged += new System.EventHandler(this.toolSet_SelectedIndexChanged_1);
 			// 
+			// optionsToolStripMenuItem
+			// 
+			this.optionsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.overwriteExistingVSUserConfigToolStripMenuItem,
+            this.forceOverwriteProjectFilesToolStripMenuItem});
+			this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+			this.optionsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
+			this.optionsToolStripMenuItem.Text = "Options";
+			// 
+			// overwriteExistingVSUserConfigToolStripMenuItem
+			// 
+			this.overwriteExistingVSUserConfigToolStripMenuItem.Name = "overwriteExistingVSUserConfigToolStripMenuItem";
+			this.overwriteExistingVSUserConfigToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+			this.overwriteExistingVSUserConfigToolStripMenuItem.Text = "Overwrite existing VS User-Config";
+			// 
+			// forceOverwriteProjectFilesToolStripMenuItem
+			// 
+			this.forceOverwriteProjectFilesToolStripMenuItem.Name = "forceOverwriteProjectFilesToolStripMenuItem";
+			this.forceOverwriteProjectFilesToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+			this.forceOverwriteProjectFilesToolStripMenuItem.Text = "Force overwrite project files";
+			this.forceOverwriteProjectFilesToolStripMenuItem.Click += new System.EventHandler(this.forceOverwriteProjectFilesToolStripMenuItem_Click);
+			// 
 			// ProjectView
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -641,7 +658,7 @@
         private System.Windows.Forms.OpenFileDialog openProjectDialog;
 		private System.Windows.Forms.SplitContainer solutionViewSplit;
         private System.Windows.Forms.TextBox log;
-        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label logLabel;
         private System.Windows.Forms.ToolStripMenuItem solutionToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem buildToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem buildAtToolStripMenuItem;
@@ -654,7 +671,6 @@
 		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem3;
 		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem4;
 		private System.Windows.Forms.ToolStripMenuItem openGeneratedSolutionToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem overwriteExistingVSUserConfigToolStripMenuItem;
 		private System.Windows.Forms.TabControl mainTabControl;
 		private System.Windows.Forms.TabPage tabRecent;
 		private System.Windows.Forms.Panel recentSolutions;
@@ -685,6 +701,9 @@
 		private System.Windows.Forms.ToolStripMenuItem pathRegistryToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem locationOfProjectFileToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem5;
+		private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem overwriteExistingVSUserConfigToolStripMenuItem;
+		private System.Windows.Forms.ToolStripMenuItem forceOverwriteProjectFilesToolStripMenuItem;
 	}
 }
 

@@ -97,6 +97,8 @@ namespace Projector
 
 		}
 
+		public bool ForceOverwriteProjectFiles { get { return forceOverwriteProjectFilesToolStripMenuItem.Checked; } }
+
 		private void ProjectView_Load(object sender, EventArgs e)
         {
 			ResizeFont(this.Controls, FontScaleFactor);
@@ -427,7 +429,7 @@ namespace Projector
 			if (!anyIssues)
 				LogLine("No issues");
 			EventLog.Clear();
-
+			logLabel.Text = "Log (" + EventLog.LastEvent.ToLongTimeString() + ")";
 		}
 
 
@@ -961,6 +963,11 @@ namespace Projector
 				mainTabControl.SelectedTab = tabLoaded;
 			UpdateRecentAndPaths(true);
 			EndLogSession();
+		}
+
+		private void forceOverwriteProjectFilesToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			forceOverwriteProjectFilesToolStripMenuItem.Checked = !forceOverwriteProjectFilesToolStripMenuItem.Checked;
 		}
 	}
 }

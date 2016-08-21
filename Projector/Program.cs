@@ -187,5 +187,83 @@ namespace Projector
 				//}
 			//}
         }
-    }
+
+		/// <summary>
+		/// Flushes <paramref name="writer"/>, checks for changes in file content, and updates if necessary.
+		/// Closes <paramref name="writer"/> when done.
+		/// </summary>
+		/// <param name="outPath">Path to check/write to</param>
+		/// <param name="writer">Writer to flush, write to disk (if necessary) and close</param>
+		/// <returns>True, if the file was written, false if it already matched</returns>
+		internal static bool ExportToDisk(FileInfo outPath, StreamWriter writer)
+		{
+			writer.Flush();
+			Stream stream = writer.BaseStream;
+			if (view.ForceOverwriteProjectFiles)
+			{
+				WriteToFile(outPath, stream);
+				writer.Close();
+				return true;
+			}
+			stream.Seek(0, SeekOrigin.Begin);
+			bool changed = !ContentMatches(outPath, stream);
+			if (changed)
+			{
+				WriteToFile(outPath, stream);
+			}
+			writer.Close();
+			return changed;
+		}
+
+		private static bool ContentMatches(FileInfo path, Stream stream)
+		{
+			try
+			{
+				StreamReader r = File.OpenText(path.FullName);
+
+				bool match = StreamsMatch(r.BaseStream, stream);
+				r.Close();
+				return match;
+			}
+			catch (FileNotFoundException)
+			{
+				return false;
+			}
+		}
+
+		private static bool StreamsMatch(Stream streamA, Stream streamB)
+		{
+			StreamReader a = new StreamReader(streamA);
+			StreamReader b = new StreamReader(streamB);
+			char[] ba = new char[1024], bb = new char[1024];
+
+			while (!a.EndOfStream && !b.EndOfStream)
+			{
+				int ra = a.ReadBlock(ba, 0, ba.Length);
+				int rb = b.ReadBlock(bb, 0, bb.Length);
+
+				if (ra != rb || !EqualContent(ba, bb, ra))
+				{
+					return true;
+				}
+			}
+			return a.EndOfStream && b.EndOfStream;
+		}
+
+		private static void WriteToFile(FileInfo outPath, Stream stream)
+		{
+			stream.Seek(0, SeekOrigin.Begin);
+			StreamWriter writer = File.CreateText(outPath.FullName);
+			stream.CopyTo(writer.BaseStream);
+			writer.Close();
+		}
+
+		private static bool EqualContent(char[] a, char[] b, int len)
+		{
+			for (int i = 0; i < len; i++)
+				if (a[i] != b[i])
+					return false;
+			return true;
+		}
+	}
 }

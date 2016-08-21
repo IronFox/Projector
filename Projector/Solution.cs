@@ -280,12 +280,18 @@ namespace Projector
             foreach (Project p in localProjects)
             {
 				var rs = p.SaveAs(toolset, configurations, overwriteExistingVSUserConfig,this);
-				EventLog.Inform(this,p,"Written to '"+rs.Item1.FullName+"'");
+				if (rs.Item3)
+					EventLog.Inform(this,p,"Written to '"+rs.Item1.FullName+"'");
+				else
+					EventLog.Inform(this,p,"No changes: '"+rs.Item1.FullName+"'");
 				projects.Add(new Tuple<FileInfo, Guid, Project>(rs.Item1, rs.Item2, p));
             }
-            StreamWriter writer = File.CreateText(outPath.FullName);
 
-            writer.WriteLine("Microsoft Visual Studio Solution File, Format Version 12.00");
+			MemoryStream stream = new MemoryStream();
+			StreamWriter writer = new StreamWriter(stream, Encoding.UTF8);
+			//File.CreateText(outPath.FullName);
+
+			writer.WriteLine("Microsoft Visual Studio Solution File, Format Version 12.00");
 			writer.WriteLine("# Visual Studio "+toolset);
 			writer.WriteLine("VisualStudioVersion = " + toolset);
 			writer.WriteLine("MinimumVisualStudioVersion = 10.0.40219.1");
@@ -334,9 +340,10 @@ namespace Projector
             writer.WriteLine("\tEndGlobalSection");
 
             writer.WriteLine("EndGlobal");
-            writer.Close();
-			EventLog.Inform(this,null,"Export done.");
-
+			if (Program.ExportToDisk(outPath, writer))
+				EventLog.Inform(this, null, "Export done.");
+			else
+				EventLog.Inform(this, null, "No changes in .sln file. Skipping export.");
 
 			PersistentState.SetOutPathFor(Source,outPath);
 			return true;

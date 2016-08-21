@@ -813,13 +813,14 @@ namespace Projector
 		/// <param name="toolSetVersion">Active toolset version to use</param>
 		/// <param name="configurations"></param>
 		/// <returns></returns>
-        public Tuple<FileInfo,Guid> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
+        public Tuple<FileInfo,Guid, bool> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
         {
             FileInfo file = OutFile;
             if (!file.Directory.Exists)
                 Directory.CreateDirectory(file.Directory.FullName);
             Guid id = LocalGuid;
-            using (StreamWriter writer = File.CreateText(file.FullName))
+			bool written = false;
+            using (StreamWriter writer = new StreamWriter(new MemoryStream()))
             {
                 writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
 
@@ -1022,10 +1023,11 @@ namespace Projector
                 writer.WriteLine("<ImportGroup Label=\"ExtensionTargets\">");
                 writer.WriteLine("</ImportGroup>");
                 writer.WriteLine("</Project>");
-                writer.Close();
+				
+				written = Program.ExportToDisk(file, writer);
             }
 
-            using (StreamWriter writer = File.CreateText(file.FullName+".filters"))
+            using (StreamWriter writer = new StreamWriter(new MemoryStream()))
             {
                 writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
                 writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
@@ -1045,11 +1047,10 @@ namespace Projector
                 }
 
                 writer.WriteLine("</Project>");
-                writer.Close();
-
+				Program.ExportToDisk(new FileInfo( file.FullName + ".filters"), writer);
             }
             if (!File.Exists(file.FullName + ".user") || overwriteUserSettings)
-                using (StreamWriter writer = File.CreateText(file.FullName + ".user"))
+                using (StreamWriter writer = new StreamWriter(new MemoryStream()))
                 {
                     writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
                     writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
@@ -1062,10 +1063,10 @@ namespace Projector
                     }
 
                     writer.WriteLine("</Project>");
-                    writer.Close();
+					Program.ExportToDisk(new FileInfo(file.FullName + ".user"), writer);
                 }
 
-            return new Tuple<FileInfo, Guid>(file, id);
+            return new Tuple<FileInfo, Guid,bool>(file, id,written);
         }
 
 
