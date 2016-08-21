@@ -194,19 +194,13 @@ namespace Projector
 		/// </summary>
 		/// <param name="outPath">Path to check/write to</param>
 		/// <param name="writer">Writer to flush, write to disk (if necessary) and close</param>
+		/// <param name="forceWrite">Force writing this file. Writing may also be force via global settings</param>
 		/// <returns>True, if the file was written, false if it already matched</returns>
-		internal static bool ExportToDisk(FileInfo outPath, StreamWriter writer)
+		internal static bool ExportToDisk(FileInfo outPath, StreamWriter writer, bool forceWrite=false)
 		{
 			writer.Flush();
 			Stream stream = writer.BaseStream;
-			if (view.ForceOverwriteProjectFiles)
-			{
-				WriteToFile(outPath, stream);
-				writer.Close();
-				return true;
-			}
-			stream.Seek(0, SeekOrigin.Begin);
-			bool changed = !ContentMatches(outPath, stream);
+			bool changed = view.ForceOverwriteProjectFiles || forceWrite || !ContentMatches(outPath, stream);
 			if (changed)
 			{
 				WriteToFile(outPath, stream);
@@ -221,6 +215,7 @@ namespace Projector
 			{
 				StreamReader r = File.OpenText(path.FullName);
 
+				stream.Seek(0, SeekOrigin.Begin);
 				bool match = StreamsMatch(r.BaseStream, stream);
 				r.Close();
 				return match;
@@ -244,7 +239,7 @@ namespace Projector
 
 				if (ra != rb || !EqualContent(ba, bb, ra))
 				{
-					return true;
+					return false;
 				}
 			}
 			return a.EndOfStream && b.EndOfStream;

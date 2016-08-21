@@ -820,7 +820,58 @@ namespace Projector
                 Directory.CreateDirectory(file.Directory.FullName);
             Guid id = LocalGuid;
 			bool written = false;
-            using (StreamWriter writer = new StreamWriter(new MemoryStream()))
+
+
+
+
+
+			foreach (Source source in sources)
+				source.ScanFiles(domain, this);
+
+
+			using (StreamWriter writer = new StreamWriter(new MemoryStream()))
+			{
+				writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+				writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
+
+				writer.WriteLine("<ItemGroup>");
+				WriteFilterDeclaration(writer, "Files");
+				foreach (Source source in sources)
+				{
+					source.root.WriteFilterDeclarations(writer, "Files", sources.Count != 1);
+				}
+				writer.WriteLine("</ItemGroup>");
+
+
+				foreach (Source source in sources)
+				{
+					source.WriteProjectFilterGroup(writer, "Files", sources.Count != 1);
+				}
+
+				writer.WriteLine("</Project>");
+				if (Program.ExportToDisk(new FileInfo(file.FullName + ".filters"), writer))
+					written = true;
+			}
+
+			if (!File.Exists(file.FullName + ".user") || overwriteUserSettings)
+				using (StreamWriter writer = new StreamWriter(new MemoryStream()))
+				{
+					writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+					writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
+
+					foreach (var config in configurations)
+					{
+						writer.WriteLine("  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)' == '" + config + "'\">");
+						writer.WriteLine("    <LocalDebuggerWorkingDirectory>" + SourcePath.DirectoryName + "</LocalDebuggerWorkingDirectory>");
+						writer.WriteLine("  </PropertyGroup>");
+					}
+
+					writer.WriteLine("</Project>");
+					if (Program.ExportToDisk(new FileInfo(file.FullName + ".user"), writer))
+						written = true;
+				}
+
+			using (StreamWriter writer = new StreamWriter(new MemoryStream()))
             {
                 writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
 
@@ -1003,7 +1054,7 @@ namespace Projector
                 }
                 foreach (Source source in sources)
                 {
-					source.ScanFiles(domain,this);
+					//source.ScanFiles(domain,this);
 					source.WriteProjectGroup(writer);
                 }
 
@@ -1024,47 +1075,10 @@ namespace Projector
                 writer.WriteLine("</ImportGroup>");
                 writer.WriteLine("</Project>");
 				
-				written = Program.ExportToDisk(file, writer);
+				written = Program.ExportToDisk(file, writer, written);
             }
 
-            using (StreamWriter writer = new StreamWriter(new MemoryStream()))
-            {
-                writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-                writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
-
-                writer.WriteLine("<ItemGroup>");
-                    WriteFilterDeclaration(writer, "Files");
-                    foreach (Source source in sources)
-                    {
-						source.root.WriteFilterDeclarations(writer, "Files",sources.Count != 1);
-                    }
-                writer.WriteLine("</ItemGroup>");
-
-
-                foreach (Source source in sources)
-                {
-					source.WriteProjectFilterGroup(writer, "Files",sources.Count != 1);
-                }
-
-                writer.WriteLine("</Project>");
-				Program.ExportToDisk(new FileInfo( file.FullName + ".filters"), writer);
-            }
-            if (!File.Exists(file.FullName + ".user") || overwriteUserSettings)
-                using (StreamWriter writer = new StreamWriter(new MemoryStream()))
-                {
-                    writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-                    writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
-
-                    foreach (var config in configurations)
-                    {
-                        writer.WriteLine("  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)' == '" + config + "'\">");
-                        writer.WriteLine("    <LocalDebuggerWorkingDirectory>"+SourcePath.DirectoryName+"</LocalDebuggerWorkingDirectory>");
-                        writer.WriteLine("  </PropertyGroup>");
-                    }
-
-                    writer.WriteLine("</Project>");
-					Program.ExportToDisk(new FileInfo(file.FullName + ".user"), writer);
-                }
+         
 
             return new Tuple<FileInfo, Guid,bool>(file, id,written);
         }
@@ -1091,7 +1105,7 @@ namespace Projector
         public static void WriteFilterDeclaration(StreamWriter writer, string path)
         {
             writer.WriteLine("  <Filter Include=\"" + path + "\">");
-            writer.WriteLine("    <UniqueIdentifier>{" + Guid.NewGuid() + "}</UniqueIdentifier>");
+         //   writer.WriteLine("    <UniqueIdentifier>{" + Guid.NewGuid() + "}</UniqueIdentifier>");
             writer.WriteLine("  </Filter>");
         }
 
