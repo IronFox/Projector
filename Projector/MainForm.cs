@@ -33,7 +33,7 @@ namespace Projector
         {
             if (openSolutionDialog.ShowDialog() == DialogResult.OK)
             {
-                LoadSolution(new FileInfo(openSolutionDialog.FileName));
+                LoadSolution(new FileEntry(openSolutionDialog.FileName));
             }
         }
 
@@ -175,7 +175,7 @@ namespace Projector
 					TreeNode tcommands = tproject.Nodes.Add("Pre-Build Commands");
 					foreach (var m in project.PreBuildCommands)
 					{
-						TreeNode tparameters = tcommands.Nodes.Add(m.locatedExecutable != null ? m.locatedExecutable.FullName : m.originalExecutable);
+						TreeNode tparameters = tcommands.Nodes.Add(m.locatedExecutable.Exists ? m.locatedExecutable.FullName : m.originalExecutable);
 						foreach (var param in m.parameters)
 							tparameters.Nodes.Add(param);
 					}
@@ -259,7 +259,7 @@ namespace Projector
 			buildSolutionButton.Enabled = solution.Primary != null;
 			tabSelected.Text = solution.ToString();
 
-			openGeneratedSolutionToolStripMenuItem.Enabled = PersistentState.GetOutPathFor(solution.Source) != null;
+			openGeneratedSolutionToolStripMenuItem.Enabled = PersistentState.GetOutPathFor(solution.Source).Exists;
 			openGeneratedSolutionButton.Enabled = openGeneratedSolutionToolStripMenuItem.Enabled;
 
 		}
@@ -326,7 +326,7 @@ namespace Projector
 			EndLogSession();
 		}
 
-		private Solution LoadSolution(FileInfo file, bool batchLoad=false)
+		private Solution LoadSolution(FileEntry file, bool batchLoad=false)
         {
 			BeginLogSession();
 			if (!file.Exists)
@@ -630,11 +630,11 @@ namespace Projector
 
 		private void LoadFromParameter(string p)
 		{
-			Solution solution = LoadSolution(new FileInfo(p));
+			Solution solution = LoadSolution(new FileEntry(p));
 			if (solution != null)
 			{
-				FileInfo outPath = PersistentState.GetOutPathFor(solution.Source);
-				if (outPath != null && outPath.Directory.Exists)
+				FileEntry outPath = PersistentState.GetOutPathFor(solution.Source);
+				if (outPath.DirectoryExists)
 					BuildCurrentSolution(solution, outPath);
 					
 			}
@@ -649,12 +649,12 @@ namespace Projector
         {
 			if (shownSolution == null)
 				return;
-            FileInfo outPath = PersistentState.GetOutPathFor(shownSolution.Source);
-            if (outPath == null || !outPath.Directory.Exists)
+			FileEntry outPath = PersistentState.GetOutPathFor(shownSolution.Source);
+            if (!outPath.DirectoryExists)
             {
 				string solutionName = shownSolution.Name + ".sln";
 				DirectoryInfo preferred = shownSolution.Source.Directory.CreateSubdirectory(Project.WorkSubDirectory);
-				outPath = new FileInfo( Path.Combine(preferred.FullName,solutionName) );
+				outPath = new FileEntry( Path.Combine(preferred.FullName,solutionName) );
 
 
 				//buildAtToolStripMenuItem_Click(sender, e);
@@ -678,7 +678,7 @@ namespace Projector
 		}
 
 
-		private void BuildCurrentSolution(Solution solution, FileInfo outPath)
+		private void BuildCurrentSolution(Solution solution, FileEntry outPath)
 		{
 			if (solution.Build(outPath, this.toolSet.SelectedItem.ToString(),overwriteExistingVSUserConfigToolStripMenuItem.Checked))
 			{
@@ -704,7 +704,7 @@ namespace Projector
 			chooseDestination.InitialDirectory = preferred.FullName;
             if (chooseDestination.ShowDialog() == DialogResult.OK)
             {
-                PersistentState.SetOutPathFor(solution.Source, new FileInfo(chooseDestination.FileName));
+                PersistentState.SetOutPathFor(solution.Source, new FileEntry(chooseDestination.FileName));
                 buildToolStripMenuItem_Click(sender, e);
             }
         }
@@ -743,8 +743,8 @@ namespace Projector
 		{
 			if (solution == null)
 				return;
-            FileInfo slnPath = PersistentState.GetOutPathFor(solution.Source);
-			if (slnPath == null)
+			FileEntry slnPath = PersistentState.GetOutPathFor(solution.Source);
+			if (slnPath.IsEmpty)
 			{
 				LogLine("Error: Out location unknown for '"+solution+"'. Chances are, this solution has not been generated.");
 				return;
@@ -780,21 +780,20 @@ namespace Projector
 		private void Generate(Solution solution)
 		{
 			BeginLogSession();
-			FileInfo outPath = PersistentState.GetOutPathFor(solution.Source);
-			if (outPath == null)
+			FileEntry outPath = PersistentState.GetOutPathFor(solution.Source);
+			if (!outPath.Exists)
 			{
 				DirectoryInfo preferred = solution.Source.Directory.CreateSubdirectory(Project.WorkSubDirectory);
 				if (preferred != null)
 				{
 					string outName = Path.Combine(preferred.FullName, solution.Name + ".sln");
 					EventLog.Warn(solution,null,"Notify: Out path for '" + solution + "' not known. Defaulting to " + outName);
-					outPath = new FileInfo(outName);
+					outPath = new FileEntry(outName);
 					PersistentState.SetOutPathFor(solution.Source, outPath);
 				}
 			}
 
-
-			if (outPath != null && outPath.Directory.Exists)
+			if (outPath.DirectoryExists)
 			{
 				bool newRecent;
 				solution.Reload(out newRecent); //refresh
@@ -954,7 +953,7 @@ namespace Projector
 			string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 			foreach (string file in files)
 			{
-				LoadSolution(new FileInfo(file), true);
+				LoadSolution(new FileEntry(file), true);
 
 			}
 

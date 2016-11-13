@@ -673,9 +673,9 @@ namespace Projector
 
 		public struct Command
 		{
-			public string originalExecutable;
-			public FileInfo	locatedExecutable;
-			public string[]	parameters;
+			public string		originalExecutable;
+			public FileEntry	locatedExecutable;
+			public string[]		parameters;
 		}
 
 
@@ -738,11 +738,11 @@ namespace Projector
 		/// <summary>
 		/// Retrieves the .project file the local project was loaded from. May be null
 		/// </summary>
-		public FileInfo SourcePath { get; private set; }
+		public FileEntry SourcePath { get; private set; }
 		/// <summary>
 		/// Checks whether or not the local project has a source path. Usually this is only false, if the local project has not yet been loaded
 		/// </summary>
-		public bool HasSource { get { return SourcePath != null && SourcePath.Exists; } }
+		public bool HasSource { get { return SourcePath.Exists; } }
 
 
         //private XmlNode xproject;
@@ -767,7 +767,7 @@ namespace Projector
 		/// </summary>
 		/// <param name="relativeToSolutionFile"></param>
 		/// <returns></returns>
-        public bool AutoConfigureSourcePath(FileInfo relativeToSolutionFile)
+        public bool AutoConfigureSourcePath(FileEntry relativeToSolutionFile)
         {
             if (HasSource)
                 return true;
@@ -786,7 +786,7 @@ namespace Projector
         {
             get
             {
-				return (SourcePath != null ? SourcePath.FullName : "").ToGuid();
+				return (SourcePath.Exists ? SourcePath.FullName : "").ToGuid();
             }
         }
 
@@ -799,11 +799,11 @@ namespace Projector
 		/// <summary>
 		/// Retrieves the Visual Studio project output file (including extension)
 		/// </summary>
-        public FileInfo OutFile
+        public FileEntry OutFile
         {
             get
             {
-                return new FileInfo(Path.Combine(Path.Combine(SourcePath.Directory.FullName, Path.Combine(WorkSubDirectory, "Projects" , Name)), Name + ".vcxproj"));
+                return new FileEntry(Path.Combine(Path.Combine(SourcePath.Directory.FullName, Path.Combine(WorkSubDirectory, "Projects" , Name)), Name + ".vcxproj"));
             }
         }
 
@@ -813,9 +813,9 @@ namespace Projector
 		/// <param name="toolSetVersion">Active toolset version to use</param>
 		/// <param name="configurations"></param>
 		/// <returns></returns>
-        public Tuple<FileInfo,Guid, bool> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
+        public Tuple<FileEntry, Guid, bool> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
         {
-            FileInfo file = OutFile;
+			FileEntry file = OutFile;
             if (!file.Directory.Exists)
                 Directory.CreateDirectory(file.Directory.FullName);
             Guid id = LocalGuid;
@@ -849,7 +849,7 @@ namespace Projector
 				}
 
 				writer.WriteLine("</Project>");
-				if (Program.ExportToDisk(new FileInfo(file.FullName + ".filters"), writer))
+				if (Program.ExportToDisk(new FileEntry(file.FullName + ".filters"), writer))
 					written = true;
 			}
 
@@ -867,7 +867,7 @@ namespace Projector
 					}
 
 					writer.WriteLine("</Project>");
-					if (Program.ExportToDisk(new FileInfo(file.FullName + ".user"), writer))
+					if (Program.ExportToDisk(new FileEntry(file.FullName + ".user"), writer))
 						written = true;
 				}
 
@@ -1031,7 +1031,7 @@ namespace Projector
                         writer.WriteLine("  <PreBuildEvent>");
                         foreach (Command cmd in PreBuildCommands)
                         {
-							if (cmd.locatedExecutable != null)
+							if (cmd.locatedExecutable.Exists )
 							{
 								writer.Write("    <Command>\"");
 								writer.Write(cmd.locatedExecutable.FullName);
@@ -1061,7 +1061,7 @@ namespace Projector
                 writer.WriteLine("<ItemGroup>");
                 foreach (var r in references)
                 {
-                    if (r.Project.SourcePath != null)
+                    if (r.Project.SourcePath.Exists)
                     {
                         writer.WriteLine("<ProjectReference Include=\"" + r.Project.OutFile.FullName + "\">");
                         writer.WriteLine("<Project>{" + r.Project.LocalGuid + "}</Project>");
@@ -1080,7 +1080,7 @@ namespace Projector
 
          
 
-            return new Tuple<FileInfo, Guid,bool>(file, id,written);
+            return new Tuple<FileEntry, Guid,bool>(file, id,written);
         }
 
 
@@ -1284,12 +1284,12 @@ namespace Projector
 				}
 
 				Command cmd = new Command(){originalExecutable = elements[0],parameters = elements.ToArray(1)};
-				FileInfo file = TryFindExecutable(cmd.originalExecutable);
-				if (file == null)
+				FileEntry file = TryFindExecutable(cmd.originalExecutable);
+				if (!file.Exists)
 					file = TryFindExecutable(cmd.originalExecutable+".exe");
-				if (file == null)
+				if (!file.Exists)
 					file = TryFindExecutable(cmd.originalExecutable + ".bat");
-				if (file != null)
+				if (!file.Exists)
 					cmd.locatedExecutable = file;
 				else
 					Warn(domain, "Unable to locate executable '" + cmd.originalExecutable + "'");
@@ -1318,9 +1318,9 @@ namespace Projector
             }
         }
 
-		private FileInfo TryFindExecutable(string executable)
+		private FileEntry TryFindExecutable(string executable)
 		{
-			FileInfo file = new FileInfo(executable);
+			FileEntry file = new FileEntry(executable);
 			if (file.Exists)
 				return file;
 
@@ -1328,11 +1328,11 @@ namespace Projector
 			string[] paths = pathEnv.Split(Path.PathSeparator);
 			foreach (string path in paths)
 			{
-				file = new FileInfo(Path.Combine(path, executable));
+				file = new FileEntry(Path.Combine(path, executable));
 				if (file.Exists)
 					return file;
 			}
-			return null;
+			return new FileEntry();
 		}
 
 
@@ -1344,11 +1344,11 @@ namespace Projector
 		/// <param name="searchScope"></param>
 		/// <param name="fileName"></param>
 		/// <returns></returns>
-        public static FileInfo GetRelative(DirectoryInfo searchScope, string fileName)
+        public static FileEntry GetRelative(DirectoryInfo searchScope, string fileName)
         {
             string current = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(searchScope.FullName);
-            FileInfo rs = new FileInfo(fileName);
+			FileEntry rs = new FileEntry(fileName);
             Directory.SetCurrentDirectory(current);
             return rs;
         }
@@ -1368,7 +1368,7 @@ namespace Projector
 		/// <param name="searchScope">Source path to look from when looking up relative paths</param>
 		/// <param name="warningsGoTo">Project that is supposed to collect warnings. May be null</param>
 		/// <returns>New or already existing project</returns>
-        public static Project AddProjectReference(XmlNode xproject, FileInfo searchScope, Solution domain, Project warningsGoTo, bool listAsLocalProject)
+        public static Project AddProjectReference(XmlNode xproject, FileEntry searchScope, Solution domain, Project warningsGoTo, bool listAsLocalProject)
         {
 			//Debug.Assert(warningsGoTo == null || warningsGoTo.Solution == domain);
             XmlNode xname = xproject.Attributes.GetNamedItem("name");
@@ -1391,7 +1391,7 @@ namespace Projector
 				if (!p.SourcePath.Exists)
                 {
 					p.Warn(domain, "Explicit project path '" + xpath.Value + "' does not exist relative to '" + searchScope.FullName + "'");
-                    p.SourcePath = null;
+                    p.SourcePath = new FileEntry();
                 }
             }
 

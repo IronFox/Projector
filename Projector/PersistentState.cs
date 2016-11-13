@@ -15,13 +15,13 @@ namespace Projector
 		{
 			public readonly string Name;
 			public readonly string Domain;
-			public readonly FileInfo File;
+			public readonly FileEntry File;
 
-			public SolutionDescriptor(FileInfo file, string domain)
+			public SolutionDescriptor(FileEntry file, string domain)
 			{
 				Domain = domain;
 				File = file;
-				Name = file.Name.Substring(0, file.Name.Length - file.Extension.Length);
+				Name = file.CoreName;
 			}
 
 			public override bool Equals(object obj)
@@ -95,7 +95,7 @@ namespace Projector
                 HashSet<string> recentKnown = new HashSet<string>();
                 foreach (XmlNode xr in xrecent)
                 {
-                    FileInfo f = new FileInfo(xr.InnerText);
+					FileEntry f = new FileEntry(xr.InnerText);
                     if (f.Exists && !recentKnown.Contains(f.FullName))
                     {
 						XmlNode xdomain = xr.Attributes.GetNamedItem("domain");
@@ -113,8 +113,8 @@ namespace Projector
                     XmlNode xsolution = xt.Attributes.GetNamedItem("solutionFile");
                     if (xsolution == null)
                         continue;
-                    FileInfo sol = new FileInfo(xsolution.Value);
-                    FileInfo ot = new FileInfo(xt.InnerText);
+					FileEntry sol = new FileEntry(xsolution.Value);
+					FileEntry ot = new FileEntry(xt.InnerText);
                     if (!sol.Exists)
                         continue;
                     if (!ot.Directory.Exists)
@@ -130,7 +130,7 @@ namespace Projector
 			return false;
         }
         private static List<SolutionDescriptor> recent = new List<SolutionDescriptor>();
-        private static Dictionary<string, FileInfo> outPaths = new Dictionary<string, FileInfo>();
+        private static Dictionary<string, FileEntry> outPaths = new Dictionary<string, FileEntry>();
         private static string toolset;
 
         public static void Backup()
@@ -177,15 +177,15 @@ namespace Projector
             Backup();
         }
 
-        public static FileInfo GetOutPathFor(FileInfo solutionFile)
+        public static FileEntry GetOutPathFor(FileEntry solutionFile)
         {
-            FileInfo rs;
+			FileEntry rs;
             if (outPaths.TryGetValue(solutionFile.FullName, out rs))
                 return rs;
-            return null;
+            return new FileEntry();
         }
 
-        public static void SetOutPathFor(FileInfo solutionSourceFile, FileInfo solutionOutFile)
+        public static void SetOutPathFor(FileEntry solutionSourceFile, FileEntry solutionOutFile)
         {
 			if (outPaths.ContainsKey(solutionSourceFile.FullName))
 			{

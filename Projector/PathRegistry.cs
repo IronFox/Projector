@@ -5,28 +5,115 @@ using System.Windows.Forms;
 
 namespace Projector
 {
-    public static partial class Extensions
+
+
+	public struct FileEntry
+	{
+		string fullPath;
+
+		public FileEntry(string path)
+		{
+			this.fullPath = path;
+		}
+
+		public string FullName
+		{
+			get
+			{
+				return fullPath;
+			}
+		}
+
+		public bool Exists
+		{
+			get
+			{
+				return fullPath != null && File.Exists(fullPath); 
+			}
+		}
+
+		public bool IsEmpty
+		{
+			get
+			{
+				return fullPath == null;
+			}
+		}
+
+		public bool IsNotEmpty
+		{
+			get
+			{
+				return fullPath != null;
+			}
+		}
+
+		public bool DirectoryExists
+		{
+			get
+			{
+				return fullPath != null && System.IO.Directory.Exists( new FileInfo(fullPath).Directory.FullName );
+			}
+
+		}
+
+		public DirectoryInfo Directory
+		{
+			get
+			{
+				return fullPath != null ? new FileInfo(fullPath).Directory : null;
+			}
+		}
+
+		public string DirectoryName
+		{
+			get
+			{
+				return fullPath != null ? new FileInfo(fullPath).DirectoryName : "";
+			}
+		}
+
+		public string CoreName
+		{
+			get
+			{
+				if (fullPath == null)
+					return null;
+				var fi = new FileInfo(fullPath);
+				return fi.Name.Substring(0, fi.Name.IndexOf(fi.Extension));
+			}
+		}
+		public override int GetHashCode()
+		{
+			return fullPath.GetHashCode();
+		}
+		public override bool Equals(object obj)
+		{
+			return obj is FileEntry && ((FileEntry)obj) == this;
+		}
+
+		public static bool operator ==(FileEntry a, FileEntry b)
+		{
+			return a.fullPath == b.fullPath;
+		}
+		public static bool operator !=(FileEntry a, FileEntry b)
+		{
+			return a.fullPath != b.fullPath;
+		}
+	}
+
+
+	internal class PathRegistry
     {
-        public static string CoreName (this FileInfo info)
-        {
-            return info.Name.Substring(0, info.Name.IndexOf(info.Extension));
-        }
-
-
-    }
-
-
-    internal class PathRegistry
-    {
-        private static Dictionary<string, FileInfo> map;
+        private static Dictionary<string, FileEntry> map;
 		private static HashSet<string>	ignore = new HashSet<string>();
 
-        internal static FileInfo LocateProject(string name)
+        internal static FileEntry LocateProject(string name)
         {
             LoadMap();
 			if (ignore.Contains(name))
-				return null;
-            FileInfo info;
+				return new FileEntry();
+			FileEntry info;
             if (map.TryGetValue(name, out info))
 			{ 
 				if (info.Exists)
@@ -43,19 +130,20 @@ namespace Projector
 				if (dialog.ShowDialog() == DialogResult.OK)
 				{
 					dialog.Filter = "Projects|*.project|All files|*.*";
-					info = new FileInfo(dialog.FileName);
-					if (info.CoreName() != name)
+					info = new FileEntry(dialog.FileName);
+					if (info.CoreName != name)
 					{
                         MessageBox.Show("The selected file's name does not match the expected project name '" + name + '"');
 						continue;
 					}
-					map.Add(name, info);
+					map[name] = info;
+					//map.Add(name, info);
 					SaveMap();
 					return info;
 				}
 				dialog.Filter = "Projects|*.project|All files|*.*";
 				ignore.Add(name);
-				return null;
+				return new FileEntry();
 			}
 			while (true);
         }
@@ -74,7 +162,7 @@ namespace Projector
         {
             if (map != null)
                 return;
-            map = new Dictionary<string, FileInfo>();
+            map = new Dictionary<string, FileEntry>();
             try
             {
                 using (System.IO.StreamReader file = new System.IO.StreamReader(StateFile.FullName))
@@ -85,7 +173,7 @@ namespace Projector
                         string[] segs = line.Split('\t');
                         if (segs.Length == 2)
                         {
-                            map.Add(segs[0], new FileInfo(segs[1]));
+                            map.Add(segs[0], new FileEntry(segs[1]));
                         }
 
                     }

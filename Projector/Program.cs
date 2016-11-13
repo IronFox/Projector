@@ -196,7 +196,7 @@ namespace Projector
 		/// <param name="writer">Writer to flush, write to disk (if necessary) and close</param>
 		/// <param name="forceWrite">Force writing this file. Writing may also be force via global settings</param>
 		/// <returns>True, if the file was written, false if it already matched</returns>
-		internal static bool ExportToDisk(FileInfo outPath, StreamWriter writer, bool forceWrite=false)
+		internal static bool ExportToDisk(FileEntry outPath, StreamWriter writer, bool forceWrite=false)
 		{
 			writer.Flush();
 			Stream stream = writer.BaseStream;
@@ -209,7 +209,7 @@ namespace Projector
 			return changed;
 		}
 
-		private static bool ContentMatches(FileInfo path, Stream stream)
+		private static bool ContentMatches(FileEntry path, Stream stream)
 		{
 			try
 			{
@@ -245,7 +245,7 @@ namespace Projector
 			return a.EndOfStream && b.EndOfStream;
 		}
 
-		private static void WriteToFile(FileInfo outPath, Stream stream)
+		private static void WriteToFile(FileEntry outPath, Stream stream)
 		{
 			stream.Seek(0, SeekOrigin.Begin);
 			StreamWriter writer = File.CreateText(outPath.FullName);
