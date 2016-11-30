@@ -13,7 +13,7 @@ namespace Projector
 
 		public FileEntry(string path)
 		{
-			this.fullPath = path;
+			this.fullPath = new FileInfo(path).FullName;
 		}
 
 		public string FullName

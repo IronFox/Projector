@@ -1289,10 +1289,10 @@ namespace Projector
 					file = TryFindExecutable(cmd.originalExecutable+".exe");
 				if (!file.Exists)
 					file = TryFindExecutable(cmd.originalExecutable + ".bat");
-				if (!file.Exists)
+				if (file.Exists)
 					cmd.locatedExecutable = file;
 				else
-					Warn(domain, "Unable to locate executable '" + cmd.originalExecutable + "'");
+					Warn(domain, "Unable to locate executable '" + cmd.originalExecutable + "' relative to '"+ Directory.GetCurrentDirectory()+"'");
 
                 preBuildCommands.Add(cmd);
             }
