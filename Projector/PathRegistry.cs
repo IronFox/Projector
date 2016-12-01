@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Windows.Forms;
 
 namespace Projector
 {
 
 
-	public struct FileEntry
+	public struct File
 	{
 		string fullPath;
 
-		public FileEntry(string path)
+		public File(string path)
 		{
-			this.fullPath = new FileInfo(path).FullName;
+			this.fullPath = path != null ? new System.IO.FileInfo(path).FullName : null;
 		}
 
 		public string FullName
@@ -28,7 +27,7 @@ namespace Projector
 		{
 			get
 			{
-				return fullPath != null && File.Exists(fullPath); 
+				return fullPath != null && System.IO.File.Exists(fullPath); 
 			}
 		}
 
@@ -52,16 +51,16 @@ namespace Projector
 		{
 			get
 			{
-				return fullPath != null && System.IO.Directory.Exists( new FileInfo(fullPath).Directory.FullName );
+				return fullPath != null && System.IO.Directory.Exists( new System.IO.FileInfo(fullPath).Directory.FullName );
 			}
 
 		}
 
-		public DirectoryInfo Directory
+		public System.IO.DirectoryInfo Directory
 		{
 			get
 			{
-				return fullPath != null ? new FileInfo(fullPath).Directory : null;
+				return fullPath != null ? new System.IO.FileInfo(fullPath).Directory : null;
 			}
 		}
 
@@ -69,8 +68,13 @@ namespace Projector
 		{
 			get
 			{
-				return fullPath != null ? new FileInfo(fullPath).DirectoryName : "";
+				return fullPath != null ? new System.IO.FileInfo(fullPath).DirectoryName : "";
 			}
+		}
+
+		public static File operator +(File a, string ext)
+		{
+			return new File(a.FullName + ext);
 		}
 
 		public string CoreName
@@ -79,7 +83,7 @@ namespace Projector
 			{
 				if (fullPath == null)
 					return null;
-				var fi = new FileInfo(fullPath);
+				var fi = new System.IO.FileInfo(fullPath);
 				return fi.Name.Substring(0, fi.Name.IndexOf(fi.Extension));
 			}
 		}
@@ -89,14 +93,14 @@ namespace Projector
 		}
 		public override bool Equals(object obj)
 		{
-			return obj is FileEntry && ((FileEntry)obj) == this;
+			return obj is File && ((File)obj) == this;
 		}
 
-		public static bool operator ==(FileEntry a, FileEntry b)
+		public static bool operator ==(File a, File b)
 		{
 			return a.fullPath == b.fullPath;
 		}
-		public static bool operator !=(FileEntry a, FileEntry b)
+		public static bool operator !=(File a, File b)
 		{
 			return a.fullPath != b.fullPath;
 		}
@@ -105,15 +109,15 @@ namespace Projector
 
 	internal class PathRegistry
     {
-        private static Dictionary<string, FileEntry> map;
+        private static Dictionary<string, File> map;
 		private static HashSet<string>	ignore = new HashSet<string>();
 
-        internal static FileEntry LocateProject(string name)
+        internal static File LocateProject(string name)
         {
             LoadMap();
 			if (ignore.Contains(name))
-				return new FileEntry();
-			FileEntry info;
+				return new File();
+			File info;
             if (map.TryGetValue(name, out info))
 			{ 
 				if (info.Exists)
@@ -130,7 +134,7 @@ namespace Projector
 				if (dialog.ShowDialog() == DialogResult.OK)
 				{
 					dialog.Filter = "Projects|*.project|All files|*.*";
-					info = new FileEntry(dialog.FileName);
+					info = new File(dialog.FileName);
 					if (info.CoreName != name)
 					{
                         MessageBox.Show("The selected file's name does not match the expected project name '" + name + '"');
@@ -143,16 +147,16 @@ namespace Projector
 				}
 				dialog.Filter = "Projects|*.project|All files|*.*";
 				ignore.Add(name);
-				return new FileEntry();
+				return new File();
 			}
 			while (true);
         }
 
-        public static FileInfo StateFile
+        public static File StateFile
         {
             get
             {
-                return new FileInfo(Path.Combine(PersistentState.StateFile.Directory.FullName, "pathRegistry.txt"));
+                return new File(System.IO.Path.Combine(PersistentState.StateFile.Directory.FullName, "pathRegistry.txt"));
             }
         }
 
@@ -162,7 +166,7 @@ namespace Projector
         {
             if (map != null)
                 return;
-            map = new Dictionary<string, FileEntry>();
+            map = new Dictionary<string, File>();
             try
             {
                 using (System.IO.StreamReader file = new System.IO.StreamReader(StateFile.FullName))
@@ -173,7 +177,7 @@ namespace Projector
                         string[] segs = line.Split('\t');
                         if (segs.Length == 2)
                         {
-                            map.Add(segs[0], new FileEntry(segs[1]));
+                            map.Add(segs[0], new File(segs[1]));
                         }
 
                     }

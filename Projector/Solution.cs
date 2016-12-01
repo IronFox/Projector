@@ -48,10 +48,10 @@ namespace Projector
 		public string Domain { get { return solutionDesc.Domain; } }
 		public PersistentState.SolutionDescriptor Desc { get { return solutionDesc; } }
 
-		public readonly FileEntry Source;
+		public readonly File Source;
 		public System.Diagnostics.Process visualStudioProcess;
 
-		public Solution(FileEntry source)
+		public Solution(File source)
 		{
 			this.Source = source;
 			//this.Events = new EventLog();
@@ -156,7 +156,7 @@ namespace Projector
 		/// <param name="file">.solution file to load</param>
 		/// <param name="newRecent">Set to true if the solution is not listed in recent solutions, false otherwise</param>
 		/// <returns>New solution or null, if the specified file could not be loaded</returns>
-		public static Solution LoadNew(FileEntry file, out bool newRecent)
+		public static Solution LoadNew(File file, out bool newRecent)
 		{
 			Solution solution = new Solution(file);
 			if (!solution.Reload(out newRecent))
@@ -237,7 +237,7 @@ namespace Projector
 		}
 
 
-		public bool Build(FileEntry outPath, string strToolset, bool overwriteExistingVSUserConfig)
+		public bool Build(File outPath, string strToolset, bool overwriteExistingVSUserConfig)
 		{
 			EventLog.Inform(this,null,"Writing solution to '" + outPath.FullName+"'");
 
@@ -245,7 +245,7 @@ namespace Projector
 
             DirectoryInfo dir = outPath.Directory;
             //DirectoryInfo projectDir = Directory.CreateDirectory(Path.Combine(dir.FullName, ".projects"));
-            List<Tuple<FileEntry, Guid, Project>> projects = new List<Tuple<FileEntry, Guid, Project>>();
+            List<Tuple<File, Guid, Project>> projects = new List<Tuple<File, Guid, Project>>();
 			int toolset;
 			{
 				string toolsetStr = strToolset;//this.toolSet.SelectedItem.ToString();
@@ -291,7 +291,7 @@ namespace Projector
 					EventLog.Inform(this,p,"Written to '"+rs.Item1.FullName+"'");
 				else
 					EventLog.Inform(this,p,"No changes: '"+rs.Item1.FullName+"'");
-				projects.Add(new Tuple<FileEntry, Guid, Project>(rs.Item1, rs.Item2, p));
+				projects.Add(new Tuple<File, Guid, Project>(rs.Item1, rs.Item2, p));
             }
 
 			MemoryStream stream = new MemoryStream();

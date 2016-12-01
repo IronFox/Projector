@@ -15,9 +15,9 @@ namespace Projector
 		{
 			public readonly string Name;
 			public readonly string Domain;
-			public readonly FileEntry File;
+			public readonly File File;
 
-			public SolutionDescriptor(FileEntry file, string domain)
+			public SolutionDescriptor(File file, string domain)
 			{
 				Domain = domain;
 				File = file;
@@ -95,7 +95,7 @@ namespace Projector
                 HashSet<string> recentKnown = new HashSet<string>();
                 foreach (XmlNode xr in xrecent)
                 {
-					FileEntry f = new FileEntry(xr.InnerText);
+					File f = new File(xr.InnerText);
                     if (f.Exists && !recentKnown.Contains(f.FullName))
                     {
 						XmlNode xdomain = xr.Attributes.GetNamedItem("domain");
@@ -113,8 +113,8 @@ namespace Projector
                     XmlNode xsolution = xt.Attributes.GetNamedItem("solutionFile");
                     if (xsolution == null)
                         continue;
-					FileEntry sol = new FileEntry(xsolution.Value);
-					FileEntry ot = new FileEntry(xt.InnerText);
+					File sol = new File(xsolution.Value);
+					File ot = new File(xt.InnerText);
                     if (!sol.Exists)
                         continue;
                     if (!ot.Directory.Exists)
@@ -130,7 +130,7 @@ namespace Projector
 			return false;
         }
         private static List<SolutionDescriptor> recent = new List<SolutionDescriptor>();
-        private static Dictionary<string, FileEntry> outPaths = new Dictionary<string, FileEntry>();
+        private static Dictionary<string, File> outPaths = new Dictionary<string, File>();
         private static string toolset;
 
         public static void Backup()
@@ -177,15 +177,15 @@ namespace Projector
             Backup();
         }
 
-        public static FileEntry GetOutPathFor(FileEntry solutionFile)
+        public static File GetOutPathFor(File solutionFile)
         {
-			FileEntry rs;
+			File rs;
             if (outPaths.TryGetValue(solutionFile.FullName, out rs))
                 return rs;
-            return new FileEntry();
+            return new File();
         }
 
-        public static void SetOutPathFor(FileEntry solutionSourceFile, FileEntry solutionOutFile)
+        public static void SetOutPathFor(File solutionSourceFile, File solutionOutFile)
         {
 			if (outPaths.ContainsKey(solutionSourceFile.FullName))
 			{

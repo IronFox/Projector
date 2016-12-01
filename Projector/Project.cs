@@ -674,7 +674,7 @@ namespace Projector
 		public struct Command
 		{
 			public string		originalExecutable;
-			public FileEntry	locatedExecutable;
+			public File	locatedExecutable;
 			public string[]		parameters;
 		}
 
@@ -738,7 +738,7 @@ namespace Projector
 		/// <summary>
 		/// Retrieves the .project file the local project was loaded from. May be null
 		/// </summary>
-		public FileEntry SourcePath { get; private set; }
+		public File SourcePath { get; private set; }
 		/// <summary>
 		/// Checks whether or not the local project has a source path. Usually this is only false, if the local project has not yet been loaded
 		/// </summary>
@@ -767,7 +767,7 @@ namespace Projector
 		/// </summary>
 		/// <param name="relativeToSolutionFile"></param>
 		/// <returns></returns>
-        public bool AutoConfigureSourcePath(FileEntry relativeToSolutionFile)
+        public bool AutoConfigureSourcePath(File relativeToSolutionFile)
         {
             if (HasSource)
                 return true;
@@ -799,11 +799,11 @@ namespace Projector
 		/// <summary>
 		/// Retrieves the Visual Studio project output file (including extension)
 		/// </summary>
-        public FileEntry OutFile
+        public File OutFile
         {
             get
             {
-                return new FileEntry(Path.Combine(Path.Combine(SourcePath.Directory.FullName, Path.Combine(WorkSubDirectory, "Projects" , Name)), Name + ".vcxproj"));
+                return new File(Path.Combine(Path.Combine(SourcePath.Directory.FullName, Path.Combine(WorkSubDirectory, "Projects" , Name)), Name + ".vcxproj"));
             }
         }
 
@@ -813,9 +813,9 @@ namespace Projector
 		/// <param name="toolSetVersion">Active toolset version to use</param>
 		/// <param name="configurations"></param>
 		/// <returns></returns>
-        public Tuple<FileEntry, Guid, bool> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
+        public Tuple<File, Guid, bool> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
         {
-			FileEntry file = OutFile;
+			File file = OutFile;
             if (!file.Directory.Exists)
                 Directory.CreateDirectory(file.Directory.FullName);
             Guid id = LocalGuid;
@@ -849,11 +849,11 @@ namespace Projector
 				}
 
 				writer.WriteLine("</Project>");
-				if (Program.ExportToDisk(new FileEntry(file.FullName + ".filters"), writer))
+				if (Program.ExportToDisk(new File(file.FullName + ".filters"), writer))
 					written = true;
 			}
 
-			if (!File.Exists(file.FullName + ".user") || overwriteUserSettings)
+			if (!(file + ".user").Exists || overwriteUserSettings)
 				using (StreamWriter writer = new StreamWriter(new MemoryStream()))
 				{
 					writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
@@ -867,7 +867,7 @@ namespace Projector
 					}
 
 					writer.WriteLine("</Project>");
-					if (Program.ExportToDisk(new FileEntry(file.FullName + ".user"), writer))
+					if (Program.ExportToDisk(file + ".user", writer))
 						written = true;
 				}
 
@@ -1080,7 +1080,7 @@ namespace Projector
 
          
 
-            return new Tuple<FileEntry, Guid,bool>(file, id,written);
+            return new Tuple<File, Guid,bool>(file, id,written);
         }
 
 
@@ -1284,7 +1284,7 @@ namespace Projector
 				}
 
 				Command cmd = new Command(){originalExecutable = elements[0],parameters = elements.ToArray(1)};
-				FileEntry file = TryFindExecutable(cmd.originalExecutable);
+				File file = TryFindExecutable(cmd.originalExecutable);
 				if (!file.Exists)
 					file = TryFindExecutable(cmd.originalExecutable+".exe");
 				if (!file.Exists)
@@ -1318,9 +1318,9 @@ namespace Projector
             }
         }
 
-		private FileEntry TryFindExecutable(string executable)
+		private File TryFindExecutable(string executable)
 		{
-			FileEntry file = new FileEntry(executable);
+			File file = new File(executable);
 			if (file.Exists)
 				return file;
 
@@ -1328,11 +1328,11 @@ namespace Projector
 			string[] paths = pathEnv.Split(Path.PathSeparator);
 			foreach (string path in paths)
 			{
-				file = new FileEntry(Path.Combine(path, executable));
+				file = new File(Path.Combine(path, executable));
 				if (file.Exists)
 					return file;
 			}
-			return new FileEntry();
+			return new File();
 		}
 
 
@@ -1344,11 +1344,11 @@ namespace Projector
 		/// <param name="searchScope"></param>
 		/// <param name="fileName"></param>
 		/// <returns></returns>
-        public static FileEntry GetRelative(DirectoryInfo searchScope, string fileName)
+        public static File GetRelative(DirectoryInfo searchScope, string fileName)
         {
             string current = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(searchScope.FullName);
-			FileEntry rs = new FileEntry(fileName);
+			File rs = new File(fileName);
             Directory.SetCurrentDirectory(current);
             return rs;
         }
@@ -1368,7 +1368,7 @@ namespace Projector
 		/// <param name="searchScope">Source path to look from when looking up relative paths</param>
 		/// <param name="warningsGoTo">Project that is supposed to collect warnings. May be null</param>
 		/// <returns>New or already existing project</returns>
-        public static Project AddProjectReference(XmlNode xproject, FileEntry searchScope, Solution domain, Project warningsGoTo, bool listAsLocalProject)
+        public static Project AddProjectReference(XmlNode xproject, File searchScope, Solution domain, Project warningsGoTo, bool listAsLocalProject)
         {
 			//Debug.Assert(warningsGoTo == null || warningsGoTo.Solution == domain);
             XmlNode xname = xproject.Attributes.GetNamedItem("name");
@@ -1391,7 +1391,7 @@ namespace Projector
 				if (!p.SourcePath.Exists)
                 {
 					p.Warn(domain, "Explicit project path '" + xpath.Value + "' does not exist relative to '" + searchScope.FullName + "'");
-                    p.SourcePath = new FileEntry();
+                    p.SourcePath = new File();
                 }
             }
 
