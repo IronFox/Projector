@@ -813,7 +813,7 @@ namespace Projector
 		/// <param name="toolSetVersion">Active toolset version to use</param>
 		/// <param name="configurations"></param>
 		/// <returns></returns>
-        public Tuple<File, Guid, bool> SaveAs(int toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
+        public Tuple<File, Guid, bool> SaveAs(ToolsetVersion toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
         {
 			File file = OutFile;
             if (!file.Directory.Exists)
@@ -832,7 +832,7 @@ namespace Projector
 			using (StreamWriter writer = new StreamWriter(new MemoryStream()))
 			{
 				writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-				writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
+				writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion + "\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
 
 				writer.WriteLine("<ItemGroup>");
 				WriteFilterDeclaration(writer, "Files");
@@ -896,7 +896,7 @@ namespace Projector
                     writer.WriteLine("<PropertyGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config + "'\" Label=\"Configuration\">");
                     writer.WriteLine("  <ConfigurationType>" + Type + "</ConfigurationType>");
                     writer.WriteLine("  <UseDebugLibraries>"+!config.IsRelease+"</UseDebugLibraries>");
-                    writer.WriteLine("  <PlatformToolset>v" + toolSetVersion + "0</PlatformToolset>");
+                    writer.WriteLine("  <PlatformToolset>v" + (toolSetVersion.Major*10 + toolSetVersion.Minor) + "</PlatformToolset>");
                     writer.WriteLine("  <WholeProgramOptimization>"+config.IsRelease+"</WholeProgramOptimization>");
                     writer.WriteLine("  <CharacterSet>Unicode</CharacterSet>");
                     writer.WriteLine("</PropertyGroup>");

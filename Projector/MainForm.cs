@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -678,18 +679,31 @@ namespace Projector
 		}
 
 
+        private ToolsetVersion GetToolsetVersion()
+        {
+            return new ToolsetVersion(this.toolSet.SelectedItem.ToString());
+        }
+
 		private void BuildCurrentSolution(Solution solution, File outPath)
 		{
-			if (solution.Build(outPath, this.toolSet.SelectedItem.ToString(),overwriteExistingVSUserConfigToolStripMenuItem.Checked))
-			{
-				if (solution == shownSolution)
-				{
-					openGeneratedSolutionToolStripMenuItem.Enabled = true;
-					openGeneratedSolutionButton.Enabled = true;
-				}
+            try
+            {
 
-				RefreshListView(solution);
-			}
+                if (solution.Build(outPath, GetToolsetVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked))
+                {
+                    if (solution == shownSolution)
+                    {
+                        openGeneratedSolutionToolStripMenuItem.Enabled = true;
+                        openGeneratedSolutionButton.Enabled = true;
+                    }
+
+                    RefreshListView(solution);
+                }
+            }
+            catch (Exception e)
+            {
+                EventLog.Warn(null, null, e.ToString());
+            }
         }
 
         private void buildAtToolStripMenuItem_Click(object sender, EventArgs e)
@@ -739,6 +753,26 @@ namespace Projector
 			OpenGeneratedSolution(solution);
 		}
 
+
+
+
+        private string TryGetVSPath(string version)
+        {
+            string installationPath = null;
+            if (Environment.Is64BitOperatingSystem)
+            {
+                installationPath = (string)Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\"+version+"\\",
+                    "InstallDir",
+                    null);
+            }
+            else
+            {
+                installationPath = (string)Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\" + version + "\\",
+                    "InstallDir",
+                    null);
+            }
+            return installationPath;
+        }
 		private void OpenGeneratedSolution(Solution solution)
 		{
 			if (solution == null)
@@ -757,13 +791,19 @@ namespace Projector
 			if (solution.visualStudioProcess == null || solution.visualStudioProcess.HasExited)
 			{ 
 				Process myProcess = new Process();
+                
 				myProcess.StartInfo.FileName = "devenv.exe"; //not the full application path
 				myProcess.StartInfo.Arguments = "\""+slnPath.FullName+"\"";
-				if (!myProcess.Start())
-					LogLine("Error: Failed to start process");
-				else
-					solution.visualStudioProcess = myProcess;
-				
+                try
+                {
+                    if (!myProcess.Start())
+                        throw new Exception("Failed to start process");
+                    solution.visualStudioProcess = myProcess;
+                }
+                catch (Exception e)
+                {
+                    LogLine("Error: " + e);
+                }
 			}
 		}
 
@@ -779,33 +819,40 @@ namespace Projector
 
 		private void Generate(Solution solution)
 		{
-			BeginLogSession();
-			File outPath = PersistentState.GetOutPathFor(solution.Source);
-			if (!outPath.Exists)
-			{
-				DirectoryInfo preferred = solution.Source.Directory.CreateSubdirectory(Project.WorkSubDirectory);
-				if (preferred != null)
-				{
-					string outName = Path.Combine(preferred.FullName, solution.Name + ".sln");
-					EventLog.Warn(solution,null,"Notify: Out path for '" + solution + "' not known. Defaulting to " + outName);
-					outPath = new File(outName);
-					PersistentState.SetOutPathFor(solution.Source, outPath);
-				}
-			}
+            BeginLogSession();
+            try
+            {
+                File outPath = PersistentState.GetOutPathFor(solution.Source);
+                if (!outPath.Exists)
+                {
+                    DirectoryInfo preferred = solution.Source.Directory.CreateSubdirectory(Project.WorkSubDirectory);
+                    if (preferred != null)
+                    {
+                        string outName = Path.Combine(preferred.FullName, solution.Name + ".sln");
+                        EventLog.Warn(solution, null, "Notify: Out path for '" + solution + "' not known. Defaulting to " + outName);
+                        outPath = new File(outName);
+                        PersistentState.SetOutPathFor(solution.Source, outPath);
+                    }
+                }
 
-			if (outPath.DirectoryExists)
-			{
-				bool newRecent;
-				solution.Reload(out newRecent); //refresh
-				solution.Build(outPath, this.toolSet.SelectedItem.ToString(), false);
-				if (solution == shownSolution)
-					ShowSolution(solution);
+                if (outPath.DirectoryExists)
+                {
+                    bool newRecent;
+                    solution.Reload(out newRecent); //refresh
+                    solution.Build(outPath, GetToolsetVersion(), false);
+                    if (solution == shownSolution)
+                        ShowSolution(solution);
 
-				RefreshListView(solution);
-			}
-			else
-				EventLog.Warn(solution,null, "Error: Cannot export '" + solution + "'. Out path is not known.");
-			EndLogSession();
+                    RefreshListView(solution);
+                }
+                else
+                    EventLog.Warn(solution, null, "Error: Cannot export '" + solution + "'. Out path is not known.");
+            }
+            catch (Exception e)
+            {
+                EventLog.Warn(solution, null, "Error: "+e);
+            }
+            EndLogSession();
 		}
 
 		private void RefreshListView(Solution solution)

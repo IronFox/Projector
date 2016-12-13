@@ -237,7 +237,7 @@ namespace Projector
 		}
 
 
-		public bool Build(File outPath, string strToolset, bool overwriteExistingVSUserConfig)
+		public bool Build(File outPath, ToolsetVersion toolset, bool overwriteExistingVSUserConfig)
 		{
 			EventLog.Inform(this,null,"Writing solution to '" + outPath.FullName+"'");
 
@@ -246,16 +246,6 @@ namespace Projector
             DirectoryInfo dir = outPath.Directory;
             //DirectoryInfo projectDir = Directory.CreateDirectory(Path.Combine(dir.FullName, ".projects"));
             List<Tuple<File, Guid, Project>> projects = new List<Tuple<File, Guid, Project>>();
-			int toolset;
-			{
-				string toolsetStr = strToolset;//this.toolSet.SelectedItem.ToString();
-				toolsetStr = toolsetStr.Substring(0, toolsetStr.IndexOf(".0"));
-				if (!int.TryParse(toolsetStr,out toolset))
-				{
-					EventLog.Warn(this,null,"Internal Error: Unable to decode toolset-version from specified toolset '" + strToolset + "'");
-					return false;
-				}
-			}
 
             List<Configuration> configurations = new List<Configuration>();
 
