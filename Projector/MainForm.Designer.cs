@@ -290,14 +290,17 @@
             // 
             // overwriteExistingVSUserConfigToolStripMenuItem
             // 
+            this.overwriteExistingVSUserConfigToolStripMenuItem.Checked = true;
+            this.overwriteExistingVSUserConfigToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.overwriteExistingVSUserConfigToolStripMenuItem.Name = "overwriteExistingVSUserConfigToolStripMenuItem";
-            this.overwriteExistingVSUserConfigToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
-            this.overwriteExistingVSUserConfigToolStripMenuItem.Text = "Overwrite existing VS User-Config";
+            this.overwriteExistingVSUserConfigToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
+            this.overwriteExistingVSUserConfigToolStripMenuItem.Text = "Overwrite .vcxproj.user";
+            this.overwriteExistingVSUserConfigToolStripMenuItem.Click += new System.EventHandler(this.overwriteExistingVSUserConfigToolStripMenuItem_Click_1);
             // 
             // forceOverwriteProjectFilesToolStripMenuItem
             // 
             this.forceOverwriteProjectFilesToolStripMenuItem.Name = "forceOverwriteProjectFilesToolStripMenuItem";
-            this.forceOverwriteProjectFilesToolStripMenuItem.Size = new System.Drawing.Size(251, 22);
+            this.forceOverwriteProjectFilesToolStripMenuItem.Size = new System.Drawing.Size(219, 22);
             this.forceOverwriteProjectFilesToolStripMenuItem.Text = "Force overwrite project files";
             this.forceOverwriteProjectFilesToolStripMenuItem.Click += new System.EventHandler(this.forceOverwriteProjectFilesToolStripMenuItem_Click);
             // 

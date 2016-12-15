@@ -684,12 +684,51 @@ namespace Projector
             return new ToolsetVersion(this.toolSet.SelectedItem.ToString());
         }
 
-		private void BuildCurrentSolution(Solution solution, File outPath)
+        private string GetOSVersion()
+        {
+            Process myProcess = new Process();
+
+            myProcess.StartInfo.FileName = "cmd.exe";
+            myProcess.StartInfo.Arguments = "/C ver";
+            myProcess.StartInfo.RedirectStandardError = true;
+            myProcess.StartInfo.RedirectStandardOutput = true;
+            myProcess.StartInfo.UseShellExecute = false;
+            myProcess.StartInfo.CreateNoWindow = true;
+            try
+            {
+                if (!myProcess.Start())
+                    throw new Exception("Failed to start process");
+
+                string output = myProcess.StandardOutput.ReadToEnd().Trim();
+                string original = output;
+                myProcess.WaitForExit();
+
+                const string match0 = "[Version ";
+                const string match1 = "]";
+                int begin = output.IndexOf(match0);
+                if (begin == -1)
+                    throw new Exception("Unable to find '"+match0+"' in result '"+original+"'");
+                output = output.Substring(begin + match0.Length);
+                int end = output.IndexOf(match1);
+                if (end == -1)
+                    throw new Exception("Unable to find '" + match1 + "' in result '" + original + "'");
+                output = output.Substring(0, end);
+
+                return output;
+            }
+            catch (Exception e)
+            {
+                EventLog.Warn(null,null,"Error (cmd.exe /C ver): " + e);
+                return "";
+            }
+        }
+
+        private void BuildCurrentSolution(Solution solution, File outPath)
 		{
             try
             {
 
-                if (solution.Build(outPath, GetToolsetVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked))
+                if (solution.Build(outPath, GetToolsetVersion(), GetOSVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked))
                 {
                     if (solution == shownSolution)
                     {
@@ -829,7 +868,7 @@ namespace Projector
                     if (preferred != null)
                     {
                         string outName = Path.Combine(preferred.FullName, solution.Name + ".sln");
-                        EventLog.Warn(solution, null, "Notify: Out path for '" + solution + "' not known. Defaulting to " + outName);
+                        EventLog.Inform(solution, null, "Out path for '" + solution + "' not known. Defaulting to " + outName);
                         outPath = new File(outName);
                         PersistentState.SetOutPathFor(solution.Source, outPath);
                     }
@@ -839,7 +878,7 @@ namespace Projector
                 {
                     bool newRecent;
                     solution.Reload(out newRecent); //refresh
-                    solution.Build(outPath, GetToolsetVersion(), false);
+                    solution.Build(outPath, GetToolsetVersion(), GetOSVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked);
                     if (solution == shownSolution)
                         ShowSolution(solution);
 
@@ -1015,5 +1054,10 @@ namespace Projector
 		{
 			forceOverwriteProjectFilesToolStripMenuItem.Checked = !forceOverwriteProjectFilesToolStripMenuItem.Checked;
 		}
-	}
+
+        private void overwriteExistingVSUserConfigToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            overwriteExistingVSUserConfigToolStripMenuItem.Checked = !overwriteExistingVSUserConfigToolStripMenuItem.Checked;
+        }
+    }
 }
