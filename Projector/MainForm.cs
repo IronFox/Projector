@@ -106,6 +106,10 @@ namespace Projector
 			toolsetLabel.Size = toolsetLabel.PreferredSize;
 			toolSet.Left = toolsetLabel.Right + 4;
 
+			toolSet.Items.Add(new ToolsetVersion(12, 0, "VS 2013",false));
+			toolSet.Items.Add(new ToolsetVersion(14, 0, "VS 2015",false));
+			toolSet.Items.Add(new ToolsetVersion(14, 1, "VS 2017",true));
+
 			PersistentState.Restore();
             if (PersistentState.Toolset != null)
                 toolSet.SelectedIndex = toolSet.Items.IndexOf(PersistentState.Toolset);
@@ -681,7 +685,7 @@ namespace Projector
 
         private ToolsetVersion GetToolsetVersion()
         {
-            return new ToolsetVersion(this.toolSet.SelectedItem.ToString());
+            return (ToolsetVersion)(toolSet.SelectedItem);
         }
 
         private string GetOSVersion()
@@ -727,7 +731,6 @@ namespace Projector
 		{
             try
             {
-
                 if (solution.Build(outPath, GetToolsetVersion(), GetOSVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked))
                 {
                     if (solution == shownSolution)

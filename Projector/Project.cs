@@ -892,7 +892,8 @@ namespace Projector
                 writer.WriteLine("\t<ProjectGuid>{" + id + "}</ProjectGuid>");
                 writer.WriteLine("\t<Keyword>Win32Proj</Keyword>");
                 writer.WriteLine("\t<RootNamespace>client</RootNamespace>");
-                writer.WriteLine("\t<WindowsTargetPlatformVersion>"+osVersion+".0</WindowsTargetPlatformVersion>");
+				if (toolSetVersion.RequiresWindowsTargetPlatformVersion)
+					writer.WriteLine("\t<WindowsTargetPlatformVersion>"+osVersion+".0</WindowsTargetPlatformVersion>");
                 writer.WriteLine("</PropertyGroup>");
                 writer.WriteLine("<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />");
                 foreach (Configuration config in configurations)

@@ -6,40 +6,50 @@ namespace Projector
     {
         public readonly int Major,
                         Minor;
+		public readonly string VSName;
+		public readonly bool RequiresWindowsTargetPlatformVersion;
 
-        public ToolsetVersion(int major, int minor)
+
+
+		public ToolsetVersion(int major, int minor, string vsName, bool requiresWindowsTargetPlatformVersion)
         {
             Major = major;
             Minor = minor;
-        }
+			VSName = vsName;
+			RequiresWindowsTargetPlatformVersion = requiresWindowsTargetPlatformVersion;
+		}
 
-        public ToolsetVersion(string strVersion)
-        {
-            string source = strVersion;
-            int at = strVersion.IndexOf(' ');
-            if (at >= 0)
-                strVersion = strVersion.Substring(0, at);
-            at = strVersion.IndexOf('.');
-            if (at >= 0)
-            {
-                string minor = strVersion.Substring(at + 1);
-                if (!int.TryParse(minor, out Minor))
-                {
-                    throw new Exception("Internal Error: Unable to decode minor toolset-version from specified toolset '" + minor + "' (in '"+source+"')");
-                }
-                strVersion = strVersion.Substring(0, at);
-            }
-            else
-                Minor = 0;
-            if (!int.TryParse(strVersion, out Major))
-            {
-                throw new Exception("Internal Error: Unable to decode major toolset-version from specified toolset '" + strVersion + "' (in '" + source + "')");
-            }
-        }
+
 
         public override string ToString()
         {
-            return Major + "." + Minor;
+			return Major + "." + Minor+" ("+ VSName+")";
         }
-    }
+
+		public static bool operator ==(ToolsetVersion a, ToolsetVersion b)
+		{
+			return a.Major == b.Major && a.Minor == b.Minor && a.VSName == b.VSName;
+		}
+
+		public static bool operator !=(ToolsetVersion a, ToolsetVersion b)
+		{
+			return !(a == b);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is ToolsetVersion)
+			{
+				return this == (ToolsetVersion)obj;
+			}
+			if (obj is string)
+			{
+				return ToString() == (string)obj;
+			}
+			return false;
+		}
+	}
+
+
+	
 }
