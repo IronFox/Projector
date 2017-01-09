@@ -128,12 +128,62 @@ namespace Projector
 		[return: MarshalAs(UnmanagedType.Bool)]
 		static extern bool SetForegroundWindow(IntPtr hWnd);
 
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
+		[DllImport("kernel32.dll")]
+		static extern bool AttachConsole(int dwProcessId);
+		private const int ATTACH_PARENT_PROCESS = -1;
+
+		/// <summary>
+		/// The main entry point for the application.
+		/// </summary>
+		[STAThread]
         static void Main()
         {
+			var cmds = Environment.GetCommandLineArgs();
+
+			if (cmds.Length > 1)
+			{
+				AttachConsole(ATTACH_PARENT_PROCESS);
+				if (cmds[1] == "--help" || cmds[1] == "-h")
+				{
+					Console.WriteLine("Usage: projector [parameters]");
+					Console.WriteLine("  (no parameters): start GUI");
+					Console.WriteLine("  --help/-h: show this text");
+					Console.WriteLine("  --make/-m X.solution: generate .make files for all involved projects of the specified solution");
+					Application.Exit();
+					return;
+				}
+				if (cmds[1] == "--make" || cmds[1] == "-m")
+				{
+					if (cmds.Length < 2)
+					{
+						Console.Error.WriteLine("Missing parameter. --make/-m Requires a valid .solution file");
+						return;
+					}
+					EventLog.LogToConsole = true;
+					List<Project> projects = new List<Project>();
+
+					bool isNew;
+					Solution solution = Solution.LoadNew(new File(cmds[2]), out isNew);
+
+					solution.ScanEmptySources();
+					foreach (var p in solution.Projects)
+					{
+						projects.Add(p);
+					}
+					DependencyTree.Clear();
+					foreach (var p in projects)
+						p.RegisterDependencyNodes();
+					DependencyTree.ParseDependencies();
+					DependencyTree.GenerateMakefiles();
+
+					EventLog.Inform(null,null,"All done. Exiting.");
+					Application.Exit();
+					return;
+				}
+				Console.WriteLine("Unknown parameter given. Use --help to see the list of compatible parameters.");
+				Application.Exit();
+			}
+
 			if (Environment.OSVersion.Version.Major >= 6)
 				SetProcessDPIAware();
 			//Application.EnableVisualStyles();
@@ -200,7 +250,7 @@ namespace Projector
 		{
 			writer.Flush();
 			Stream stream = writer.BaseStream;
-			bool changed = view.ForceOverwriteProjectFiles || forceWrite || !ContentMatches(outPath, stream);
+			bool changed = (view != null && view.ForceOverwriteProjectFiles) || forceWrite || !ContentMatches(outPath, stream);
 			if (changed)
 			{
 				WriteToFile(outPath, stream);

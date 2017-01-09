@@ -1104,7 +1104,7 @@ namespace Projector
 			{
 				foreach (Tuple<CodeGroup, File> f in s.EnumerateFiles())
 				{
-					DependencyTree.RegisterNode(this, f.Item2, f.Item1 == c || f.Item1 == cpp);
+					DependencyTree.RegisterNode(this, f.Item2, f.Item1);
 				}
 			}
 		}

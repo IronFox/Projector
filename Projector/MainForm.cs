@@ -49,12 +49,13 @@ namespace Projector
         {
             if (log.Text.Length > 0)
                 log.Text += "\r\n";
-            log.Text += line;
-			if (log.Visible)
-			{
-				log.SelectionStart = log.TextLength;
-				log.ScrollToCaret();
-			}
+            //log.Text += line;
+			log.AppendText(line);
+			//if (log.Visible)
+			//{
+			//	log.SelectionStart = log.TextLength;
+			//	log.ScrollToCaret();
+			//}
         }
 
         private void AddSourceFolder(TreeNode tsource, Project.Source.Folder root)
@@ -198,7 +199,8 @@ namespace Projector
 				{
 					if (platform == Platform.None)
 						continue;
-					string t = project.GetReleaseTargetNameFor(platform, out bool isCustom);
+					bool isCustom;
+					string t = project.GetReleaseTargetNameFor(platform, out isCustom);
 					ttarget.Nodes.Add(platform + ": \"" + t + "\"" + (isCustom ? " (custom)" : ""));
 				}
 
@@ -339,7 +341,8 @@ namespace Projector
 				return null;
 			}
 			bool newRecent;
-			if (solutions.TryGetValue(file.FullName,out var solution))
+			Solution solution;
+			if (solutions.TryGetValue(file.FullName,out solution))
 			{
 				EventLog.Inform(solution,null, "Solution '" + file + "' already loaded");
 				solution.Reload(out newRecent);
@@ -384,7 +387,7 @@ namespace Projector
 			return solution;
         }
 
-		private string LogNextEvent(ref Solution currentSolution, EventLog.Notification n)
+		public static string LogNextEvent(ref Solution currentSolution, EventLog.Notification n)
 		{
 			string head0 = "", head1 = "";
 			if (currentSolution != n.Solution)
@@ -477,7 +480,8 @@ namespace Projector
 			internal void HighlightDomain(string domain)
 			{
 				ClearHighlight();
-				if (domainMap.TryGetValue(domain, out var hightlighted))
+				List<LinkLabel> hightlighted;
+				if (domainMap.TryGetValue(domain, out hightlighted))
 					foreach (var label in hightlighted)
 					{
 						label.Font = litFont;
@@ -671,7 +675,8 @@ namespace Projector
 				//return;
             }
 			FlushProjects();
-			shownSolution.Reload(out bool newRecent); //refresh
+			bool newRecent;
+			shownSolution.Reload(out newRecent); //refresh
 			ShowSolution(shownSolution);
 
 			BuildCurrentSolution(shownSolution, outPath);
@@ -883,7 +888,8 @@ namespace Projector
 
                 if (outPath.DirectoryExists)
                 {
-					solution.Reload(out bool newRecent); //refresh
+					bool newRecent;
+					solution.Reload(out newRecent); //refresh
                     solution.Build(outPath, GetToolsetVersion(), GetOSVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked);
                     if (solution == shownSolution)
                         ShowSolution(solution);

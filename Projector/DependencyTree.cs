@@ -59,6 +59,14 @@ namespace Projector
 			"thread",
 			"complex",
 			"random",
+			"stddef.h",
+			"math.hpp",
+			"iconv.h",
+			"ws2tcpip.h",
+			"sys/socket.h",
+			"sys/types.h",
+			"sys/errno.h",
+			"netinet/tcp.h",
 
 		});
 		public static void Clear()
@@ -66,12 +74,13 @@ namespace Projector
 			nodes.Clear();
 		}
 
-		public static void RegisterNode(Project owner, File path, bool compile)
+		public static void RegisterNode(Project owner, File path, Project.CodeGroup group)
 		{
-			if (nodes.TryGetValue(path, out var node))
+			DependencyNode node;
+			if (nodes.TryGetValue(path, out node))
 				node.Parents.Add(owner);
 			else
-				nodes.Add(path, new DependencyNode(owner, path, compile));
+				nodes.Add(path, new DependencyNode(owner, path, group));
 		}
 
 		internal static void ParseDependencies()
@@ -79,7 +88,7 @@ namespace Projector
 			foreach (DependencyNode node in nodes.Values)
 			{
 				Project parent = node.Parents[0];
-				EventLog.Inform(null, parent, "Parsing " + node.File);
+				//EventLog.Inform(null, parent, "Parsing " + node.File);
 				node.Dependencies.Clear();
 				string line;
 				File file = node.File;
@@ -110,10 +119,11 @@ namespace Projector
 						{
 							if (node.Dependencies.ContainsKey(candidate))
 								continue;
-							if (nodes.TryGetValue(candidate, out var other))
+							DependencyNode other;
+							if (nodes.TryGetValue(candidate, out other))
 								node.Dependencies.Add(candidate,new Tuple<DependencyNode, string>(other, line));
 							else
-								node.Dependencies.Add(candidate,new Tuple<DependencyNode, string>(new DependencyNode(null, candidate, false), line));
+								node.Dependencies.Add(candidate,new Tuple<DependencyNode, string>(new DependencyNode(null, candidate, null), line));
 						}
 						continue;
 					}
@@ -143,10 +153,11 @@ namespace Projector
 									found = true;
 									if (!node.Dependencies.ContainsKey(candidate))
 									{
-										if (nodes.TryGetValue(candidate, out var other))
+										DependencyNode other;
+										if (nodes.TryGetValue(candidate, out other))
 											node.Dependencies.Add(candidate,new Tuple<DependencyNode, string>(other, line));
 										else
-											node.Dependencies.Add(candidate, new Tuple<DependencyNode, string>(new DependencyNode(null, candidate, false), line));
+											node.Dependencies.Add(candidate, new Tuple<DependencyNode, string>(new DependencyNode(null, candidate, null), line));
 									}
 									break;
 								}
@@ -220,17 +231,82 @@ namespace Projector
 
 				using (StreamWriter writer = new StreamWriter(new MemoryStream()))
 				{
+					writer.WriteLine("CC = gcc");
+					writer.WriteLine("CPP = g++");
+					writer.WriteLine("CXXFLAGS = ");
+					writer.WriteLine("CFLAGS = $(CXXFLAGS)");
+					writer.WriteLine("CPPFLAGS = $(CXXFLAGS)");
+					writer.Write("LFLAGS =");
+
+					foreach (var dep in scope.Key.References)
+					{
+						if (dep.Project.Type == "StaticLibrary")
+						{
+							string path = MakeRelativePath(scope.Key.SourcePath.Directory, dep.Project.SourcePath.Directory);
+							writer.Write(" -L" + path + " -l" + dep.Project.Name + ".lib");
+						}
+					}
+
+					writer.WriteLine();
+
+					string link = "gcc";
+					string outName = scope.Key.Name;
+					if (scope.Key.Type == "Application")
+					{
+					}
+					else
+						if (scope.Key.Type == "StaticLibrary")
+					{
+						outName = "lib" + outName + ".a";
+						link = "ar";
+					}
+					else
+						if (scope.Key.Type == "DLL")
+					{
+						outName += ".so";
+					}
+					writer.WriteLine("OUT = " + outName);
+					writer.WriteLine("LINK = "+link);
+					writer.Write("OBJ =");
+					foreach (var n in scope.Value)
+					{
+						string path = MakeRelativePath(scope.Key.SourcePath.Directory, n.File.Directory);
+						writer.Write(" "+Path.Combine(path,"obj",n.File.CoreName + ".o"));
+
+						//$(CC) - c - o $@ $< $(CFLAGS)
+					}
+					writer.WriteLine();
+
+					writer.WriteLine();
+					writer.WriteLine("build : $(OBJ)");
+					if (scope.Key.Type == "StaticLibrary")
+						writer.WriteLine("\t$(LINK) $(LFLAGS) rcs $(OUT) $(OBJ)");
+					else
+						writer.WriteLine("\t$(LINK) -o $(OUT) $(OBJ) $(LFLAGS)");
+					writer.WriteLine();
+
+					writer.WriteLine("clean :");
+					writer.WriteLine("\trm $(OBJ) $(OUT)");
+					writer.WriteLine();
+
 					foreach (var n in scope.Value)
 					{
 						string path = MakeRelativePath(scope.Key.SourcePath.Directory, n.File.Directory);
 
-						writer.Write(Path.Combine(path, n.File.CoreName + ".o") + " : " + Path.Combine(path, n.File.Name));
+						writer.Write(Path.Combine(path,"obj", n.File.CoreName + ".o") + " : " + Path.Combine(path, n.File.Name));
 						foreach (var d in n.Dependencies)
 						{
 							string path2 = MakeRelativePath(scope.Key.SourcePath.Directory, d.Value.Item1.File.Directory);
 							writer.Write(" " + Path.Combine(path2, d.Value.Item1.File.Name));
 						}
 						writer.WriteLine();
+						if (n.Group == Project.c)
+							writer.WriteLine("\t$(CC) -c -o $@ $< $(CFLAGS)");
+						else
+							if (n.Group == Project.cpp)
+								writer.WriteLine("\t$(CPP) -c -o $@ $< $(CPPFLAGS)");
+						writer.WriteLine();
+
 					}
 					Program.ExportToDisk(new File(outFile), writer);
 				}

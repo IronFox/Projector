@@ -41,15 +41,28 @@ namespace Projector
 								messages = new List<Notification>();
 		private static DateTime lastEvent = DateTime.Now;
 
+		private static Solution current = null, currentWarn = null;
 		public static void Warn(Solution s, Project p, string message)
 		{
-			warnings.Add(new Notification(s, p, message));
+			var msg = new Notification(s, p, message);
+			if (LogToConsole)
+			{
+				Console.Error.WriteLine("Warning: "+Projector.ProjectView.LogNextEvent(ref currentWarn, msg));
+				return;
+			}
+			warnings.Add(msg);
 			lastEvent = DateTime.Now;
 		}
 
 		public static void Inform(Solution s, Project p, string message)
 		{
-			messages.Add(new Notification(s, p, message));
+			var msg = new Notification(s, p, message);
+			if (LogToConsole)
+			{
+				Console.WriteLine(Projector.ProjectView.LogNextEvent(ref current, msg));
+				return;
+			}
+			messages.Add(msg);
 			lastEvent = DateTime.Now;
 		}
 
@@ -94,5 +107,7 @@ namespace Projector
 				return lastEvent;
 			}
 		}
+
+		public static bool LogToConsole { get; internal set; }
 	}
 }
