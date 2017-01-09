@@ -85,6 +85,8 @@
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.toolsetLabel = new System.Windows.Forms.Label();
 			this.toolSet = new System.Windows.Forms.ComboBox();
+			this.generateMakefileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.solutionViewSplit)).BeginInit();
 			this.solutionViewSplit.Panel1.SuspendLayout();
@@ -114,7 +116,7 @@
 			this.menuStrip1.Size = new System.Drawing.Size(564, 24);
 			this.menuStrip1.TabIndex = 2;
 			this.menuStrip1.Text = "menuStrip1";
-			this.menuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.menuStrip1_ItemClicked);
+			this.menuStrip1.ItemClicked += new System.Windows.Forms.ToolStripItemClickedEventHandler(this.MenuStrip1_ItemClicked);
 			// 
 			// fileToolStripMenuItem
 			// 
@@ -134,7 +136,7 @@
 			this.loadProjectToolStripMenuItem.Name = "loadProjectToolStripMenuItem";
 			this.loadProjectToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
 			this.loadProjectToolStripMenuItem.Text = "Load Solution...";
-			this.loadProjectToolStripMenuItem.Click += new System.EventHandler(this.loadProjectToolStripMenuItem_Click);
+			this.loadProjectToolStripMenuItem.Click += new System.EventHandler(this.LoadProjectToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem3
 			// 
@@ -200,7 +202,7 @@
 			this.quitToolStripMenuItem.Name = "quitToolStripMenuItem";
 			this.quitToolStripMenuItem.Size = new System.Drawing.Size(162, 22);
 			this.quitToolStripMenuItem.Text = "Quit";
-			this.quitToolStripMenuItem.Click += new System.EventHandler(this.quitToolStripMenuItem_Click);
+			this.quitToolStripMenuItem.Click += new System.EventHandler(this.QuitToolStripMenuItem_Click);
 			// 
 			// loadedSolutionsToolStripMenuItem
 			// 
@@ -208,7 +210,9 @@
             this.generateSelectedToolStripMenuItem,
             this.openGeneratedToolStripMenuItem,
             this.toolStripMenuItem6,
-            this.unloadSelectedToolStripMenuItem});
+            this.unloadSelectedToolStripMenuItem,
+            this.toolStripMenuItem7,
+            this.generateMakefileToolStripMenuItem});
 			this.loadedSolutionsToolStripMenuItem.Name = "loadedSolutionsToolStripMenuItem";
 			this.loadedSolutionsToolStripMenuItem.Size = new System.Drawing.Size(110, 20);
 			this.loadedSolutionsToolStripMenuItem.Text = "Loaded Solutions";
@@ -216,26 +220,26 @@
 			// generateSelectedToolStripMenuItem
 			// 
 			this.generateSelectedToolStripMenuItem.Name = "generateSelectedToolStripMenuItem";
-			this.generateSelectedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+			this.generateSelectedToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
 			this.generateSelectedToolStripMenuItem.Text = "Generate Selected";
-			this.generateSelectedToolStripMenuItem.Click += new System.EventHandler(this.generateSelectedButton_Click);
+			this.generateSelectedToolStripMenuItem.Click += new System.EventHandler(this.GenerateSelectedButton_Click);
 			// 
 			// openGeneratedToolStripMenuItem
 			// 
 			this.openGeneratedToolStripMenuItem.Name = "openGeneratedToolStripMenuItem";
-			this.openGeneratedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+			this.openGeneratedToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
 			this.openGeneratedToolStripMenuItem.Text = "Open Generated";
 			this.openGeneratedToolStripMenuItem.Click += new System.EventHandler(this.openSelectedButton_Click);
 			// 
 			// toolStripMenuItem6
 			// 
 			this.toolStripMenuItem6.Name = "toolStripMenuItem6";
-			this.toolStripMenuItem6.Size = new System.Drawing.Size(165, 6);
+			this.toolStripMenuItem6.Size = new System.Drawing.Size(171, 6);
 			// 
 			// unloadSelectedToolStripMenuItem
 			// 
 			this.unloadSelectedToolStripMenuItem.Name = "unloadSelectedToolStripMenuItem";
-			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(168, 22);
+			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
 			this.unloadSelectedToolStripMenuItem.Text = "Unload Selected";
 			this.unloadSelectedToolStripMenuItem.Click += new System.EventHandler(this.unloadSelectedToolStripMenuItem_Click);
 			// 
@@ -257,14 +261,14 @@
 			this.buildToolStripMenuItem.Name = "buildToolStripMenuItem";
 			this.buildToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
 			this.buildToolStripMenuItem.Text = "Build";
-			this.buildToolStripMenuItem.Click += new System.EventHandler(this.buildToolStripMenuItem_Click);
+			this.buildToolStripMenuItem.Click += new System.EventHandler(this.BuildToolStripMenuItem_Click);
 			// 
 			// buildAtToolStripMenuItem
 			// 
 			this.buildAtToolStripMenuItem.Name = "buildAtToolStripMenuItem";
 			this.buildAtToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
 			this.buildAtToolStripMenuItem.Text = "Build at...";
-			this.buildAtToolStripMenuItem.Click += new System.EventHandler(this.buildAtToolStripMenuItem_Click);
+			this.buildAtToolStripMenuItem.Click += new System.EventHandler(this.BuildAtToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem4
 			// 
@@ -277,7 +281,7 @@
 			this.openGeneratedSolutionToolStripMenuItem.Name = "openGeneratedSolutionToolStripMenuItem";
 			this.openGeneratedSolutionToolStripMenuItem.Size = new System.Drawing.Size(207, 22);
 			this.openGeneratedSolutionToolStripMenuItem.Text = "Open Generated Solution";
-			this.openGeneratedSolutionToolStripMenuItem.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
+			this.openGeneratedSolutionToolStripMenuItem.Click += new System.EventHandler(this.OpenGeneratedSolutionToolStripMenuItem_Click);
 			// 
 			// optionsToolStripMenuItem
 			// 
@@ -343,7 +347,7 @@
 			// solutionViewSplit.Panel1
 			// 
 			this.solutionViewSplit.Panel1.Controls.Add(this.mainTabControl);
-			this.solutionViewSplit.Panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.splitContainer1_Panel1_Paint);
+			this.solutionViewSplit.Panel1.Paint += new System.Windows.Forms.PaintEventHandler(this.SplitContainer1_Panel1_Paint);
 			// 
 			// solutionViewSplit.Panel2
 			// 
@@ -432,7 +436,7 @@
 			this.generateSelectedButton.TabIndex = 0;
 			this.generateSelectedButton.Text = "Generate Selected Solutions";
 			this.generateSelectedButton.UseVisualStyleBackColor = true;
-			this.generateSelectedButton.Click += new System.EventHandler(this.generateSelectedButton_Click);
+			this.generateSelectedButton.Click += new System.EventHandler(this.GenerateSelectedButton_Click);
 			// 
 			// loadedSolutionsView
 			// 
@@ -457,7 +461,7 @@
 			this.loadedSolutionsView.TabIndex = 0;
 			this.loadedSolutionsView.UseCompatibleStateImageBehavior = false;
 			this.loadedSolutionsView.View = System.Windows.Forms.View.Details;
-			this.loadedSolutionsView.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.solutionListBox_ItemCheck);
+			this.loadedSolutionsView.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.SolutionListBox_ItemCheck);
 			this.loadedSolutionsView.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.loadedSolutionsView_ItemChecked);
 			this.loadedSolutionsView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.loadedSolutionsView_ItemSelectionChanged);
 			this.loadedSolutionsView.DragDrop += new System.Windows.Forms.DragEventHandler(this.recentSolutions_DragDrop);
@@ -519,7 +523,7 @@
 			this.openGeneratedSolutionButton.TabIndex = 3;
 			this.openGeneratedSolutionButton.Text = "Open Generated";
 			this.openGeneratedSolutionButton.UseVisualStyleBackColor = true;
-			this.openGeneratedSolutionButton.Click += new System.EventHandler(this.openGeneratedSolutionToolStripMenuItem_Click);
+			this.openGeneratedSolutionButton.Click += new System.EventHandler(this.OpenGeneratedSolutionToolStripMenuItem_Click);
 			// 
 			// buildSolutionButton
 			// 
@@ -607,6 +611,18 @@
 			this.toolSet.TabIndex = 2;
 			this.toolSet.ValueMember = "14.0 (VS 2015)";
 			this.toolSet.SelectedIndexChanged += new System.EventHandler(this.toolSet_SelectedIndexChanged_1);
+			// 
+			// generateMakefileToolStripMenuItem
+			// 
+			this.generateMakefileToolStripMenuItem.Name = "generateMakefileToolStripMenuItem";
+			this.generateMakefileToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+			this.generateMakefileToolStripMenuItem.Text = "Generate Makefiles";
+			this.generateMakefileToolStripMenuItem.Click += new System.EventHandler(this.generateMakefileToolStripMenuItem_Click);
+			// 
+			// toolStripMenuItem7
+			// 
+			this.toolStripMenuItem7.Name = "toolStripMenuItem7";
+			this.toolStripMenuItem7.Size = new System.Drawing.Size(171, 6);
 			// 
 			// ProjectView
 			// 
@@ -704,6 +720,8 @@
 		private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem overwriteExistingVSUserConfigToolStripMenuItem;
 		private System.Windows.Forms.ToolStripMenuItem forceOverwriteProjectFilesToolStripMenuItem;
+		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem7;
+		private System.Windows.Forms.ToolStripMenuItem generateMakefileToolStripMenuItem;
 	}
 }
 

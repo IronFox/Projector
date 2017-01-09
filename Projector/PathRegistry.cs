@@ -14,6 +14,10 @@ namespace Projector
 		{
 			this.fullPath = path != null ? new System.IO.FileInfo(path).FullName : null;
 		}
+		public File(System.IO.FileInfo info)
+		{
+			fullPath = info?.FullName;
+		}
 
 		public string FullName
 		{
@@ -27,7 +31,7 @@ namespace Projector
 		{
 			get
 			{
-				return fullPath != null && System.IO.File.Exists(fullPath); 
+				return fullPath != null && System.IO.File.Exists(fullPath);
 			}
 		}
 
@@ -51,7 +55,7 @@ namespace Projector
 		{
 			get
 			{
-				return fullPath != null && System.IO.Directory.Exists( new System.IO.FileInfo(fullPath).Directory.FullName );
+				return fullPath != null && System.IO.Directory.Exists(new System.IO.FileInfo(fullPath).Directory.FullName);
 			}
 
 		}
@@ -76,6 +80,16 @@ namespace Projector
 		{
 			return new File(a.FullName + ext);
 		}
+		public string Name
+		{
+			get
+			{
+				if (fullPath == null)
+					return null;
+				var fi = new System.IO.FileInfo(fullPath);
+				return fi.Name;
+			}
+		}
 
 		public string CoreName
 		{
@@ -94,6 +108,11 @@ namespace Projector
 		public override bool Equals(object obj)
 		{
 			return obj is File && ((File)obj) == this;
+		}
+
+		public override string ToString()
+		{
+			return fullPath ?? "<null>";
 		}
 
 		public static bool operator ==(File a, File b)

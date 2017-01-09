@@ -36,6 +36,11 @@ namespace Projector
 			return !(a == b);
 		}
 
+		public override int GetHashCode()
+		{
+			return ((VSName.GetHashCode() * 17 + Major) * 17 + Minor);
+		}
+
 		public override bool Equals(object obj)
 		{
 			if (obj is ToolsetVersion)

@@ -15,13 +15,13 @@ using System.Xml;
 namespace Projector
 {
     public partial class ProjectView : Form
-    {
+	{
         public ProjectView()
         {
             InitializeComponent();
         }
 
-        private void menuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+        private void MenuStrip1_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
         {
 
         }
@@ -30,7 +30,7 @@ namespace Projector
 
         
 
-        private void loadProjectToolStripMenuItem_Click(object sender, EventArgs e)
+        private void LoadProjectToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (openSolutionDialog.ShowDialog() == DialogResult.OK)
             {
@@ -70,7 +70,7 @@ namespace Projector
                 AddSourceFolder(tsource.Nodes.Add(sub.name), sub);
         }
 
-        private void splitContainer1_Panel1_Paint(object sender, PaintEventArgs e)
+        private void SplitContainer1_Panel1_Paint(object sender, PaintEventArgs e)
         {
 
         }
@@ -198,8 +198,7 @@ namespace Projector
 				{
 					if (platform == Platform.None)
 						continue;
-					bool isCustom;
-					string t = project.GetReleaseTargetNameFor(platform, out isCustom);
+					string t = project.GetReleaseTargetNameFor(platform, out bool isCustom);
 					ttarget.Nodes.Add(platform + ": \"" + t + "\"" + (isCustom ? " (custom)" : ""));
 				}
 
@@ -340,8 +339,7 @@ namespace Projector
 				return null;
 			}
 			bool newRecent;
-			Solution solution;
-			if (solutions.TryGetValue(file.FullName,out solution))
+			if (solutions.TryGetValue(file.FullName,out var solution))
 			{
 				EventLog.Inform(solution,null, "Solution '" + file + "' already loaded");
 				solution.Reload(out newRecent);
@@ -359,7 +357,7 @@ namespace Projector
 				solutions.Add(file.FullName,solution);
 				ListViewItem item = loadedSolutionsView.Items.Add(solution.ToString());
 				loadedSolutions.Add(solution);
-				item.SubItems.Add(solution.Primary != null ? solution.Primary.ToString() : "");
+				item.SubItems.Add(solution.Primary?.ToString());
 				item.SubItems.Add(solution.Projects.Count().ToString());
 				item.Checked = true;
 				solution.ListViewItem = item;
@@ -479,8 +477,7 @@ namespace Projector
 			internal void HighlightDomain(string domain)
 			{
 				ClearHighlight();
-				List<LinkLabel> hightlighted;
-				if (domainMap.TryGetValue(domain, out hightlighted))
+				if (domainMap.TryGetValue(domain, out var hightlighted))
 					foreach (var label in hightlighted)
 					{
 						label.Font = litFont;
@@ -546,8 +543,10 @@ namespace Projector
 
 			}
 
-			ToolTip tooltip = new ToolTip();
-			tooltip.ShowAlways = true;
+			ToolTip tooltip = new ToolTip()
+			{
+				ShowAlways = true
+			};
 			int left = 20;
 			//string lastDomain = null;
 			foreach (var recent in PersistentState.Recent)
@@ -560,12 +559,14 @@ namespace Projector
 					bool hasDomain = recent.Domain != null && recent.Domain.Length != 0;
 					if (hasDomain)//&& lastDomain != recent.Domain
 					{
-						LinkLabel ldomain = new LinkLabel();
-						ldomain.Top = top;
+						LinkLabel ldomain = new LinkLabel()
+						{
+							Top = top,
 
-						ldomain.Font = f;
-						ldomain.Left = 20;
-						ldomain.Text = recent.Domain+"/";
+							Font = f,
+							Left = 20,
+							Text = recent.Domain + "/"
+						};
 						ldomain.Width = ldomain.PreferredWidth;
 						left = 20 + ldomain.Width;
 						recentSolutions.Controls.Add(ldomain);
@@ -579,14 +580,16 @@ namespace Projector
 						left = 20;
 					//lastDomain = recent.Domain;
 
-					{ 
-						LinkLabel lrecent = new LinkLabel();
-						lrecent.Top = top;
-						//lrecent.Font;
+					{
+						LinkLabel lrecent = new LinkLabel()
+						{
+							Top = top,
+							//lrecent.Font;
 
-						lrecent.Font = f;
-						lrecent.Left = left;
-						lrecent.Text = recent.Name;
+							Font = f,
+							Left = left,
+							Text = recent.Name
+						};
 						lrecent.Width = lrecent.PreferredWidth;
 						recentSolutions.Controls.Add(lrecent);
 						tooltip.SetToolTip(lrecent, recent.File.FullName);
@@ -598,10 +601,12 @@ namespace Projector
 
 				}
 
-				ToolStripItem item = new ToolStripMenuItem(recent.ToString());
-				item.AutoToolTip = true;
-				item.ToolTipText = recent.File.FullName;
-                item.Click += (sender, item2) => LoadSolution(recent.File);
+				ToolStripItem item = new ToolStripMenuItem(recent.ToString())
+				{
+					AutoToolTip = true,
+					ToolTipText = recent.File.FullName
+				};
+				item.Click += (sender, item2) => LoadSolution(recent.File);
 				//lpath.Click += (sender, item2) => LoadSolution(recent.File);
                 parent.Add(item);
             }
@@ -617,7 +622,7 @@ namespace Projector
         }
 
 
-		private void toolSet_SelectedIndexChanged(object sender, EventArgs e)
+		private void ToolSet_SelectedIndexChanged(object sender, EventArgs e)
         {
 
         }
@@ -645,12 +650,12 @@ namespace Projector
 			}
 		}
 
-        private void quitToolStripMenuItem_Click(object sender, EventArgs e)
+        private void QuitToolStripMenuItem_Click(object sender, EventArgs e)
         {
 			Program.End();
         }
 
-        private void buildToolStripMenuItem_Click(object sender, EventArgs e)
+        private void BuildToolStripMenuItem_Click(object sender, EventArgs e)
         {
 			if (shownSolution == null)
 				return;
@@ -666,8 +671,7 @@ namespace Projector
 				//return;
             }
 			FlushProjects();
-			bool newRecent;
-			shownSolution.Reload(out newRecent); //refresh
+			shownSolution.Reload(out bool newRecent); //refresh
 			ShowSolution(shownSolution);
 
 			BuildCurrentSolution(shownSolution, outPath);
@@ -748,7 +752,7 @@ namespace Projector
             }
         }
 
-        private void buildAtToolStripMenuItem_Click(object sender, EventArgs e)
+        private void BuildAtToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //string name = Project.Primary.Name;
 			Solution solution = shownSolution;
@@ -761,7 +765,7 @@ namespace Projector
             if (chooseDestination.ShowDialog() == DialogResult.OK)
             {
                 PersistentState.SetOutPathFor(solution.Source, new File(chooseDestination.FileName));
-                buildToolStripMenuItem_Click(sender, e);
+                BuildToolStripMenuItem_Click(sender, e);
             }
         }
 
@@ -789,7 +793,7 @@ namespace Projector
 			Program.End();
 		}
 
-		private void openGeneratedSolutionToolStripMenuItem_Click(object sender, EventArgs e)
+		private void OpenGeneratedSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
 			Solution solution = shownSolution;
 			OpenGeneratedSolution(solution);
@@ -849,12 +853,12 @@ namespace Projector
 			}
 		}
 
-        private void overwriteExistingVSUserConfigToolStripMenuItem_Click(object sender, EventArgs e)
+        private void OverwriteExistingVSUserConfigToolStripMenuItem_Click(object sender, EventArgs e)
         {
             overwriteExistingVSUserConfigToolStripMenuItem.Checked = !overwriteExistingVSUserConfigToolStripMenuItem.Checked;
         }
 
-		private void solutionListBox_ItemCheck(object sender, ItemCheckEventArgs e)
+		private void SolutionListBox_ItemCheck(object sender, ItemCheckEventArgs e)
 		{
 
 		}
@@ -879,8 +883,7 @@ namespace Projector
 
                 if (outPath.DirectoryExists)
                 {
-                    bool newRecent;
-                    solution.Reload(out newRecent); //refresh
+					solution.Reload(out bool newRecent); //refresh
                     solution.Build(outPath, GetToolsetVersion(), GetOSVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked);
                     if (solution == shownSolution)
                         ShowSolution(solution);
@@ -906,18 +909,25 @@ namespace Projector
 			}
 		}
 
-		private void generateSelectedButton_Click(object sender, EventArgs e)
+
+		private IEnumerable<Solution> GetSelectedSolutions()
 		{
-			FlushProjects();
-			BeginLogSession();
 			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
 			{
 				if (loadedSolutionsView.Items[i].Checked)
 				{
 					Solution solution = loadedSolutions[i-1];
-					Generate(solution);
+					yield return solution;
 				}
 			}
+		}
+
+		private void GenerateSelectedButton_Click(object sender, EventArgs e)
+		{
+			FlushProjects();
+			BeginLogSession();
+			foreach (var s in GetSelectedSolutions())
+				Generate(s);
 			EndLogSession();
 		}
 
@@ -1062,5 +1072,29 @@ namespace Projector
         {
             overwriteExistingVSUserConfigToolStripMenuItem.Checked = !overwriteExistingVSUserConfigToolStripMenuItem.Checked;
         }
-    }
+
+		private void generateMakefileToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			HashSet<Project> projects = new HashSet<Project>();
+
+			BeginLogSession();
+
+			GenerateSelectedButton_Click(null, null);
+
+			foreach (var s in GetSelectedSolutions())
+			{
+				s.ScanEmptySources();
+				foreach (var p in s.Projects)
+				{
+					projects.Add(p);
+				}
+			}
+			DependencyTree.Clear();
+			foreach (var p in projects)
+				p.RegisterDependencyNodes();
+			DependencyTree.ParseDependencies();
+			DependencyTree.GenerateMakefiles();
+			EndLogSession();
+		}
+	}
 }

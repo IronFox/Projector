@@ -198,7 +198,7 @@ namespace Projector
 
 
         public static CodeGroup cpp = new CodeGroup() { name = "C++", tag = "ClCompile" };
-        public static CodeGroup h = new CodeGroup() { name = "header", tag = "ClInclude" };
+        public static CodeGroup header = new CodeGroup() { name = "header", tag = "ClInclude" };
         public static CodeGroup c = new CodeGroup() { name = "C", tag = "ClCompile" };
         public static CodeGroup shader = new CodeGroup() { name = "Shader", tag = "None" };
         public static CodeGroup image = new CodeGroup() { name = "Image", tag = "Image" };
@@ -213,10 +213,10 @@ namespace Projector
 		/// </summary>
         public static Dictionary<string, CodeGroup> ExtensionMap = new Dictionary<string, CodeGroup>()
         {
-            {".h", h },
-            {".hpp", h },
-            {".h++", h },
-            {".hh", h },
+            {".h", header },
+            {".hpp", header },
+            {".h++", header },
+            {".hh", header },
 
             {".c", c },
 
@@ -232,19 +232,6 @@ namespace Projector
 			{ ".rc2", resource },
 		};
 
-
-		/// <summary>
-		/// Additionally included path
-		/// </summary>
-		public class PathInclusion
-		{
-			/// <summary>
-			/// Root directory to search from
-			/// </summary>
-			public DirectoryInfo path;
-
-
-		}
 
 		/// <summary>
 		/// Project source declaration. Each source targets a directory and may provide any number of exclusion-rules
@@ -316,7 +303,7 @@ namespace Projector
             public class Folder
             {
                 public string name;
-                public Dictionary<CodeGroup, List<FileInfo>> groups = new Dictionary<CodeGroup, List<FileInfo>>();
+                public Dictionary<CodeGroup, List<File>> groups = new Dictionary<CodeGroup, List<File>>();
                 public List<Folder> subFolders = new List<Folder>();
 
 
@@ -381,6 +368,20 @@ namespace Projector
 						child.WriteFilterDeclarations(writer,path,true);
 
 				}
+
+				public IEnumerable<Tuple<CodeGroup, File>> EnumerateFiles()
+				{
+					foreach (var g in groups)
+					{
+						foreach (var f in g.Value)
+							yield return new Tuple<CodeGroup, File>(g.Key, f);
+					}
+					foreach (var f in subFolders)
+					{
+						foreach (var rs in f.EnumerateFiles())
+							yield return rs;
+					}
+				}
 			}
 
             public Folder root;
@@ -436,13 +437,13 @@ namespace Projector
                     CodeGroup grp;
                     if (ExtensionMap.TryGetValue(f.Extension.ToLower(), out grp))
                     {
-                        List<FileInfo> list;
+                        List<File> list;
                         if (!sub.groups.TryGetValue(grp, out list))
                         {
-                            list = new List<FileInfo>();
+                            list = new List<File>();
                             sub.groups.Add(grp, list);
                         }
-                        list.Add(f);
+                        list.Add(new File(f));
                     }
                 }
 
@@ -502,8 +503,11 @@ namespace Projector
 				writer.WriteLine("</ItemGroup>");
 			}
 
-
-        }
+			public IEnumerable<Tuple<CodeGroup, File>> EnumerateFiles()
+			{
+				return root.EnumerateFiles();
+			}
+		}
 
 		/// <summary>
 		/// Reference of a remote project
@@ -696,9 +700,30 @@ namespace Projector
 		/// </summary>
         public IEnumerable<Source> Sources { get { return sources; } }
 		/// <summary>
-		/// Retrieves all includes directories. May be empty, but never null
+		/// Retrieves all included directories from any source (own sources, referenced projects, explicit inclusions). May be empty, but never null.
+		/// Explicit inclusions are listed first, followed by local sources flagged as 'include', and finally referenced projects flagged as 'include'.
 		/// </summary>
-		public IEnumerable<PathInclusion> IncludedPaths { get { return includedPaths; } }
+		public IEnumerable<string> IncludedPaths
+		{
+			get
+			{
+				foreach (var inc in explicitIncludePaths)
+					yield return inc.FullName;
+				foreach (var source in sources)
+					if (source.includeDirectory)
+						yield return source.path.FullName;
+				foreach (var r in references)
+				{
+					if (!r.IncludePath)
+						continue;
+					foreach (var source in r.Project.sources)
+					{
+						if (source.includeDirectory)
+							yield return source.path.FullName;
+					}
+				}
+			}
+		}
 		/// <summary>
 		/// Retrieves all command line instructions to be executed ahead of building the local project. May be empty, but never null
 		/// </summary>
@@ -753,7 +778,7 @@ namespace Projector
         List<Source> sources = new List<Source>();
         Dictionary<string, string> macros = new Dictionary<string, string>();
         List<Reference> references = new List<Reference>();
-		List<PathInclusion> includedPaths = new List<PathInclusion>();
+		List<DirectoryInfo> explicitIncludePaths = new List<DirectoryInfo>();
 		Dictionary<Platform,string>customTargetNames = new Dictionary<Platform,string>();
 		int customStackSize = -1;
         int roundTrip = 0;
@@ -930,23 +955,10 @@ namespace Projector
 					}
 
 
-					List<string> includes = new List<string>(), libPaths = new List<string>();
+					List<string> includes, libPaths = new List<string>();
 
-					foreach (var source in sources)
-						if (source.includeDirectory)
-							includes.Add(source.path.FullName);
+					includes = new List<string>( this.IncludedPaths );
 
-
-					foreach (var r in references)
-                    {
-                        if (!r.IncludePath)
-                            continue;
-                        foreach (var source in r.Project.sources)
-                        {
-							if (source.includeDirectory)
-	                            includes.Add(source.path.FullName);
-                        }
-                    }
 
 					foreach (var lib in includedLibraries)
 					{
@@ -960,8 +972,6 @@ namespace Projector
 								libPaths.Add(linkDir.Item2.FullName);
 					}
 
-					foreach (var inc in includedPaths)
-						includes.Add(inc.path.FullName);
 					if (includes.Count > 0)
 						writer.WriteLine("  <IncludePath>" + includes.Fuse(";") + ";$(IncludePath)</IncludePath>");
 					if (libPaths.Count > 0)
@@ -1088,6 +1098,16 @@ namespace Projector
             return new Tuple<File, Guid,bool>(file, id,written);
         }
 
+		public void RegisterDependencyNodes()
+		{
+			foreach (var s in sources)
+			{
+				foreach (Tuple<CodeGroup, File> f in s.EnumerateFiles())
+				{
+					DependencyTree.RegisterNode(this, f.Item2, f.Item1 == c || f.Item1 == cpp);
+				}
+			}
+		}
 
 		public string GetReleaseTargetNameFor(Platform platform, out bool isCustom)
 		{
@@ -1181,7 +1201,7 @@ namespace Projector
 						includedLibraries.Add(lib);
                 preBuildCommands.AddRange(p.preBuildCommands);
                 sources.AddRange(p.sources);
-				includedPaths.AddRange(p.includedPaths);
+				explicitIncludePaths.AddRange(p.explicitIncludePaths);
 				foreach (var pair in p.macros)
                     macros.Add(pair.Key, pair.Value);
                 references.AddRange(p.references);
@@ -1534,16 +1554,14 @@ namespace Projector
 				Warn(domain, "'path' attribute missing while parsing include entry");
 				return;
 			}
-			PathInclusion inc = new PathInclusion();
 
-
-			inc.path = GetRelativeDir(SourcePath.Directory, xPath.Value);
-			if (!inc.path.Exists)
+			DirectoryInfo path = GetRelativeDir(SourcePath.Directory, xPath.Value);
+			if (!path.Exists)
 			{
 				Warn(domain, "Include path '" + xPath.Value + "' does not exist relative to '" + SourcePath.FullName + "'");
 				return;
 			}
-			includedPaths.Add(inc);
+			explicitIncludePaths.Add(path);
 		}
 
 		public Project(string name)
