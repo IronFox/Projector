@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using Microsoft.VisualStudio.Setup.Configuration;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -101,6 +102,92 @@ namespace Projector
 
 		public bool ForceOverwriteProjectFiles { get { return forceOverwriteProjectFilesToolStripMenuItem.Checked; } }
 
+
+		private static void PrintWorkloads(ISetupPackageReference[] packages)
+		{
+			var workloads = from package in packages
+							where string.Equals(package.GetType(), "Workload", StringComparison.OrdinalIgnoreCase)
+							orderby package.GetId()
+							select package;
+
+			foreach (var workload in workloads)
+			{
+				Console.WriteLine($"    {workload.GetId()}");
+			}
+		}
+		private static void PrintInstance(ISetupInstance instance, ISetupHelper helper)
+		{
+			var instance2 = (ISetupInstance2)instance;
+			var state = instance2.GetState();
+			Console.WriteLine($"InstanceId: {instance2.GetInstanceId()} ({(state == InstanceState.Complete ? "Complete" : "Incomplete")})");
+
+			var installationVersion = instance.GetInstallationVersion();
+			var version = helper.ParseVersion(installationVersion);
+
+			Console.WriteLine($"InstallationVersion: {installationVersion} ({version})");
+
+			if ((state & InstanceState.Local) == InstanceState.Local)
+			{
+				Console.WriteLine($"InstallationPath: {instance2.GetInstallationPath()}");
+			}
+
+			if ((state & InstanceState.Registered) == InstanceState.Registered)
+			{
+				Console.WriteLine($"Product: {instance2.GetProduct().GetId()}");
+				Console.WriteLine("Workloads:");
+
+				PrintWorkloads(instance2.GetPackages());
+			}
+
+			Console.WriteLine();
+		}
+
+		private static string InstancePath(ISetupInstance instance, ISetupHelper helper, string name, string version)
+		{
+			var instance2 = (ISetupInstance2)instance;
+			var state = instance2.GetState();
+
+			var installationVersion = instance.GetInstallationVersion();
+			if (!installationVersion.StartsWith(version))
+				return null;
+			//var version = helper.ParseVersion(installationVersion);
+
+			Console.WriteLine($"InstallationVersion: {installationVersion} ({version})");
+
+			if ((state & InstanceState.Local) != InstanceState.Local)
+				return null;
+
+			if ((state & InstanceState.Registered) == InstanceState.Registered)
+			{
+				if (!instance2.GetProduct().GetId().StartsWith(name))
+					return null;
+				return instance2.GetInstallationPath();
+			}
+			return null;
+		}
+
+
+		private static string TryGetVS17Path()
+		{
+			var configuration = new SetupConfiguration();
+			var en = configuration.EnumAllInstances();
+			ISetupInstance[] inst = new ISetupInstance[1];
+			int got;
+			do
+			{
+				en.Next(1, inst, out got);
+				if (got > 0)
+				{
+					string rs = InstancePath(inst[0], (ISetupHelper)configuration,"Microsoft.VisualStudio","15.0");
+					if (rs != null)
+						return rs;
+				}
+			}
+			while (got > 0);
+
+			return null;
+		}
+
 		private void ProjectView_Load(object sender, EventArgs e)
         {
 			ResizeFont(this.Controls, FontScaleFactor);
@@ -109,7 +196,7 @@ namespace Projector
 
 			toolSet.Items.Add(new ToolsetVersion(12, 0, "VS 2013",false));
 			toolSet.Items.Add(new ToolsetVersion(14, 0, "VS 2015",false));
-			toolSet.Items.Add(new ToolsetVersion(14, 1, "VS 2017",true));
+			toolSet.Items.Add(new ToolsetVersion(14, 1, "VS 2017",true,TryGetVS17Path()));
 
 			PersistentState.Restore();
             if (PersistentState.Toolset != null)
@@ -842,8 +929,14 @@ namespace Projector
 			if (solution.visualStudioProcess == null || solution.visualStudioProcess.HasExited)
 			{ 
 				Process myProcess = new Process();
-                
-				myProcess.StartInfo.FileName = "devenv.exe"; //not the full application path
+				ToolsetVersion vs = GetToolsetVersion();
+				if (vs.Path != null)
+				{
+					myProcess.StartInfo.WorkingDirectory = Path.Combine(vs.Path, "Common7", "IDE");
+					myProcess.StartInfo.FileName = Path.Combine(myProcess.StartInfo.WorkingDirectory, "devenv.exe");
+				}
+				else
+					myProcess.StartInfo.FileName = "devenv.exe"; //not the full application path
 				myProcess.StartInfo.Arguments = "\""+slnPath.FullName+"\"";
                 try
                 {

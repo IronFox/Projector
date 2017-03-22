@@ -6,22 +6,25 @@ namespace Projector
     {
         public readonly int Major,
                         Minor;
-		public readonly string VSName;
+		public readonly string VSName,Path;
 		public readonly bool RequiresWindowsTargetPlatformVersion;
 
 
-
-		public ToolsetVersion(int major, int minor, string vsName, bool requiresWindowsTargetPlatformVersion)
+		public ToolsetVersion(int major, int minor, string vsName, bool requiresWindowsTargetPlatformVersion, string path)
         {
             Major = major;
             Minor = minor;
 			VSName = vsName;
+			Path = path;
 			RequiresWindowsTargetPlatformVersion = requiresWindowsTargetPlatformVersion;
 		}
 
+		public ToolsetVersion(int major, int minor, string vsName, bool requiresWindowsTargetPlatformVersion) : this(major,minor,vsName,requiresWindowsTargetPlatformVersion,null)
+		{}
 
 
-        public override string ToString()
+
+		public override string ToString()
         {
 			return Major + "." + Minor+" ("+ VSName+")";
         }
