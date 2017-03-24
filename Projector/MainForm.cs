@@ -161,13 +161,16 @@ namespace Projector
 			{
 				if (!instance2.GetProduct().GetId().StartsWith(name))
 					return null;
-				return instance2.GetInstallationPath();
+				string rs = Path.Combine(instance2.GetInstallationPath(), "Common7", "IDE");
+				if (!Directory.Exists(rs))
+					return null;
+				return rs;
 			}
 			return null;
 		}
 
 
-		private static string TryGetVS17Path()
+		private static string TryGetVSSetupPath(string version)
 		{
 			var configuration = new SetupConfiguration();
 			var en = configuration.EnumAllInstances();
@@ -178,14 +181,54 @@ namespace Projector
 				en.Next(1, inst, out got);
 				if (got > 0)
 				{
-					string rs = InstancePath(inst[0], (ISetupHelper)configuration,"Microsoft.VisualStudio","15.0");
+					string rs = InstancePath(inst[0], (ISetupHelper)configuration,"Microsoft.VisualStudio", version);
 					if (rs != null)
 						return rs;
 				}
 			}
 			while (got > 0);
+			throw new Exception($"Visual Studio v{version} not found in setup COM");
+		}
 
-			return null;
+		private string TryGetVSPath(int majorVersion, int minorVersion)
+		{
+			string version = majorVersion + "." + minorVersion;
+			if (majorVersion >= 15)
+				return TryGetVSSetupPath(version);
+			string installationPath = null;
+			if (Environment.Is64BitOperatingSystem)
+			{
+				installationPath = (string)Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\" + version + "\\",
+					"InstallDir",
+					null);
+			}
+			else
+			{
+				installationPath = (string)Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\" + version + "\\",
+					"InstallDir",
+					null);
+			}
+			if (installationPath == null)
+				throw new Exception($"Visual Studio v{version} not found in registry");
+			return installationPath;
+		}
+
+		private void RegisterToolSet(int major, int minor, string vsName, int vsMajorVersion, int vsMinorVersion)
+		{
+			bool requiresWindowsTargetPlatformVersion = vsMajorVersion >= 15;
+			try
+			{
+				string path = TryGetVSPath(vsMajorVersion, vsMinorVersion);
+				if (path == null)
+					throw new Exception($"Visual Studio v{vsMajorVersion}.{vsMinorVersion} not found in registry");
+				toolSet.Items.Add(new ToolsetVersion(major, minor, vsName, requiresWindowsTargetPlatformVersion, path));
+
+				LogLine(vsName + " found in " + path);
+			}
+			catch (Exception ex)
+			{
+				LogLine(vsName+$" installation folder not found. Skipping. Toolset v{major}.{minor} will not be available");
+			}
 		}
 
 		private void ProjectView_Load(object sender, EventArgs e)
@@ -194,9 +237,9 @@ namespace Projector
 			toolsetLabel.Size = toolsetLabel.PreferredSize;
 			toolSet.Left = toolsetLabel.Right + 4;
 
-			toolSet.Items.Add(new ToolsetVersion(12, 0, "VS 2013",false));
-			toolSet.Items.Add(new ToolsetVersion(14, 0, "VS 2015",false));
-			toolSet.Items.Add(new ToolsetVersion(14, 1, "VS 2017",true,TryGetVS17Path()));
+			RegisterToolSet(12, 0, "VS 2013", 12,0);
+			RegisterToolSet(14, 0, "VS 2015", 14,0);
+			RegisterToolSet(14, 1, "VS 2017", 15,0);
 
 			PersistentState.Restore();
             if (PersistentState.Toolset != null)
@@ -894,23 +937,7 @@ namespace Projector
 
 
 
-        private string TryGetVSPath(string version)
-        {
-            string installationPath = null;
-            if (Environment.Is64BitOperatingSystem)
-            {
-                installationPath = (string)Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\"+version+"\\",
-                    "InstallDir",
-                    null);
-            }
-            else
-            {
-                installationPath = (string)Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\" + version + "\\",
-                    "InstallDir",
-                    null);
-            }
-            return installationPath;
-        }
+
 		private void OpenGeneratedSolution(Solution solution)
 		{
 			if (solution == null)
@@ -932,7 +959,7 @@ namespace Projector
 				ToolsetVersion vs = GetToolsetVersion();
 				if (vs.Path != null)
 				{
-					myProcess.StartInfo.WorkingDirectory = Path.Combine(vs.Path, "Common7", "IDE");
+					myProcess.StartInfo.WorkingDirectory = vs.Path;
 					myProcess.StartInfo.FileName = Path.Combine(myProcess.StartInfo.WorkingDirectory, "devenv.exe");
 				}
 				else
