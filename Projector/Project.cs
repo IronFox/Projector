@@ -562,6 +562,8 @@ namespace Projector
 
 			public LibraryInclusion(XmlNode xLib, Solution domain, Project warn)
 			{
+				XmlNode xWarn = xLib.Attributes.GetNamedItem("warn_if_not_found");
+				bool doWarn = xWarn == null || xWarn.Value.ToUpper() != "FALSE";
 				XmlNode xName = xLib.Attributes.GetNamedItem("name");
 				if (xName == null)
 				{
@@ -618,7 +620,13 @@ namespace Projector
 
 				if (Root == null)
                 {
-                    warn.Warn(domain,Name + ": None of the " + missed.Count + " root locations could be evaluated. Is this library installed on your machine?");
+					if (doWarn)
+					{
+						if (missed.Count == 1)
+							warn.Warn(domain, Name + ": The given root location '" + missed[0] + "' could be evaluated. Is this library installed on your machine?");
+						else
+							warn.Warn(domain, Name + ": None of the " + missed.Count + " root locations could be evaluated. Is this library installed on your machine?");
+					}
                 }
                 else
                 {
