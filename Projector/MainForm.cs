@@ -225,7 +225,7 @@ namespace Projector
 
 				LogLine(vsName + " found in " + path);
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				LogLine(vsName+$" installation folder not found. Skipping. Toolset v{major}.{minor} will not be available");
 			}
@@ -242,13 +242,21 @@ namespace Projector
 			RegisterToolSet(14, 1, "VS 2017", 15,0);
 
 			PersistentState.Restore();
-            if (PersistentState.Toolset != null)
-                toolSet.SelectedIndex = toolSet.Items.IndexOf(PersistentState.Toolset);
-            else
-            {
-                toolSet.SelectedIndex = 0;
-                PersistentState.Toolset = toolSet.SelectedItem.ToString();
-            }
+			if (PersistentState.Toolset != null)
+			{
+				toolSet.SelectedIndex = toolSet.Items.IndexOf(PersistentState.Toolset);
+
+				if (toolSet.SelectedIndex == -1)	//toolset no longer available
+				{
+					toolSet.SelectedIndex = 0;
+					PersistentState.Toolset = toolSet.SelectedItem.ToString();
+				}
+			}
+			else
+			{
+				toolSet.SelectedIndex = 0;
+				PersistentState.Toolset = toolSet.SelectedItem.ToString();
+			}
         }
 
 
