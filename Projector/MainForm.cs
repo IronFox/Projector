@@ -9,6 +9,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Xml;
@@ -417,6 +418,7 @@ namespace Projector
 
 		private void UpdateAllNoneCheckbox()
 		{
+			startVSTimer.Enabled = false;
 			bool anyFalse = false;
 			bool anyTrue = false;
 			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
@@ -473,6 +475,8 @@ namespace Projector
 		private Solution LoadSolution(File file, bool batchLoad=false)
         {
 			BeginLogSession();
+			startVSTimer.Enabled = false;
+
 			if (!file.Exists)
 			{
 				AbortLogSession("Error: Unable to read solution file '" + file + "'");
@@ -822,6 +826,7 @@ namespace Projector
 
 		void FlushProjects()
 		{
+			startVSTimer.Enabled = false;
 			foreach (Solution s in loadedSolutions)
 			{
 				s.Clear();
@@ -1065,21 +1070,21 @@ namespace Projector
 			EndLogSession();
 		}
 
+
+		int startVSTimerAt = 0;
 		private void openSelectedButton_Click(object sender, EventArgs e)
 		{
-			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
+			if (!startVSTimer.Enabled)
 			{
-				if (loadedSolutionsView.Items[i].Checked)
-				{
-					Solution solution = loadedSolutions[i - 1];
-					OpenGeneratedSolution(solution);
-				}
+				startVSTimerAt = 0;
+				startVSTimer.Interval = 1;	//start immediately
+				startVSTimer.Enabled = true;
 			}
-
 		}
 
 		private void unloadSelectedToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			startVSTimer.Enabled = false;
 			for (int i = 1; i < loadedSolutionsView.Items.Count; i++)
 			{
 				if (loadedSolutionsView.Items[i].Checked)
@@ -1229,6 +1234,24 @@ namespace Projector
 			DependencyTree.ParseDependencies();
 			DependencyTree.GenerateMakefiles();
 			EndLogSession();
+		}
+
+		private void startVSTimer_Tick(object sender, EventArgs e)
+		{
+			if (startVSTimerAt >= loadedSolutions.Count)
+			{
+				startVSTimer.Enabled = false;
+				return;
+			}
+			{
+				if (loadedSolutionsView.Items[startVSTimerAt+1].Checked)
+				{
+					Solution solution = loadedSolutions[startVSTimerAt];
+					OpenGeneratedSolution(solution);
+				}
+			}
+			startVSTimer.Interval = 1000;
+			startVSTimerAt++;
 		}
 	}
 }

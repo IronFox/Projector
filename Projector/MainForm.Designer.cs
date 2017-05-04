@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+			this.components = new System.ComponentModel.Container();
 			System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem("All <-> None");
 			System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ProjectView));
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
@@ -48,6 +49,8 @@
 			this.openGeneratedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
 			this.unloadSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
+			this.generateMakefileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.solutionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.buildToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.buildAtToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -85,8 +88,7 @@
 			this.panel2 = new System.Windows.Forms.Panel();
 			this.toolsetLabel = new System.Windows.Forms.Label();
 			this.toolSet = new System.Windows.Forms.ComboBox();
-			this.generateMakefileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
+			this.startVSTimer = new System.Windows.Forms.Timer(this.components);
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.solutionViewSplit)).BeginInit();
 			this.solutionViewSplit.Panel1.SuspendLayout();
@@ -242,6 +244,18 @@
 			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
 			this.unloadSelectedToolStripMenuItem.Text = "Unload Selected";
 			this.unloadSelectedToolStripMenuItem.Click += new System.EventHandler(this.unloadSelectedToolStripMenuItem_Click);
+			// 
+			// toolStripMenuItem7
+			// 
+			this.toolStripMenuItem7.Name = "toolStripMenuItem7";
+			this.toolStripMenuItem7.Size = new System.Drawing.Size(171, 6);
+			// 
+			// generateMakefileToolStripMenuItem
+			// 
+			this.generateMakefileToolStripMenuItem.Name = "generateMakefileToolStripMenuItem";
+			this.generateMakefileToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+			this.generateMakefileToolStripMenuItem.Text = "Generate Makefiles";
+			this.generateMakefileToolStripMenuItem.Click += new System.EventHandler(this.generateMakefileToolStripMenuItem_Click);
 			// 
 			// solutionToolStripMenuItem
 			// 
@@ -612,17 +626,10 @@
 			this.toolSet.ValueMember = "14.0 (VS 2015)";
 			this.toolSet.SelectedIndexChanged += new System.EventHandler(this.toolSet_SelectedIndexChanged_1);
 			// 
-			// generateMakefileToolStripMenuItem
+			// startVSTimer
 			// 
-			this.generateMakefileToolStripMenuItem.Name = "generateMakefileToolStripMenuItem";
-			this.generateMakefileToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
-			this.generateMakefileToolStripMenuItem.Text = "Generate Makefiles";
-			this.generateMakefileToolStripMenuItem.Click += new System.EventHandler(this.generateMakefileToolStripMenuItem_Click);
-			// 
-			// toolStripMenuItem7
-			// 
-			this.toolStripMenuItem7.Name = "toolStripMenuItem7";
-			this.toolStripMenuItem7.Size = new System.Drawing.Size(171, 6);
+			this.startVSTimer.Interval = 1000;
+			this.startVSTimer.Tick += new System.EventHandler(this.startVSTimer_Tick);
 			// 
 			// ProjectView
 			// 
@@ -722,6 +729,7 @@
 		private System.Windows.Forms.ToolStripMenuItem forceOverwriteProjectFilesToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem7;
 		private System.Windows.Forms.ToolStripMenuItem generateMakefileToolStripMenuItem;
+		private System.Windows.Forms.Timer startVSTimer;
 	}
 }
 
