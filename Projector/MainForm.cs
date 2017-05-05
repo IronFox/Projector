@@ -1250,7 +1250,7 @@ namespace Projector
 					OpenGeneratedSolution(solution);
 				}
 			}
-			startVSTimer.Interval = 1000;
+			startVSTimer.Interval = 5000;
 			startVSTimerAt++;
 		}
 	}
