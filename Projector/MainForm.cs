@@ -951,20 +951,20 @@ namespace Projector
 
 
 
-		private void OpenGeneratedSolution(Solution solution)
+		private bool OpenGeneratedSolution(Solution solution)
 		{
 			if (solution == null)
-				return;
+				return false;
 			File slnPath = PersistentState.GetOutPathFor(solution.Source);
 			if (slnPath.IsEmpty)
 			{
 				LogLine("Error: Out location unknown for '"+solution+"'. Chances are, this solution has not been generated.");
-				return;
+				return false;
 			}
 			if (!slnPath.Exists)
 			{
 				LogLine("Error: '"+slnPath.FullName+"' does not exist");
-				return;
+				return false;
 			}
 			if (solution.visualStudioProcess == null || solution.visualStudioProcess.HasExited)
 			{ 
@@ -983,12 +983,14 @@ namespace Projector
                     if (!myProcess.Start())
                         throw new Exception("Failed to start process");
                     solution.visualStudioProcess = myProcess;
+					return true;
                 }
                 catch (Exception e)
                 {
                     LogLine("Error: " + e);
                 }
 			}
+			return false;
 		}
 
         private void OverwriteExistingVSUserConfigToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1238,6 +1240,7 @@ namespace Projector
 
 		private void startVSTimer_Tick(object sender, EventArgs e)
 		{
+			bool longInterval = false;
 			if (startVSTimerAt >= loadedSolutions.Count)
 			{
 				startVSTimer.Enabled = false;
@@ -1247,10 +1250,11 @@ namespace Projector
 				if (loadedSolutionsView.Items[startVSTimerAt+1].Checked)
 				{
 					Solution solution = loadedSolutions[startVSTimerAt];
-					OpenGeneratedSolution(solution);
+					if (OpenGeneratedSolution(solution))
+						longInterval = true;
 				}
 			}
-			startVSTimer.Interval = 5000;
+			startVSTimer.Interval = longInterval ? 5000 : 1;
 			startVSTimerAt++;
 		}
 	}
