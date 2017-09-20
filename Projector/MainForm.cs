@@ -193,7 +193,9 @@ namespace Projector
 
 		private string TryGetVSPath(int majorVersion, int minorVersion)
 		{
-			string version = majorVersion + "." + minorVersion;
+			string version = majorVersion + ".";
+			if (minorVersion != -1)
+				version += minorVersion;
 			if (majorVersion >= 15)
 				return TryGetVSSetupPath(version);
 			string installationPath = null;
@@ -240,7 +242,7 @@ namespace Projector
 
 			RegisterToolSet(12, 0, "VS 2013", 12,0);
 			RegisterToolSet(14, 0, "VS 2015", 14,0);
-			RegisterToolSet(14, 1, "VS 2017", 15,0);
+			RegisterToolSet(14, 1, "VS 2017", 15,-1);
 
 			PersistentState.Restore();
 			if (PersistentState.Toolset != null)
@@ -249,8 +251,13 @@ namespace Projector
 
 				if (toolSet.SelectedIndex == -1)	//toolset no longer available
 				{
-					toolSet.SelectedIndex = 0;
-					PersistentState.Toolset = toolSet.SelectedItem.ToString();
+					if (toolSet.Items.Count > 0)
+					{
+						toolSet.SelectedIndex = 0;
+						PersistentState.Toolset = toolSet.SelectedItem.ToString();
+					}
+					else
+						LogLine("No Installation of Visual Studio found");
 				}
 			}
 			else

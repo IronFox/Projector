@@ -6,3 +6,4 @@ Projector/pathRegistry.txt
 Projector.exe.config
 *.pdb
 .projector/
+.vs/
