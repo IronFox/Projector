@@ -868,7 +868,7 @@ namespace Projector
 			using (StreamWriter writer = new StreamWriter(new MemoryStream()))
 			{
 				writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-				writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion + "\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
+				writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion.OutXMLText + "\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
 
 				writer.WriteLine("<ItemGroup>");
 				WriteFilterDeclaration(writer, "Files");
@@ -893,7 +893,7 @@ namespace Projector
 				using (StreamWriter writer = new StreamWriter(new MemoryStream()))
 				{
 					writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-					writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
+					writer.WriteLine("<Project ToolsVersion=\"" + toolSetVersion.OutXMLText + "\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
 
 					foreach (var config in configurations)
 					{
@@ -911,7 +911,7 @@ namespace Projector
             {
                 writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
 
-                writer.WriteLine("<Project DefaultTargets=\"Build\" ToolsVersion=\"" + toolSetVersion + ".0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
+                writer.WriteLine("<Project DefaultTargets=\"Build\" ToolsVersion=\"" + toolSetVersion.OutXMLText + "\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
                 writer.WriteLine("<ItemGroup Label=\"ProjectConfigurations\">");
                 foreach (Configuration config in configurations)
                 {
@@ -926,7 +926,7 @@ namespace Projector
                 writer.WriteLine("\t<Keyword>Win32Proj</Keyword>");
                 writer.WriteLine("\t<RootNamespace>client</RootNamespace>");
 				if (toolSetVersion.RequiresWindowsTargetPlatformVersion)
-					writer.WriteLine("\t<WindowsTargetPlatformVersion>"+osVersion+".0</WindowsTargetPlatformVersion>");
+					writer.WriteLine("\t<WindowsTargetPlatformVersion>"+osVersion+"</WindowsTargetPlatformVersion>");
                 writer.WriteLine("</PropertyGroup>");
                 writer.WriteLine("<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />");
                 foreach (Configuration config in configurations)

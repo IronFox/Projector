@@ -9,6 +9,14 @@ namespace Projector
 		public readonly string VSName,Path;
 		public readonly bool RequiresWindowsTargetPlatformVersion;
 
+		public string OutXMLText
+		{
+			get
+			{
+				return Major + "." + Minor;
+			}
+		}
+			
 
 		public ToolsetVersion(int major, int minor, string vsName, bool requiresWindowsTargetPlatformVersion, string path)
         {

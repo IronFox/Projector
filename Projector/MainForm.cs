@@ -877,6 +877,13 @@ namespace Projector
                     throw new Exception("Unable to find '" + match1 + "' in result '" + original + "'");
                 output = output.Substring(0, end);
 
+
+				string[] segs = output.Split('.');
+				if (segs.Length == 4)
+				{
+					segs[3] = "0";	//non-0 would not be a plattform target according to VS
+					output = string.Join(".", segs);
+				}
                 return output;
             }
             catch (Exception e)
