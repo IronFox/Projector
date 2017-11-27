@@ -884,6 +884,12 @@ namespace Projector
 					segs[3] = "0";	//non-0 would not be a plattform target according to VS
 					output = string.Join(".", segs);
 				}
+				else if (segs.Length < 4)
+				{
+					for (int i = segs.Length; i < 4; i++)
+						output += ".0";
+
+				}
                 return output;
             }
             catch (Exception e)
