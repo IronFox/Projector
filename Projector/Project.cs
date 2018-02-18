@@ -686,8 +686,23 @@ namespace Projector
 		public struct Command
 		{
 			public string		originalExecutable;
-			public File	locatedExecutable;
+			public File			locatedExecutable;
 			public string[]		parameters;
+
+			public string QuotedParameters
+			{
+				get
+				{
+					if (parameters == null || parameters.Length == 0)
+						return "";
+					return " \"" + string.Join("\" \"", parameters) + "\"";
+				}
+			}
+
+			public override string ToString()
+			{
+				return originalExecutable + " " + string.Join(" ", parameters);
+			}
 		}
 
 
@@ -1068,7 +1083,7 @@ namespace Projector
 								writer.WriteLine("</Command>");
 							}
 							else
-								writer.WriteLine("    <Command>../../" + cmd + "</Command>");
+								writer.WriteLine("    <Command>\"" + Path.Combine(new string[] { "..", "..", cmd.originalExecutable })+ "\""+cmd.QuotedParameters+ "</Command>");
                         }
                         writer.WriteLine("  </PreBuildEvent>");
                     }
