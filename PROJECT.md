@@ -126,7 +126,7 @@ May include **conditions**.
 ### ```<link>```
 Declares a .lib file (including extension) to link into the local project.
 The final file is determined relative to ```[install folder]\[link directory]```
-You can specify any number of links, each declaration an additional .lib file to link to the local project.
+You can specify any number of links, each declaring an additional .lib file to link to the local project.
 May include **conditions**.
 
 ### Conditions
