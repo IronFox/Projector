@@ -1,10 +1,10 @@
 # Projector .solution files
 
-.solution files declare a Visual Studio solution, which should include one or more projects.
+.solution files declare each one Visual Studio solution, which should include one or more projects.
 The file name doubles as the solution name.
-Solution names should be unique across all of your code repositories.
+Solution/file names should be unique across all of your code repositories.
 
-Projector can directly open .solution files, and include all referenced .project files.
+Projector open .solution files directly, implicitly including all referenced .project files.
 
 ## General syntax
 
