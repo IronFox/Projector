@@ -34,10 +34,10 @@ This simple example recursively searches for all files (starting at ```[path]```
 * ```.rc .rc2``` (Resource files)
 * ```.hlsl .hlsli``` (HLSL shader files, excluded from compilation)
 
-Each source section receives its own Filter in the final Visual Studio project file.
+Each source section receives its own filter (project sub-directory) in the final Visual Studio project file.
 
 ### Header Inclusion
-When adding ```include="true"``` to ```project``` sections declares that the respective headers should be includeable using ```#include <...>```.
+Adding ```include="true"``` to ```project``` sections may be used to declare that the respective headers should be accessible using ```#include <...>```.
 ```xml
 <project type="[type]">
 	<source path="[path]" include="true" />
@@ -108,22 +108,22 @@ Precompiled libraries may be included by adding one or more ```includeLibrary```
 	</includeLibrary>
 </project>
 ```
-### <rootRegistryHint>
+### ```<rootRegistryHint>```
 Specifies a registry path to look up the library installation folder. The last backslash separates the value name: ```folder[\folder[\folder[...]]]```\\```valueName```.
 You can specify any number of registry hints.
 The first successful lookup will determine the library installation path to match against.
 
-### <include>
+### ```<include>```
 Declares a sub-directory (relative to the found installation folder) to include header files from.
 You can specify any number of include paths, all of which are added to the _Include Directories_ of the local Visual Studio project.
 May include **conditions**.
 
-### <linkDirectory>
+### ```<linkDirectory>```
 Declares a sub-directory (relative to the found installation folder) to link .lib files from.
 You can specify any number of link directories, all of which are added to the _Library Directories_ of the local Visual Studio project.
 May include **conditions**.
 
-### <link>
+### ```<link>```
 Declares a .lib file (including extension) to link into the local project.
 The final file is determined relative to ```[install folder]\[link directory]```
 You can specify any number of links, each declaration an additional .lib file to link to the local project.
