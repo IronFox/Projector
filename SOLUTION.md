@@ -4,6 +4,8 @@
 The file name doubles as the solution name.
 Solution names should be unique across all of your code repositories.
 
+Projector can directly open .solution files, and include all referenced .project files.
+
 ## General syntax
 
 A minimal .solution file is declared as following:

@@ -1,7 +1,10 @@
 # Projector .project files
 
-.project files declare an individual project using XML syntax. The *.project file name doubles as the project name.
+.project files declare an individual project using XML syntax. 
+The file name doubles as the project name.
 Since Projector maintains a mapping of names to .project paths, you should use unique project file names across all of your code repositories.
+
+Projector cannot load .project files directly, but requires them to be referenced by a .solution file.
 
 ## General syntax
 
