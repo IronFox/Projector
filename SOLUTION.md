@@ -4,7 +4,7 @@
 The file name doubles as the solution name.
 Solution/file names should be unique across all of your code repositories.
 
-Projector open .solution files directly, implicitly including all referenced .project files.
+Projector opens .solution files directly, implicitly including all referenced .project files.
 
 ## General syntax
 
