@@ -113,22 +113,21 @@ Precompiled libraries may be included by adding one or more ```includeLibrary```
 ```
 ### ```<rootRegistryHint>```
 Specifies a registry path to look up the library installation folder. The last backslash separates the value name: ```folder[\folder[\folder[...]]]```\\```valueName```.
-You can specify any number of registry hints.
+You can specify any number of registry hints (including none at all).
 The first successful lookup will determine the library installation path to match against.
 
 ### ```<include>```
 Declares a sub-directory (relative to the found installation folder) to include header files from.
-You can specify any number of include paths, all of which are added to the _Include Directories_ of the local Visual Studio project.
+You can specify any number of include paths (including none at all), all of which are added to the _Include Directories_ of the local Visual Studio project.
 May include **conditions**.
 
 ### ```<linkDirectory>```
 Declares a sub-directory (relative to the found installation folder) to link .lib files from.
-You can specify any number of link directories, all of which are added to the _Library Directories_ of the local Visual Studio project.
+You can specify any number of link directories (including none at all), all of which are added to the _Library Directories_ of the local Visual Studio project.
 May include **conditions**.
 
 ### ```<link>```
 Declares a .lib file (including extension) to link into the local project.
-The final file is determined relative to ```[install folder]\[link directory]```
 You can specify any number of links, each declaring an additional .lib file to link to the local project.
 May include **conditions**.
 
@@ -155,7 +154,7 @@ If any evaluates to false, the entire section is ignored for the given constella
     * ```OptimizedDebug```: Release configuration with debug symbols
     * ```Release```: Release configuration (without debug symbols)
 
-### Example: OpenAL 1.1, v3.03 and v3.05
+### Example 1: OpenAL 1.1, v3.03 and v3.05
 ```xml
 <project type="[type]">
 	<includeLibrary name="OpenAL 1.1 SDK">
@@ -169,8 +168,14 @@ If any evaluates to false, the entire section is ignored for the given constella
 </project>
 ```
 
-
-
+### Example 2: Rpcrt4 (Windows Library, no library paths needed)
+```xml
+<project type="[type]">
+	<includeLibrary name="Rpcrt4">
+		<link>Rpcrt4.lib</link>
+	</includeLibrary>
+</project>
+```
 
 
 
