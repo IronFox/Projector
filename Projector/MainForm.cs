@@ -1083,13 +1083,18 @@ namespace Projector
 			}
 		}
 
-		private void GenerateSelectedButton_Click(object sender, EventArgs e)
+		public void RebuildSelected()
 		{
 			FlushProjects();
 			BeginLogSession();
 			foreach (var s in GetSelectedSolutions())
 				Generate(s);
 			EndLogSession();
+		}
+
+		private void GenerateSelectedButton_Click(object sender, EventArgs e)
+		{
+			RebuildSelected();
 		}
 
 
@@ -1280,8 +1285,7 @@ namespace Projector
 
 		private void buildSelectedToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			GenerateSelectedButton_Click(sender, e);	//rebuild selected
-			new BuildSolutions().Begin(GetSelectedSolutions(), GetToolsetVersion());
+			new BuildSolutions().Begin(GetSelectedSolutions(), GetToolsetVersion(), RebuildSelected);
 		}
 	}
 }

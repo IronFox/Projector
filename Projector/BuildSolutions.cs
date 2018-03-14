@@ -45,27 +45,14 @@ namespace Projector
 		}
 
 
-		public enum BuildMode
-		{
-			ForceRebuildAll,
-			ForceRebuildFinalProjects,
-			NoForceRebuilds
-		}
 
 
-		public class BuildJob : IComparable<BuildJob>
+		public struct JobID : IComparable<JobID>
 		{
 			public readonly Platform Platform;
 			public readonly Project Project;
 
-			public readonly List<BuildJob> References = new List<BuildJob>();
-			public readonly List<BuildJob> ReferencedBy = new List<BuildJob>();
-
-			public bool IsCompiled { get; set; } = false;
-
-			private ConsoleProcess process;
-
-			public BuildJob(Platform platform, Project p)
+			public JobID(Platform platform, Project p)
 			{
 				Platform = platform;
 				Project = p;
@@ -73,10 +60,22 @@ namespace Projector
 
 			public override bool Equals(object obj)
 			{
-				if (!(obj is BuildJob))
+				if (!(obj is JobID))
 					return false;
-				var other = (BuildJob)obj;
-				return Platform == other.Platform && Project == other.Project;
+				var other = (JobID)obj;
+				return this == other;
+			}
+
+			public static bool operator ==(JobID a, JobID b)
+			{
+				return a.Platform == b.Platform 
+					&& a.Project == b.Project
+					;
+			}
+
+			public static bool operator !=(JobID a, JobID b)
+			{
+				return !(a == b);
 			}
 
 			public override int GetHashCode()
@@ -87,15 +86,56 @@ namespace Projector
 				return hashCode;
 			}
 
-
-			public void BeginMsBuild(string config, BuildMode mode, Action<string> logFunction)
+			public int CompareTo(JobID other)
 			{
-				bool rebuild = mode == BuildMode.ForceRebuildAll || (ReferencedBy.Count == 0 && mode == BuildMode.ForceRebuildFinalProjects);
+				return ToString().CompareTo(other.ToString());
+			}
+			public override string ToString()
+			{
+				return Platform != Platform.None ? Project.Name + " " + Platform : Project.Name;
+			}
+
+		}
+
+
+		public class BuildJob : IComparable<BuildJob>
+		{
+			public readonly JobID ID;
+			public readonly List<BuildJob> References = new List<BuildJob>();
+			public readonly List<BuildJob> ReferencedBy = new List<BuildJob>();
+
+			public bool IsCompiled { get; set; } = false;
+			public bool IsSelected { get; set; } = false;
+
+			private ConsoleProcess process;
+
+			public BuildJob(JobID id)
+			{
+				ID = id;
+			}
+
+			public override bool Equals(object obj)
+			{
+				if (!(obj is BuildJob))
+					return false;
+				var other = (BuildJob)obj;
+				return ID == other.ID;
+			}
+
+			public override int GetHashCode()
+			{
+				return ID.GetHashCode();
+			}
+
+
+			public void BeginMsBuild(string config, bool forceRebuildSelected, Action<string> logFunction)
+			{
+				bool rebuild = forceRebuildSelected && IsSelected;
 				logFunction( (rebuild ? "Rebuilding " : "Building ") + this + "...");
 
-				string parameters = "\"" + Project.OutFile + "\" /p:BuildProjectReferences=false /p:configuration=" + config;
-				if (Platform != Platform.None)
-					parameters += " /p:platform=" + Configuration.TranslateForVisualStudio(Platform);
+				string parameters = "\"" + ID.Project.OutFile + "\" /p:BuildProjectReferences=false /p:configuration=" + config;
+				if (ID.Platform != Platform.None)
+					parameters += " /p:platform=" + Configuration.TranslateForVisualStudio(ID.Platform);
 				if (rebuild)
 					parameters += " /t:Rebuild";
 				Begin(parameters);
@@ -108,7 +148,7 @@ namespace Projector
 
 			public override string ToString()
 			{
-				return Platform != Platform.None ? Project.Name + " " + Platform : Project.Name;
+				return ID.ToString();
 			}
 
 			public bool IsRunning
@@ -147,25 +187,26 @@ namespace Projector
 
 			public int CompareTo(BuildJob other)
 			{
-				return ToString().CompareTo(other.ToString());
+				return ID.CompareTo(other.ID);
 			}
 		}
 
 
 
-		List<BuildJob> projects = new List<BuildJob>();
+		List<JobID> projects = new List<JobID>();
 
-		public void Begin(IEnumerable<Solution> loadedSolutions, ToolsetVersion toolset)
+		Action rebuildProjects;
+
+		public void Begin(IEnumerable<Solution> loadedSolutions, ToolsetVersion toolset, Action rebuildProjects)
 		{
 			this.toolset = toolset;
-
+			this.rebuildProjects = rebuildProjects;
 
 			string[] segments = toolset.Path.Split(Path.DirectorySeparatorChar);
 			if (FindBuildPath(Path.Combine(segments.Take(segments.Length - 2).ToArray())))
 				LogEvent("Found MSBuild in " + msBuildPath);
 
 
-			buildMode.SelectedIndex = 0;
 
 			var rows = buildSelection.Items;
 			
@@ -174,16 +215,16 @@ namespace Projector
 			{
 				foreach (var p in s.Projects)
 				{
-					if (p.ReferencedBy.Count > 0)
-						continue;
+					//if (p.ReferencedBy.Count > 0)
+						//continue;
 					if (!added.Add(p))
 						continue;
 
 					if (IsPlatformAgnostic(p))
-						projects.Add(new BuildJob(Platform.None, p));
+						projects.Add(new JobID(Platform.None, p));
 					else
 						foreach (Platform platform in Solution.GetTargetPlatforms())
-							projects.Add(new BuildJob(platform, p));
+							projects.Add(new JobID(platform, p));
 				}
 			}
 
@@ -194,8 +235,8 @@ namespace Projector
 			{
 				var row = rows.Add(p.Project.Name);
 				if (p.Platform != Platform.None)
-					row.SubItems.Add(p.Platform.ToString());
-				row.Checked = true;
+					row.SubItems.Add(Configuration.TranslateForVisualStudio( p.Platform ));
+				row.Checked = p.Project.ReferencedBy.Count == 0;
 			}
 
 			selectionLocked = false;
@@ -270,8 +311,9 @@ namespace Projector
 			}
 			else
 			{
-				eventLog.Items.Add(input);
-				eventLog.TopIndex = eventLog.Items.Count - 1;
+				if (eventLog.Text.Length > 0)
+					eventLog.Text += "\r\n";
+				eventLog.AppendText(input);
 			}
 		}
 
@@ -289,36 +331,37 @@ namespace Projector
 
 
 
-		private BuildJob ScanDependencyGraph(Dictionary<BuildJob, BuildJob> outList, BuildJob build)
+		private BuildJob ScanDependencyGraph(Dictionary<JobID, BuildJob> outList, JobID build)
 		{
 			BuildJob existing;
 			if (outList.TryGetValue(build,out existing))
 				return existing;
-			outList.Add(build, build);
+			var job = new BuildJob(build);
+			outList.Add(build, job);
 
 			foreach (var p in build.Project.References)
 			{
 				var platform = IsPlatformAgnostic(p.Project) ? Platform.None : build.Platform;
-				var dep = ScanDependencyGraph(outList, new BuildJob(platform, p.Project));
-				build.References.Add( dep );
-				dep.ReferencedBy.Add(build);
+				var dep = ScanDependencyGraph(outList, new JobID(platform, p.Project));
+				job.References.Add(dep);
+				dep.ReferencedBy.Add(job);
 			}
-			return build;
+			return job;
 		}
 
-		private void GetSelectedBuildTargets(Dictionary<BuildJob, BuildJob> outList)
+		private void GetSelectedBuildTargets(Dictionary<JobID, BuildJob> outList)
 		{
 			for (int i = 1; i < buildSelection.Items.Count; i++)
 			{
 				if (buildSelection.Items[i].Checked)
 				{
-					ScanDependencyGraph(outList, projects[i - 1]);
+					ScanDependencyGraph(outList, projects[i - 1]).IsSelected = true;
 				}
 			}
 		}
 		public ICollection<BuildJob> GetSelectedBuildTargets()
 		{
-			var outList = new Dictionary<BuildJob, BuildJob>();
+			var outList = new Dictionary<JobID, BuildJob>();
 			GetSelectedBuildTargets(outList);
 			return outList.Values;
 		}
@@ -352,13 +395,15 @@ namespace Projector
 				LogEvent("Aborted all jobs");
 
 				buildButton.Text = "Build";
-				buildMode.Enabled = true;
+				forceRebuildSelected.Enabled = true;
 				buildConfigurations.Enabled = true;
 
 				return;
 			}
 
-			eventLog.Items.Clear();
+			rebuildProjects();
+
+			eventLog.Text = "";
 
 			var workSet = GetSelectedBuildTargets();
 			string config = buildConfigurations.SelectedItem.ToString();
@@ -375,14 +420,14 @@ namespace Projector
 				if (p.References.Count == 0)
 				{
 					activeJobs.Add(p);
-					p.BeginMsBuild(config, (BuildMode)buildMode.SelectedIndex, LogEvent);
+					p.BeginMsBuild(config, forceRebuildSelected.Checked, LogEvent);
 				}
 			}
 			if (activeJobs.Count > 0)
 			{
 				buildButton.Text = "Abort Build";
 				buildConfigurations.Enabled = false;
-				buildMode.Enabled = false;
+				forceRebuildSelected.Enabled = false;
 			}
 		}
 
@@ -414,16 +459,17 @@ namespace Projector
 							if (canBuild)
 							{
 								activeJobs.Add(c);
-								c.BeginMsBuild(buildConfigurations.SelectedItem.ToString(), (BuildMode)buildMode.SelectedIndex, LogEvent);
+								c.BeginMsBuild(buildConfigurations.SelectedItem.ToString(), forceRebuildSelected.Checked, LogEvent);
 							}
 						}
 					}
 
 					if (activeJobs.Count == 0)
 					{
+						LogEvent("All done");
 						buildButton.Text = "Build";
 						buildConfigurations.Enabled = true;
-						buildMode.Enabled = true;
+						forceRebuildSelected.Enabled = true;
 					}
 				}
 			}
