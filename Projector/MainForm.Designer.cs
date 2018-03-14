@@ -89,6 +89,7 @@
 			this.toolsetLabel = new System.Windows.Forms.Label();
 			this.toolSet = new System.Windows.Forms.ComboBox();
 			this.startVSTimer = new System.Windows.Forms.Timer(this.components);
+			this.buildSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.solutionViewSplit)).BeginInit();
 			this.solutionViewSplit.Panel1.SuspendLayout();
@@ -214,7 +215,8 @@
             this.toolStripMenuItem6,
             this.unloadSelectedToolStripMenuItem,
             this.toolStripMenuItem7,
-            this.generateMakefileToolStripMenuItem});
+            this.generateMakefileToolStripMenuItem,
+            this.buildSelectedToolStripMenuItem});
 			this.loadedSolutionsToolStripMenuItem.Name = "loadedSolutionsToolStripMenuItem";
 			this.loadedSolutionsToolStripMenuItem.Size = new System.Drawing.Size(110, 20);
 			this.loadedSolutionsToolStripMenuItem.Text = "Loaded Solutions";
@@ -222,38 +224,38 @@
 			// generateSelectedToolStripMenuItem
 			// 
 			this.generateSelectedToolStripMenuItem.Name = "generateSelectedToolStripMenuItem";
-			this.generateSelectedToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+			this.generateSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
 			this.generateSelectedToolStripMenuItem.Text = "Generate Selected";
 			this.generateSelectedToolStripMenuItem.Click += new System.EventHandler(this.GenerateSelectedButton_Click);
 			// 
 			// openGeneratedToolStripMenuItem
 			// 
 			this.openGeneratedToolStripMenuItem.Name = "openGeneratedToolStripMenuItem";
-			this.openGeneratedToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+			this.openGeneratedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
 			this.openGeneratedToolStripMenuItem.Text = "Open Generated";
 			this.openGeneratedToolStripMenuItem.Click += new System.EventHandler(this.openSelectedButton_Click);
 			// 
 			// toolStripMenuItem6
 			// 
 			this.toolStripMenuItem6.Name = "toolStripMenuItem6";
-			this.toolStripMenuItem6.Size = new System.Drawing.Size(171, 6);
+			this.toolStripMenuItem6.Size = new System.Drawing.Size(210, 6);
 			// 
 			// unloadSelectedToolStripMenuItem
 			// 
 			this.unloadSelectedToolStripMenuItem.Name = "unloadSelectedToolStripMenuItem";
-			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
 			this.unloadSelectedToolStripMenuItem.Text = "Unload Selected";
 			this.unloadSelectedToolStripMenuItem.Click += new System.EventHandler(this.unloadSelectedToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem7
 			// 
 			this.toolStripMenuItem7.Name = "toolStripMenuItem7";
-			this.toolStripMenuItem7.Size = new System.Drawing.Size(171, 6);
+			this.toolStripMenuItem7.Size = new System.Drawing.Size(210, 6);
 			// 
 			// generateMakefileToolStripMenuItem
 			// 
 			this.generateMakefileToolStripMenuItem.Name = "generateMakefileToolStripMenuItem";
-			this.generateMakefileToolStripMenuItem.Size = new System.Drawing.Size(174, 22);
+			this.generateMakefileToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
 			this.generateMakefileToolStripMenuItem.Text = "Generate Makefiles";
 			this.generateMakefileToolStripMenuItem.Click += new System.EventHandler(this.generateMakefileToolStripMenuItem_Click);
 			// 
@@ -631,6 +633,13 @@
 			this.startVSTimer.Interval = 1000;
 			this.startVSTimer.Tick += new System.EventHandler(this.startVSTimer_Tick);
 			// 
+			// buildSelectedToolStripMenuItem
+			// 
+			this.buildSelectedToolStripMenuItem.Name = "buildSelectedToolStripMenuItem";
+			this.buildSelectedToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+			this.buildSelectedToolStripMenuItem.Text = "Clean and Build Selected...";
+			this.buildSelectedToolStripMenuItem.Click += new System.EventHandler(this.buildSelectedToolStripMenuItem_Click);
+			// 
 			// ProjectView
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -730,6 +739,7 @@
 		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem7;
 		private System.Windows.Forms.ToolStripMenuItem generateMakefileToolStripMenuItem;
 		private System.Windows.Forms.Timer startVSTimer;
+		private System.Windows.Forms.ToolStripMenuItem buildSelectedToolStripMenuItem;
 	}
 }
 

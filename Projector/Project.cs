@@ -19,7 +19,7 @@ namespace Projector
 	public enum Platform
 	{
 		None,
-		x32,
+		x86,
 		x64,
 		ARM
 	}
@@ -57,7 +57,7 @@ namespace Projector
 
 		public static string TranslateForVisualStudio(Platform p)
 		{
-			return p == Platform.x32 ? "Win32" : p.ToString();
+			return p == Platform.x86 ? "Win32" : p.ToString();
 		}
 
 		public static bool DefaultIncludePlatformInReleaseName(Platform p)
@@ -104,8 +104,13 @@ namespace Projector
 			}
 			catch
 			{
-				warnWhom.Warn(domain,"Unable to decode condition platform '"+ifPlatform.Value+"'. Supported values are ARM, x32, and x64");
-				IfPlatform = Platform.None;
+				if (ifPlatform.Value == "x32")
+					IfPlatform = Platform.x86;
+				else
+				{
+					warnWhom.Warn(domain, "Unable to decode condition platform '" + ifPlatform.Value + "'. Supported values are ARM, x32, and x64");
+					IfPlatform = Platform.None;
+				}
 			}
 			XmlNode ifConfig = node.Attributes.GetNamedItem("if_config");
 			if (ifConfig != null && ifConfig.Value.Length > 0)
@@ -717,11 +722,12 @@ namespace Projector
 		/// <summary>
 		/// Retrieves all locally referenced projects. May be empty, but never null
 		/// </summary>
-        public IEnumerable<Reference> References { get { return references; } }
+        public ICollection<Reference> References { get { return references; } }
+		public ICollection<Project> ReferencedBy { get { return referencedBy; } }
 		/// <summary>
 		/// Retrieves all local source directories. May be empty, but never null
 		/// </summary>
-        public IEnumerable<Source> Sources { get { return sources; } }
+        public ICollection<Source> Sources { get { return sources; } }
 		/// <summary>
 		/// Retrieves all included directories from any source (own sources, referenced projects, explicit inclusions). May be empty, but never null.
 		/// Explicit inclusions are listed first, followed by local sources flagged as 'include', and finally referenced projects flagged as 'include'.
@@ -788,9 +794,10 @@ namespace Projector
 		/// </summary>
 		public File SourcePath { get; private set; }
 		/// <summary>
-		/// Checks whether or not the local project has a source path. Usually this is only false, if the local project has not yet been loaded
+		/// Checks whether or not the local project has a source path. Usually this is only false if the local project has not yet been loaded
 		/// </summary>
-		public bool HasSource { get { return SourcePath.Exists; } }
+		public bool HasSourceProject { get { return SourcePath.Exists; } }
+
 
 
         //private XmlNode xproject;
@@ -803,6 +810,7 @@ namespace Projector
         List<Reference> references = new List<Reference>();
 		List<DirectoryInfo> explicitIncludePaths = new List<DirectoryInfo>();
 		Dictionary<Platform,string>customTargetNames = new Dictionary<Platform,string>();
+		HashSet<Project> referencedBy = new HashSet<Project>();
 		int customStackSize = -1;
         int roundTrip = 0;
 
@@ -817,13 +825,13 @@ namespace Projector
 		/// <returns></returns>
         public bool AutoConfigureSourcePath(File relativeToSolutionFile)
         {
-            if (HasSource)
+            if (HasSourceProject)
                 return true;
             SourcePath = GetRelative(relativeToSolutionFile.Directory, Name + ".project");
             if (SourcePath.Exists)
                 return true;
             SourcePath = PathRegistry.LocateProject(Name);
-            return HasSource;
+            return HasSourceProject;
         }
 
 
@@ -857,14 +865,14 @@ namespace Projector
 
 
 
-        /// <summary>
-        /// Constructs the local project
-        /// </summary>
-        /// <param name="toolSetVersion">Active toolset version to use</param>
-        /// <param name="osVersion">String containing the target OS version</param>
-        /// <param name="configurations"></param>
-        /// <returns></returns>
-        public Tuple<File, Guid, bool> SaveAs(ToolsetVersion toolSetVersion, string osVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
+		/// <summary>
+		/// Constructs the local project
+		/// </summary>
+		/// <param name="toolSetVersion">Active toolset version to use</param>
+		/// <param name="osVersion">String containing the target OS version</param>
+		/// <param name="configurations"></param>
+		/// <returns></returns>
+		public Tuple<File, Guid, bool> SaveAs(ToolsetVersion toolSetVersion, string osVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
         {
 			File file = OutFile;
             if (!file.Directory.Exists)
@@ -1191,6 +1199,7 @@ namespace Projector
 					continue;
 
 				}
+				p.AddReferencedBy(this);
                 if (!p.loaded)
                 {
                     allThere = false;
@@ -1489,9 +1498,15 @@ namespace Projector
 									xinclude != null ? xinclude.Value == "true" : true
 									);
             references.Add(re);
+			re.Project.AddReferencedBy(this);
         }
 
-        private void AddSource(XmlNode xsource, Solution domain)
+		private void AddReferencedBy(Project project)
+		{
+			referencedBy.Add(project);
+		}
+
+		private void AddSource(XmlNode xsource, Solution domain)
         {
             
             XmlNode xPath = xsource.Attributes.GetNamedItem("path");

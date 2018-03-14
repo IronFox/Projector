@@ -11,7 +11,7 @@ namespace Projector
 {
 	public class Solution
 	{
-		struct Config
+		public struct Config
 		{
 			public readonly string Name;
 			public readonly bool IsRelease,
@@ -21,6 +21,11 @@ namespace Projector
 				Name = name;
 				IsRelease = isRelease;
 				Deploy = deploy;
+			}
+
+			public override string ToString()
+			{
+				return Name;
 			}
 		}
 
@@ -208,7 +213,7 @@ namespace Projector
 			Project p;
 			while ((p = GetNextToLoad()) != null)
 			{
-				if (!p.HasSource && !p.AutoConfigureSourcePath(Source))
+				if (!p.HasSourceProject && !p.AutoConfigureSourcePath(Source))
 					continue;
 
 				string filename = p.SourcePath.FullName;
@@ -236,6 +241,29 @@ namespace Projector
 			return true;
 		}
 
+		public static IEnumerable<Config> GetPureBuildConfigurations()
+		{
+			yield return new Config("Debug", false, false);
+			yield return new Config("OptimizedDebug", true, false);
+			yield return new Config("Release", true, true);
+
+		}
+
+		public static IEnumerable<Platform> GetTargetPlatforms()
+		{
+			yield return Platform.x86;
+			yield return Platform.x64;
+		}
+
+		public static IEnumerable<Configuration> GetAllBuildConfigurations()
+		{
+			//List<Configuration> configurations = new List<Configuration>();
+
+			foreach (var p in GetTargetPlatforms())
+				foreach (var n in GetPureBuildConfigurations())
+					yield return new Configuration(n.Name, p, n.IsRelease, n.Deploy);
+		}
+
 
 		public bool Build(File outPath, ToolsetVersion toolset, string osVersion, bool overwriteExistingVSUserConfig)
 		{
@@ -247,25 +275,8 @@ namespace Projector
             //DirectoryInfo projectDir = Directory.CreateDirectory(Path.Combine(dir.FullName, ".projects"));
             List<Tuple<File, Guid, Project>> projects = new List<Tuple<File, Guid, Project>>();
 
-            List<Configuration> configurations = new List<Configuration>();
+			var configurations = GetAllBuildConfigurations();
 
-			{
-				Platform[] platforms = new Platform[]{
-					Platform.x32,
-					Platform.x64
-				};
-				Config[] names = new Config[]
-				{
-					new Config("Debug", false,false),
-                    new Config("OptimizedDebug", true,false),
-					new Config("Release", true,true)
-				};
-
-
-				foreach (var p in platforms)
-					foreach (var n in names)
-						configurations.Add(new Configuration(n.Name,p,n.IsRelease,n.Deploy));
-			}
 			//{
 			//	new Configuration() {Name = "Debug", Platform = "Win32", IsRelease = false },
 			//	new Configuration() {Name = "Debug", Platform = "x64", IsRelease = false },

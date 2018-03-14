@@ -1277,5 +1277,11 @@ namespace Projector
 			startVSTimer.Interval = longInterval ? 5000 : 1;
 			startVSTimerAt++;
 		}
+
+		private void buildSelectedToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			GenerateSelectedButton_Click(sender, e);	//rebuild selected
+			new BuildSolutions().Begin(GetSelectedSolutions(), GetToolsetVersion());
+		}
 	}
 }

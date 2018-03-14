@@ -81,6 +81,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Management" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -97,6 +98,13 @@
     </Compile>
     <Compile Include="About.Designer.cs">
       <DependentUpon>About.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ConsoleProcess.cs" />
+    <Compile Include="BuildSolutions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="BuildSolutions.Designer.cs">
+      <DependentUpon>BuildSolutions.cs</DependentUpon>
     </Compile>
     <Compile Include="DependencyNode.cs" />
     <Compile Include="DependencyTree.cs" />
@@ -117,6 +125,9 @@
     <Compile Include="ToolsetVersion.cs" />
     <EmbeddedResource Include="About.resx">
       <DependentUpon>About.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="BuildSolutions.resx">
+      <DependentUpon>BuildSolutions.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
