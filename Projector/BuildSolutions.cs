@@ -202,13 +202,15 @@ namespace Projector
 			this.toolset = toolset;
 			this.rebuildProjects = rebuildProjects;
 
-			string[] segments = toolset.Path.Split(Path.DirectorySeparatorChar);
-			if (FindBuildPath(Path.Combine(segments.Take(segments.Length - 2).ToArray())))
-				LogEvent("Found MSBuild in " + msBuildPath);
+			if (msBuildPath == "" && toolset.Path != null)
+			{
+				string[] segments = toolset.Path.Split(Path.DirectorySeparatorChar);
+				if (FindBuildPath(Path.Combine(segments.Take(segments.Length - 2).ToArray())))
+					LogEvent("Found MSBuild in " + msBuildPath);
+			}
 
 
 
-			var rows = buildSelection.Items;
 			
 			HashSet<Project> added = new HashSet<Project>();
 			foreach (var s in loadedSolutions)
@@ -230,17 +232,7 @@ namespace Projector
 
 			projects.Sort();
 
-			selectionLocked = true;
-			foreach (var p in projects)
-			{
-				var row = rows.Add(p.Project.Name);
-				if (p.Platform != Platform.None)
-					row.SubItems.Add(Configuration.TranslateForVisualStudio( p.Platform ));
-				row.Checked = p.Project.ReferencedBy.Count == 0;
-			}
-
-			selectionLocked = false;
-			UpdateAllNoneCheckbox();
+	
 
 			buildConfigurations.Items.Clear();
 			foreach (var cfg in Solution.GetPureBuildConfigurations())
@@ -255,9 +247,49 @@ namespace Projector
 
 		private void BuildSolutions_Shown(object sender, EventArgs e)
 		{
-			
+
+			var rows = buildSelection.Items;
+			selectionLocked = true;
+			foreach (var p in projects)
+			{
+				var row = rows.Add(p.Project.Name);
+				if (p.Platform != Platform.None)
+					row.SubItems.Add(Configuration.TranslateForVisualStudio(p.Platform));
+				else
+					row.SubItems.Add("");
+				row.Checked = p.Project.ReferencedBy.Count == 0;
+				row.SubItems.Add("");
+			}
+
+			selectionLocked = false;
+			UpdateAllNoneCheckbox();
+			UpdateActions();
+
 		}
 
+
+		private void UpdateActions()
+		{
+			Dictionary<JobID, int> map = new Dictionary<JobID, int>();
+			int at = 1;
+			foreach (var p in projects)
+			{
+				buildSelection.Items[at].SubItems[2].Text = "";
+				map.Add(p, at++);
+			}
+
+			var targets = GetSelectedBuildTargets();
+
+			foreach (var t in targets)
+			{
+				string text = "";
+				if (t.IsSelected && forceRebuildSelected.Checked)
+					text = "Rebuild";
+				else
+					text = "Build";
+				buildSelection.Items[map[t.ID]].SubItems[2].Text = text;
+			}
+		}
 
 		private void UpdateAllNoneCheckbox()
 		{
@@ -294,6 +326,8 @@ namespace Projector
 			}
 			else
 				UpdateAllNoneCheckbox();
+
+			UpdateActions();
 		}
 
 
@@ -483,6 +517,11 @@ namespace Projector
 			}
 			else
 				toolStripStatusLabel.Text = "";
+		}
+
+		private void forceRebuildSelected_CheckedChanged(object sender, EventArgs e)
+		{
+			UpdateActions();
 		}
 	}
 }

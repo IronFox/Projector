@@ -35,6 +35,7 @@
 			this.toolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
 			this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
 			this.buildControl = new System.Windows.Forms.Panel();
+			this.eventLog = new System.Windows.Forms.TextBox();
 			this.forceRebuildSelected = new System.Windows.Forms.CheckBox();
 			this.buildButton = new System.Windows.Forms.Button();
 			this.buildConfigurations = new System.Windows.Forms.ComboBox();
@@ -44,7 +45,7 @@
 			this.buildSelection = new System.Windows.Forms.ListView();
 			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.eventLog = new System.Windows.Forms.TextBox();
+			this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.statusStrip1.SuspendLayout();
 			this.buildControl.SuspendLayout();
 			this.groupBox1.SuspendLayout();
@@ -83,6 +84,18 @@
 			this.buildControl.Size = new System.Drawing.Size(584, 289);
 			this.buildControl.TabIndex = 2;
 			// 
+			// eventLog
+			// 
+			this.eventLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+			this.eventLog.Location = new System.Drawing.Point(3, 33);
+			this.eventLog.Multiline = true;
+			this.eventLog.Name = "eventLog";
+			this.eventLog.ReadOnly = true;
+			this.eventLog.Size = new System.Drawing.Size(578, 253);
+			this.eventLog.TabIndex = 4;
+			// 
 			// forceRebuildSelected
 			// 
 			this.forceRebuildSelected.AutoSize = true;
@@ -94,6 +107,7 @@
 			this.forceRebuildSelected.TabIndex = 3;
 			this.forceRebuildSelected.Text = "Force-Rebuild Selected";
 			this.forceRebuildSelected.UseVisualStyleBackColor = true;
+			this.forceRebuildSelected.CheckedChanged += new System.EventHandler(this.forceRebuildSelected_CheckedChanged);
 			// 
 			// buildButton
 			// 
@@ -149,7 +163,8 @@
 			this.buildSelection.CheckBoxes = true;
 			this.buildSelection.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnHeader1,
-            this.columnHeader2});
+            this.columnHeader2,
+            this.columnHeader3});
 			this.buildSelection.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.buildSelection.FullRowSelect = true;
 			this.buildSelection.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
@@ -163,6 +178,7 @@
 			this.buildSelection.TabIndex = 1;
 			this.buildSelection.UseCompatibleStateImageBehavior = false;
 			this.buildSelection.View = System.Windows.Forms.View.Details;
+			this.buildSelection.ItemChecked += new System.Windows.Forms.ItemCheckedEventHandler(this.buildSelection_ItemChecked);
 			// 
 			// columnHeader1
 			// 
@@ -173,17 +189,9 @@
 			// 
 			this.columnHeader2.Text = "Platform";
 			// 
-			// eventLog
+			// columnHeader3
 			// 
-			this.eventLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.eventLog.Location = new System.Drawing.Point(3, 33);
-			this.eventLog.Multiline = true;
-			this.eventLog.Name = "eventLog";
-			this.eventLog.ReadOnly = true;
-			this.eventLog.Size = new System.Drawing.Size(578, 253);
-			this.eventLog.TabIndex = 4;
+			this.columnHeader3.Text = "Action";
 			// 
 			// BuildSolutions
 			// 
@@ -224,5 +232,6 @@
 		private System.Windows.Forms.ColumnHeader columnHeader1;
 		private System.Windows.Forms.ColumnHeader columnHeader2;
 		private System.Windows.Forms.TextBox eventLog;
+		private System.Windows.Forms.ColumnHeader columnHeader3;
 	}
 }
