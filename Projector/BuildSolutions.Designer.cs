@@ -93,6 +93,7 @@
 			this.eventLog.Multiline = true;
 			this.eventLog.Name = "eventLog";
 			this.eventLog.ReadOnly = true;
+			this.eventLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
 			this.eventLog.Size = new System.Drawing.Size(578, 253);
 			this.eventLog.TabIndex = 4;
 			// 
