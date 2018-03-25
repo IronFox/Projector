@@ -207,6 +207,7 @@
 			this.MinimumSize = new System.Drawing.Size(600, 600);
 			this.Name = "BuildSolutions";
 			this.Text = "(Re)build Projects";
+			this.Load += new System.EventHandler(this.BuildSolutions_Load);
 			this.Shown += new System.EventHandler(this.BuildSolutions_Shown);
 			this.statusStrip1.ResumeLayout(false);
 			this.statusStrip1.PerformLayout();

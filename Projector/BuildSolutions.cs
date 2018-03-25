@@ -44,8 +44,20 @@ namespace Projector
 			return false;
 		}
 
-
-
+		//https://stackoverflow.com/questions/38155313/statusstrip-label-not-visible-when-text-too-long
+		//Reza Aghaei
+		public class CustomRenderer : ToolStripProfessionalRenderer
+		{
+			protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
+			{
+				if (e.Item is ToolStripStatusLabel)
+					TextRenderer.DrawText(e.Graphics, e.Text, e.TextFont,
+						e.TextRectangle, e.TextColor, Color.Transparent,
+						e.TextFormat | TextFormatFlags.EndEllipsis);
+				else
+					base.OnRenderItemText(e);
+			}
+		}
 
 		public struct JobID : IComparable<JobID>
 		{
@@ -522,6 +534,11 @@ namespace Projector
 		private void forceRebuildSelected_CheckedChanged(object sender, EventArgs e)
 		{
 			UpdateActions();
+		}
+
+		private void BuildSolutions_Load(object sender, EventArgs e)
+		{
+			this.statusStrip1.Renderer = new CustomRenderer();
 		}
 	}
 }
