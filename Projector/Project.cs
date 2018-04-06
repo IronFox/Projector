@@ -981,6 +981,8 @@ namespace Projector
 					{ 
                         writer.WriteLine("  <OutDir>"+SourcePath.DirectoryName+Path.DirectorySeparatorChar+"</OutDir>");
 						//if (config.platform == "Win32")
+					}
+					{
 						bool dummy;
 						writer.WriteLine("  <TargetName>" + GetReleaseTargetNameFor(config.Platform, out dummy) + "</TargetName>");
 					}
