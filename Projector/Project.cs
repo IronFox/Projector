@@ -34,6 +34,10 @@ namespace Projector
 		/// </summary>
         public readonly string	Name;
 		/// <summary>
+		/// Macro that should be defined such that the code can recognize the locally used configuration. May be empty or null
+		/// </summary>
+		public readonly string	ConfigMacroIdentifier;
+		/// <summary>
 		/// Name of the targeted platform (e.g. 'Win32' or 'x64')
 		/// </summary>
 		public readonly Platform	Platform;
@@ -47,9 +51,10 @@ namespace Projector
         public readonly bool Deploy;
 
 
-		public Configuration(string name, Platform platform, bool isRelease, bool deploy)
+		public Configuration(string name, string macroIdentifier, Platform platform, bool isRelease, bool deploy)
 		{
 			Name = name;
+			ConfigMacroIdentifier = macroIdentifier;
 			Platform = platform;
 			IsRelease = isRelease;
             Deploy = deploy;
@@ -1032,8 +1037,8 @@ namespace Projector
                             writer.Write("=" + m.Value);
                         writer.Write(";");
                     }
-                    if (!config.IsRelease)
-                        writer.Write("_DEBUG;");
+                    if ( !string.IsNullOrWhiteSpace(config.ConfigMacroIdentifier))
+                        writer.Write(config.ConfigMacroIdentifier+";");
 					writer.Write("PLATFORM_"+config.Platform.ToString().ToUpper()+";");
 					writer.Write("PLATFORM_TARGET_NAME_EXTENSION_STR=\"" + (Configuration.DefaultIncludePlatformInReleaseName(config.Platform) ? " "+config.Platform.ToString():"") + "\";");
 					if (SubSystem != null)

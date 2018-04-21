@@ -13,12 +13,14 @@ namespace Projector
 	{
 		public struct Config
 		{
-			public readonly string Name;
-			public readonly bool IsRelease,
+			public readonly string	Name,
+									MacroIdentifier;	//macro that should be defined such that the code can recognize this configuration. May be empty
+			public readonly bool	IsRelease,
 									Deploy;
-			public Config(string name, bool isRelease, bool deploy)
+			public Config(string name, string macroIdentifier, bool isRelease, bool deploy)
 			{
 				Name = name;
+				MacroIdentifier = macroIdentifier;
 				IsRelease = isRelease;
 				Deploy = deploy;
 			}
@@ -243,9 +245,9 @@ namespace Projector
 
 		public static IEnumerable<Config> GetPureBuildConfigurations()
 		{
-			yield return new Config("Debug", false, false);
-			yield return new Config("OptimizedDebug", true, false);
-			yield return new Config("Release", true, true);
+			yield return new Config("Debug", "_DEBUG", false, false);
+			yield return new Config("OptimizedDebug","_OPTIMIZED_DEBUG", true, false);
+			yield return new Config("Release", "", true, true);
 
 		}
 
@@ -261,7 +263,7 @@ namespace Projector
 
 			foreach (var p in GetTargetPlatforms())
 				foreach (var n in GetPureBuildConfigurations())
-					yield return new Configuration(n.Name, p, n.IsRelease, n.Deploy);
+					yield return new Configuration(n.Name, n.MacroIdentifier, p, n.IsRelease, n.Deploy);
 		}
 
 
