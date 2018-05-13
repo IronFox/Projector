@@ -44,20 +44,6 @@ namespace Projector
 			return false;
 		}
 
-		//https://stackoverflow.com/questions/38155313/statusstrip-label-not-visible-when-text-too-long
-		//Reza Aghaei
-		public class CustomRenderer : ToolStripProfessionalRenderer
-		{
-			protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
-			{
-				if (e.Item is ToolStripStatusLabel)
-					TextRenderer.DrawText(e.Graphics, e.Text, e.TextFont,
-						e.TextRectangle, e.TextColor, Color.Transparent,
-						e.TextFormat | TextFormatFlags.EndEllipsis);
-				else
-					base.OnRenderItemText(e);
-			}
-		}
 
 		public struct JobID : IComparable<JobID>
 		{
@@ -217,7 +203,7 @@ namespace Projector
 			if (msBuildPath == "" && toolset.Path != null)
 			{
 				string[] segments = toolset.Path.Split(Path.DirectorySeparatorChar);
-				if (FindBuildPath(Path.Combine(segments.Take(segments.Length - 2).ToArray())))
+				if (FindBuildPath(string.Join(Path.DirectorySeparatorChar.ToString(),segments.Take(segments.Length - 2).ToArray())))
 					LogEvent("Found MSBuild in " + msBuildPath);
 			}
 
@@ -522,6 +508,8 @@ namespace Projector
 
 			
 			toolStripProgressBar.Value = projectsBuilt;
+			toolStripStatusLabel.Spring = true;
+			toolStripStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
 
 			if (activeJobs.Count > 0)
 			{
@@ -538,7 +526,6 @@ namespace Projector
 
 		private void BuildSolutions_Load(object sender, EventArgs e)
 		{
-			this.statusStrip1.Renderer = new CustomRenderer();
 		}
 	}
 }

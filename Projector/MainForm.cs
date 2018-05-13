@@ -782,6 +782,8 @@ namespace Projector
 
         private void ProjectView_Shown(object sender, EventArgs e)
         {
+			toolStripStatusLabel1.Spring = true;
+			toolStripStatusLabel1.TextAlign = ContentAlignment.MiddleLeft;
 			statusStrip.Items[0].Text = "Persistent state stored in " + PersistentState.StateFile.FullName;
 
             UpdateRecentAndPaths(true);
