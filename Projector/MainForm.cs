@@ -1285,7 +1285,9 @@ namespace Projector
 
 		private void buildSelectedToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			new BuildSolutions().Begin(GetSelectedSolutions(), GetToolsetVersion(), RebuildSelected);
+			var sol = new BuildSolutions();
+			ResizeFont(sol.Controls, FontScaleFactor);
+			sol.Begin(GetSelectedSolutions(), GetToolsetVersion(), RebuildSelected);
 		}
 	}
 }

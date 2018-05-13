@@ -53,24 +53,26 @@
 			// 
 			// statusStrip1
 			// 
+			this.statusStrip1.ImageScalingSize = new System.Drawing.Size(20, 20);
 			this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripProgressBar,
             this.toolStripStatusLabel});
-			this.statusStrip1.Location = new System.Drawing.Point(0, 539);
+			this.statusStrip1.Location = new System.Drawing.Point(0, 664);
 			this.statusStrip1.Name = "statusStrip1";
-			this.statusStrip1.Size = new System.Drawing.Size(584, 22);
+			this.statusStrip1.Padding = new System.Windows.Forms.Padding(1, 0, 19, 0);
+			this.statusStrip1.Size = new System.Drawing.Size(779, 26);
 			this.statusStrip1.TabIndex = 1;
 			this.statusStrip1.Text = "statusStrip1";
 			// 
 			// toolStripProgressBar
 			// 
 			this.toolStripProgressBar.Name = "toolStripProgressBar";
-			this.toolStripProgressBar.Size = new System.Drawing.Size(100, 16);
+			this.toolStripProgressBar.Size = new System.Drawing.Size(133, 20);
 			// 
 			// toolStripStatusLabel
 			// 
 			this.toolStripStatusLabel.Name = "toolStripStatusLabel";
-			this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 17);
+			this.toolStripStatusLabel.Size = new System.Drawing.Size(0, 21);
 			// 
 			// buildControl
 			// 
@@ -79,9 +81,10 @@
 			this.buildControl.Controls.Add(this.buildButton);
 			this.buildControl.Controls.Add(this.buildConfigurations);
 			this.buildControl.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.buildControl.Location = new System.Drawing.Point(0, 250);
+			this.buildControl.Location = new System.Drawing.Point(0, 308);
+			this.buildControl.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.buildControl.Name = "buildControl";
-			this.buildControl.Size = new System.Drawing.Size(584, 289);
+			this.buildControl.Size = new System.Drawing.Size(779, 356);
 			this.buildControl.TabIndex = 2;
 			// 
 			// eventLog
@@ -89,12 +92,13 @@
 			this.eventLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.eventLog.Location = new System.Drawing.Point(3, 33);
+			this.eventLog.Location = new System.Drawing.Point(4, 41);
+			this.eventLog.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.eventLog.Multiline = true;
 			this.eventLog.Name = "eventLog";
 			this.eventLog.ReadOnly = true;
 			this.eventLog.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.eventLog.Size = new System.Drawing.Size(578, 253);
+			this.eventLog.Size = new System.Drawing.Size(769, 310);
 			this.eventLog.TabIndex = 4;
 			// 
 			// forceRebuildSelected
@@ -102,9 +106,10 @@
 			this.forceRebuildSelected.AutoSize = true;
 			this.forceRebuildSelected.Checked = true;
 			this.forceRebuildSelected.CheckState = System.Windows.Forms.CheckState.Checked;
-			this.forceRebuildSelected.Location = new System.Drawing.Point(3, 10);
+			this.forceRebuildSelected.Location = new System.Drawing.Point(4, 12);
+			this.forceRebuildSelected.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.forceRebuildSelected.Name = "forceRebuildSelected";
-			this.forceRebuildSelected.Size = new System.Drawing.Size(137, 17);
+			this.forceRebuildSelected.Size = new System.Drawing.Size(178, 21);
 			this.forceRebuildSelected.TabIndex = 3;
 			this.forceRebuildSelected.Text = "Force-Rebuild Selected";
 			this.forceRebuildSelected.UseVisualStyleBackColor = true;
@@ -113,9 +118,10 @@
 			// buildButton
 			// 
 			this.buildButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-			this.buildButton.Location = new System.Drawing.Point(395, 6);
+			this.buildButton.Location = new System.Drawing.Point(527, 7);
+			this.buildButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.buildButton.Name = "buildButton";
-			this.buildButton.Size = new System.Drawing.Size(186, 23);
+			this.buildButton.Size = new System.Drawing.Size(248, 28);
 			this.buildButton.TabIndex = 2;
 			this.buildButton.Text = "Build";
 			this.buildButton.UseVisualStyleBackColor = true;
@@ -127,18 +133,20 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.buildConfigurations.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.buildConfigurations.FormattingEnabled = true;
-			this.buildConfigurations.Location = new System.Drawing.Point(217, 6);
+			this.buildConfigurations.Location = new System.Drawing.Point(289, 7);
+			this.buildConfigurations.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.buildConfigurations.Name = "buildConfigurations";
-			this.buildConfigurations.Size = new System.Drawing.Size(172, 21);
+			this.buildConfigurations.Size = new System.Drawing.Size(228, 24);
 			this.buildConfigurations.TabIndex = 0;
 			// 
 			// splitter1
 			// 
 			this.splitter1.Cursor = System.Windows.Forms.Cursors.HSplit;
 			this.splitter1.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.splitter1.Location = new System.Drawing.Point(0, 247);
+			this.splitter1.Location = new System.Drawing.Point(0, 304);
+			this.splitter1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.splitter1.Name = "splitter1";
-			this.splitter1.Size = new System.Drawing.Size(584, 3);
+			this.splitter1.Size = new System.Drawing.Size(779, 4);
 			this.splitter1.TabIndex = 3;
 			this.splitter1.TabStop = false;
 			// 
@@ -152,8 +160,10 @@
 			this.groupBox1.Controls.Add(this.buildSelection);
 			this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.groupBox1.Location = new System.Drawing.Point(0, 0);
+			this.groupBox1.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(584, 247);
+			this.groupBox1.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.groupBox1.Size = new System.Drawing.Size(779, 304);
 			this.groupBox1.TabIndex = 4;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Explicit Rebuild Selection (Unselected projects may be implicitly built if refere" +
@@ -172,10 +182,11 @@
 			listViewItem1.StateImageIndex = 0;
 			this.buildSelection.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
             listViewItem1});
-			this.buildSelection.Location = new System.Drawing.Point(3, 16);
+			this.buildSelection.Location = new System.Drawing.Point(4, 19);
+			this.buildSelection.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.buildSelection.MultiSelect = false;
 			this.buildSelection.Name = "buildSelection";
-			this.buildSelection.Size = new System.Drawing.Size(578, 228);
+			this.buildSelection.Size = new System.Drawing.Size(771, 281);
 			this.buildSelection.TabIndex = 1;
 			this.buildSelection.UseCompatibleStateImageBehavior = false;
 			this.buildSelection.View = System.Windows.Forms.View.Details;
@@ -193,18 +204,20 @@
 			// columnHeader3
 			// 
 			this.columnHeader3.Text = "Action";
+			this.columnHeader3.Width = 120;
 			// 
 			// BuildSolutions
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(584, 561);
+			this.ClientSize = new System.Drawing.Size(779, 690);
 			this.Controls.Add(this.groupBox1);
 			this.Controls.Add(this.splitter1);
 			this.Controls.Add(this.buildControl);
 			this.Controls.Add(this.statusStrip1);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-			this.MinimumSize = new System.Drawing.Size(600, 600);
+			this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.MinimumSize = new System.Drawing.Size(794, 728);
 			this.Name = "BuildSolutions";
 			this.Text = "(Re)build Projects";
 			this.Load += new System.EventHandler(this.BuildSolutions_Load);
