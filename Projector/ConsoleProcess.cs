@@ -16,7 +16,7 @@ namespace Projector
 
 
 
-		public ConsoleProcess(string workingDirectory, string executableName, string parameters)
+		public ConsoleProcess(string workingDirectory, string executableName, string parameters, ProcessPriorityClass priority = ProcessPriorityClass.BelowNormal)
 		{
 			process = new Process();
 			process.StartInfo.RedirectStandardError = true;
@@ -31,6 +31,7 @@ namespace Projector
 			process.StartInfo.Arguments = parameters;
 
 			process.Start();
+			process.PriorityClass = priority;
 			process.BeginOutputReadLine();
 			process.BeginErrorReadLine();
 		}
