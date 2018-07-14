@@ -345,6 +345,7 @@ namespace Projector
 			{
 				if (eventLog.Text.Length > 0)
 					eventLog.Text += "\r\n";
+				eventLog.AppendText('['+DateTime.Now.ToLongTimeString()+"] ");
 				eventLog.AppendText(input);
 			}
 		}
