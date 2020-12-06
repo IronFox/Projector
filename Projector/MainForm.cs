@@ -188,7 +188,7 @@ namespace Projector
 				}
 			}
 			while (got > 0);
-			throw new Exception($"Visual Studio v{version} not found in setup COM");
+			throw new VSNotFoundException($"Visual Studio v{version} not found in setup COM");
 		}
 
 		private string TryGetVSPath(int majorVersion, int minorVersion)
@@ -201,18 +201,18 @@ namespace Projector
 			string installationPath = null;
 			if (Environment.Is64BitOperatingSystem)
 			{
-				installationPath = (string)Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\" + version + "\\",
+				installationPath = (string)Registry.GetValue($"HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\{version}\\",
 					"InstallDir",
 					null);
 			}
 			else
 			{
-				installationPath = (string)Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\" + version + "\\",
+				installationPath = (string)Registry.GetValue($"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\{version}\\",
 					"InstallDir",
 					null);
 			}
 			if (installationPath == null)
-				throw new Exception($"Visual Studio v{version} not found in registry");
+				throw new VSNotFoundException($"Visual Studio v{version} not found in registry");
 			return installationPath;
 		}
 
@@ -228,7 +228,7 @@ namespace Projector
 
 				LogLine(vsName + " found in " + path);
 			}
-			catch (Exception)
+			catch (VSNotFoundException)
 			{
 				LogLine(vsName+$" installation folder not found. Skipping. Toolset v{major}.{minor} will not be available");
 			}
@@ -243,6 +243,7 @@ namespace Projector
 			RegisterToolSet(12, 0, "VS 2013", 12,0);
 			RegisterToolSet(14, 0, "VS 2015", 14,0);
 			RegisterToolSet(14, 1, "VS 2017", 15,-1);
+			RegisterToolSet(14, 2, "VS 2019", 16, -1);
 
 			PersistentState.Restore();
 			if (PersistentState.Toolset != null)
