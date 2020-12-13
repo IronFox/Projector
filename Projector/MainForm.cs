@@ -321,9 +321,20 @@ namespace Projector
 				}
 				if (project.CustomStackSize > -1)
 				{
-					tproject.Nodes.Add("custom stack size (bytes): " + project.CustomStackSize);
+					tproject.Nodes.Add("Custom Stack Size (bytes): " + project.CustomStackSize);
 				}
-				if (project.PreBuildCommands.Count() > 0)
+				if (project.ExtraProjectOptions.Length > 0)
+				{
+					tproject.Nodes.Add("Extra Project Options: " + project.ExtraProjectOptions);
+				}
+				if (project.DisableWarnings.Count > 0)
+                {
+					TreeNode tDisabled = tproject.Nodes.Add("Disabled Warnings");
+					foreach (var warn in project.DisableWarnings)
+						tDisabled.Nodes.Add(warn);
+				}
+
+				if (project.PreBuildCommands.Count > 0)
 				{
 					TreeNode tcommands = tproject.Nodes.Add("Pre-Build Commands");
 					foreach (var m in project.PreBuildCommands)

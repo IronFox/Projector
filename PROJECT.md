@@ -1,3 +1,4 @@
+
 # Projector .project files
 
 .project files declare an individual project using XML syntax. 
@@ -76,7 +77,17 @@ Macros can be defined by adding any number of ```macro``` sections to the projec
 </project>
 ```
 
-## References
+## Disabled Warnings
+Warnings can be disabled for the local project, by adding one or more ```disableWarning``` sections:
+```xml
+<project type="[type]">
+	<disableWarning>[warning number]</disableWarning>
+	<disableWarning code="[warning number]"/>
+</project>
+```
+
+
+## Project References
 
 Project references may be declared by adding one or more ```referenceProject``` sections:
 ```xml
@@ -177,9 +188,25 @@ If any evaluates to false, the entire section is ignored for the given constella
 </project>
 ```
 
+## Extra Parameters
+The project section allows a number of special parameters:
+### extraProjectOptions
+This section allows adding additional command line parameters passed to the Visual Studio project.
+```xml
+<project type="[type]" extraProjectOptions="[options]">
+	<!-- ... -->
+</project>
+```
+A common candidate would be ```/std:c++latest``` .
 
-
-
+### stackSize
+Sometimes the default stack size is unsufficient. In this case, a custom stack size can be declared such:
+```xml
+<project type="[type]" stackSize="[size]">
+	<!-- ... -->
+</project>
+```
+The stack size is declared in bytes (e.g. ```4194304``` for 4MB) and applied too threads created by this project.
 
 
 

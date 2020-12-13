@@ -728,6 +728,16 @@ namespace Projector
 		/// Retrieves all locally referenced projects. May be empty, but never null
 		/// </summary>
         public ICollection<Reference> References { get { return references; } }
+
+		/// <summary>
+		/// Options to add to the project configuration
+		/// </summary>
+		public string ExtraProjectOptions { get; private set; } = "";
+		/// <summary>
+		/// Retrieves disabled warning identifiers
+		/// </summary>
+		public IReadOnlyCollection<string> DisableWarnings => disableWarnings;
+
 		public ICollection<Project> ReferencedBy { get { return referencedBy; } }
 		/// <summary>
 		/// Retrieves all local source directories. May be empty, but never null
@@ -761,7 +771,7 @@ namespace Projector
 		/// <summary>
 		/// Retrieves all command line instructions to be executed ahead of building the local project. May be empty, but never null
 		/// </summary>
-		public IEnumerable<Command> PreBuildCommands { get { return preBuildCommands; } }
+		public IReadOnlyList<Command> PreBuildCommands { get { return preBuildCommands; } }
 		/// <summary>
 		/// Any configuration custom stack size (in bytes) to be used for the local project. Negative if not used (-1)
 		/// </summary>
@@ -813,6 +823,7 @@ namespace Projector
         List<Source> sources = new List<Source>();
         Dictionary<string, string> macros = new Dictionary<string, string>();
         List<Reference> references = new List<Reference>();
+		private readonly HashSet<string> disableWarnings = new HashSet<string>();
 		List<DirectoryInfo> explicitIncludePaths = new List<DirectoryInfo>();
 		Dictionary<Platform,string>customTargetNames = new Dictionary<Platform,string>();
 		HashSet<Project> referencedBy = new HashSet<Project>();
@@ -1051,7 +1062,20 @@ namespace Projector
                     writer.WriteLine("    <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>");
                     writer.WriteLine("    <MultiProcessorCompilation>true</MultiProcessorCompilation>");
                     writer.WriteLine("    <MinimalRebuild>false</MinimalRebuild>");
-                    writer.WriteLine("  </ClCompile>");
+
+					if (disableWarnings.Count > 0)
+					{
+						writer.WriteLine("    <DisableSpecificWarnings>");
+						writer.WriteLine(string.Join(",", disableWarnings));
+						writer.WriteLine("    </DisableSpecificWarnings>");
+					}
+
+					if (toolSetVersion.Major >= 14 && toolSetVersion.Minor >= 2)
+						writer.WriteLine($"    <AdditionalOptions>/Zc:__cplusplus {ExtraProjectOptions} %(AdditionalOptions)</AdditionalOptions>");
+					else if (ExtraProjectOptions.Length > 0)
+						writer.WriteLine($"    <AdditionalOptions>{ExtraProjectOptions} %(AdditionalOptions)</AdditionalOptions>");
+
+					writer.WriteLine("  </ClCompile>");
                     writer.WriteLine("  <Link>");
                     if (SubSystem != null)
                         writer.WriteLine("    <SubSystem>"+ SubSystem + "</SubSystem>");
@@ -1181,7 +1205,10 @@ namespace Projector
 
         public void Load(XmlNode xproject, Solution domain)
         {
-            XmlNode xType = xproject.Attributes.GetNamedItem("type");
+			ExtraProjectOptions = "";
+			disableWarnings.Clear();
+
+			XmlNode xType = xproject.Attributes.GetNamedItem("type");
             if (xType != null)
             {
                 Type = xType.Value;
@@ -1228,6 +1255,11 @@ namespace Projector
             {
                 if (p.CustomStackSize != -1)
                     customStackSize = p.CustomStackSize;
+
+				ExtraProjectOptions = p.ExtraProjectOptions;
+				foreach (var warn in p.DisableWarnings)
+					disableWarnings.Add(warn);
+
 				HashSet<string> have = new HashSet<string>();
 				foreach (var m in p.CustomManifests)
 					if (!have.Contains(m.FullName))
@@ -1263,6 +1295,26 @@ namespace Projector
             XmlNode xStack = xproject.Attributes.GetNamedItem("stackSize");
             if (xStack != null)
                 customStackSize = int.Parse( xStack.InnerText);
+
+
+			XmlNode xExtraOptions = xproject.Attributes.GetNamedItem("extraProjectOptions");
+			if (xExtraOptions != null)
+				ExtraProjectOptions = xExtraOptions.InnerText ?? "";
+
+			XmlNodeList xDisableWarnings = xproject.SelectNodes("disableWarning");
+			if (xDisableWarnings != null)
+			{
+				foreach (XmlNode xDisable in xDisableWarnings)
+				{
+					XmlNode xCode = xDisable.Attributes.GetNamedItem("code");
+					if (xCode != null && !string.IsNullOrWhiteSpace(xCode.InnerText))
+						disableWarnings.Add(xCode.InnerText.Trim());
+					else
+						if (!string.IsNullOrWhiteSpace(xDisable.InnerText))
+							disableWarnings.Add(xDisable.InnerText.Trim());
+				}
+			}
+
 
 
 			XmlNodeList xmanifests = xproject.SelectNodes("manifest");
