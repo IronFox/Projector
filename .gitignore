@@ -7,3 +7,4 @@ Projector.exe.config
 *.pdb
 .projector/
 .vs/
+/.vs.old
