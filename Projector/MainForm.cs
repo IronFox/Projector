@@ -702,6 +702,7 @@ namespace Projector
 					title.Text = "Recent Solutions: (shift+click to load but stay on this tab)";
 					title.Left = 15;
 					title.Top = top;
+					title.Height = title.PreferredHeight;
 					top += title.Height;
 					title.Width = title.PreferredWidth;
 					recentSolutions.Controls.Add(title);
@@ -734,6 +735,7 @@ namespace Projector
 							Text = recent.Domain + "/"
 						};
 						ldomain.Width = ldomain.PreferredWidth;
+						ldomain.Height = ldomain.PreferredHeight;
 						left = 20 + ldomain.Width;
 						recentSolutions.Controls.Add(ldomain);
 						tooltip.SetToolTip(ldomain, "Load all recent projects of domain '"+recent.Domain+"'");
@@ -756,6 +758,7 @@ namespace Projector
 							Left = left,
 							Text = recent.Name
 						};
+						lrecent.Height = lrecent.PreferredHeight;
 						lrecent.Width = lrecent.PreferredWidth;
 						recentSolutions.Controls.Add(lrecent);
 						tooltip.SetToolTip(lrecent, recent.File.FullName);
