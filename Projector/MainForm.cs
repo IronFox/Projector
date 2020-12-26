@@ -88,6 +88,9 @@ namespace Projector
 				}
 				c.Font = new Font(c.Font.FontFamily.Name, c.Font.Size * scaleFactor);
 			}
+			toolsetPanel.Top = MainMenuStrip.Height;
+			solutionViewSplit.Top = toolsetPanel.Top + toolsetPanel.Height;
+			solutionViewSplit.Height = ClientSize.Height - statusStrip.Height - solutionViewSplit.Top;
 		}
 
 		public  float FontScaleFactor
