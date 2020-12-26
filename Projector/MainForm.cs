@@ -867,17 +867,31 @@ namespace Projector
 
 		private string GetWindowsTargetPlatformVersion()
         {
-			RegistryKey super;
+			string path;
 			if (Environment.Is64BitOperatingSystem)
 			{
-				super = Registry.LocalMachine.OpenSubKey("SOFTWARE\\WOW6432Node\\Microsoft\\Windows Kits\\Installed Roots");
+				path = "SOFTWARE\\WOW6432Node\\Microsoft\\Windows Kits\\Installed Roots";
 			}
 			else
 			{
-				super = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots");
+				path = "SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots";
+			}
+			var registryKey = Registry.LocalMachine.OpenSubKey(path);
+			if (registryKey == null)
+            {
+				LogLine("Error: Registry path does not exist: " + path);
+				LogLine("Unable to determine window target platform version.");
+				LogLine("(Re)Install Windows SDK and restart the application.");
+				return null;
 			}
 
-			string[] keys = super.GetSubKeyNames();
+			string[] keys = registryKey.GetSubKeyNames();
+			if (keys == null || keys.Length == 0)
+			{
+				LogLine("Error: No sub keys found for: " + path);
+				LogLine("(Re)Install Windows SDK and restart the application.");
+				return null;
+			}
 
 			Array.Sort(keys);
 			string rs = keys[keys.Length - 1];
