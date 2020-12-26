@@ -6,8 +6,8 @@ namespace Projector
     {
         public readonly int Major,
                         Minor;
-		public readonly string VSName,Path;
-		public readonly bool RequiresWindowsTargetPlatformVersion;
+		public readonly string VSName,Path, WindowsTargetPlatformVersion;
+		
 
 		public string OutXMLText
 		{
@@ -18,16 +18,16 @@ namespace Projector
 		}
 			
 
-		public ToolsetVersion(int major, int minor, string vsName, bool requiresWindowsTargetPlatformVersion, string path)
+		public ToolsetVersion(int major, int minor, string vsName, string windowsTargetPlatformVersion, string path)
         {
             Major = major;
             Minor = minor;
 			VSName = vsName;
 			Path = path;
-			RequiresWindowsTargetPlatformVersion = requiresWindowsTargetPlatformVersion;
+			WindowsTargetPlatformVersion = windowsTargetPlatformVersion;
 		}
 
-		public ToolsetVersion(int major, int minor, string vsName, bool requiresWindowsTargetPlatformVersion) : this(major,minor,vsName,requiresWindowsTargetPlatformVersion,null)
+		public ToolsetVersion(int major, int minor, string vsName, string windowsTargetPlatformVersion) : this(major,minor,vsName, windowsTargetPlatformVersion, null)
 		{}
 
 

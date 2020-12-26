@@ -267,7 +267,7 @@ namespace Projector
 		}
 
 
-		public bool Build(File outPath, ToolsetVersion toolset, string osVersion, bool overwriteExistingVSUserConfig)
+		public bool Build(File outPath, ToolsetVersion toolset, bool overwriteExistingVSUserConfig)
 		{
 			EventLog.Inform(this,null,"Writing solution to '" + outPath.FullName+"'");
 
@@ -289,7 +289,7 @@ namespace Projector
 
             foreach (Project p in localProjects)
             {
-				var rs = p.SaveAs(toolset,osVersion, configurations, overwriteExistingVSUserConfig,this);
+				var rs = p.SaveAs(toolset,configurations, overwriteExistingVSUserConfig,this);
 				if (rs.Item3)
 					EventLog.Inform(this,p,"Written to '"+rs.Item1.FullName+"'");
 				else

@@ -885,10 +885,10 @@ namespace Projector
 		/// Constructs the local project
 		/// </summary>
 		/// <param name="toolSetVersion">Active toolset version to use</param>
-		/// <param name="osVersion">String containing the target OS version</param>
+		/// <param name="windowsTargetPlatformVersion">String containing the windows target platform version</param>
 		/// <param name="configurations"></param>
 		/// <returns></returns>
-		public Tuple<File, Guid, bool> SaveAs(ToolsetVersion toolSetVersion, string osVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
+		public Tuple<File, Guid, bool> SaveAs(ToolsetVersion toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
         {
 			File file = OutFile;
             if (!file.Directory.Exists)
@@ -964,8 +964,8 @@ namespace Projector
                 writer.WriteLine("\t<ProjectGuid>{" + id + "}</ProjectGuid>");
                 writer.WriteLine("\t<Keyword>Win32Proj</Keyword>");
                 writer.WriteLine("\t<RootNamespace>client</RootNamespace>");
-				if (toolSetVersion.RequiresWindowsTargetPlatformVersion)
-					writer.WriteLine("\t<WindowsTargetPlatformVersion>"+osVersion+"</WindowsTargetPlatformVersion>");
+				if (toolSetVersion.WindowsTargetPlatformVersion != null)
+					writer.WriteLine("\t<WindowsTargetPlatformVersion>"+toolSetVersion.WindowsTargetPlatformVersion+ "</WindowsTargetPlatformVersion>");
                 writer.WriteLine("</PropertyGroup>");
                 writer.WriteLine("<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />");
                 foreach (Configuration config in configurations)

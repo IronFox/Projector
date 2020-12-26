@@ -216,15 +216,16 @@ namespace Projector
 			return installationPath;
 		}
 
+
 		private void RegisterToolSet(int major, int minor, string vsName, int vsMajorVersion, int vsMinorVersion)
 		{
-			bool requiresWindowsTargetPlatformVersion = vsMajorVersion >= 15;
+			string windowsTargetPlatformVersion = vsMajorVersion >= 15 ? GetWindowsTargetPlatformVersion() : null;
 			try
 			{
 				string path = TryGetVSPath(vsMajorVersion, vsMinorVersion);
 				if (path == null)
 					throw new Exception($"Visual Studio v{vsMajorVersion}.{vsMinorVersion} not found in registry");
-				toolSet.Items.Add(new ToolsetVersion(major, minor, vsName, requiresWindowsTargetPlatformVersion, path));
+				toolSet.Items.Add(new ToolsetVersion(major, minor, vsName, windowsTargetPlatformVersion, path));
 
 				LogLine(vsName + " found in " + path);
 			}
@@ -861,7 +862,28 @@ namespace Projector
             return (ToolsetVersion)(toolSet.SelectedItem);
         }
 
-        private string GetOSVersion()
+		private string GetWindowsTargetPlatformVersion()
+        {
+			RegistryKey super;
+			if (Environment.Is64BitOperatingSystem)
+			{
+				super = Registry.LocalMachine.OpenSubKey("SOFTWARE\\WOW6432Node\\Microsoft\\Windows Kits\\Installed Roots");
+			}
+			else
+			{
+				super = Registry.LocalMachine.OpenSubKey("SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots");
+			}
+
+			string[] keys = super.GetSubKeyNames();
+
+			Array.Sort(keys);
+			string rs = keys[keys.Length - 1];
+			return rs;
+		}
+
+
+
+		private string GetOSVersion()
         {
             Process myProcess = new Process();
 
@@ -917,7 +939,7 @@ namespace Projector
 		{
             try
             {
-                if (solution.Build(outPath, GetToolsetVersion(), GetOSVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked))
+                if (solution.Build(outPath, GetToolsetVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked))
                 {
                     if (solution == shownSolution)
                     {
@@ -1059,7 +1081,7 @@ namespace Projector
                 {
 					bool newRecent;
 					solution.Reload(out newRecent); //refresh
-                    solution.Build(outPath, GetToolsetVersion(), GetOSVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked);
+                    solution.Build(outPath, GetToolsetVersion(), overwriteExistingVSUserConfigToolStripMenuItem.Checked);
                     if (solution == shownSolution)
                         ShowSolution(solution);
 
