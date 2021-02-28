@@ -40,33 +40,36 @@
 			this.aboutTitle.Image = global::Projector.Properties.Resources.Projector;
 			this.aboutTitle.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this.aboutTitle.Location = new System.Drawing.Point(0, 0);
+			this.aboutTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.aboutTitle.Name = "aboutTitle";
-			this.aboutTitle.Size = new System.Drawing.Size(284, 30);
+			this.aboutTitle.Size = new System.Drawing.Size(379, 37);
 			this.aboutTitle.TabIndex = 0;
-			this.aboutTitle.Text = "Projector";
+			this.aboutTitle.Text = "Projector v1.1";
 			this.aboutTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
 			// textBox
 			// 
 			this.textBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
 			this.textBox.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.textBox.Location = new System.Drawing.Point(0, 30);
+			this.textBox.Location = new System.Drawing.Point(0, 37);
+			this.textBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.textBox.Multiline = true;
 			this.textBox.Name = "textBox";
 			this.textBox.ReadOnly = true;
-			this.textBox.Size = new System.Drawing.Size(284, 149);
+			this.textBox.Size = new System.Drawing.Size(379, 183);
 			this.textBox.TabIndex = 1;
 			this.textBox.TabStop = false;
 			this.textBox.Text = resources.GetString("textBox.Text");
 			// 
 			// About
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(284, 179);
+			this.ClientSize = new System.Drawing.Size(379, 220);
 			this.Controls.Add(this.textBox);
 			this.Controls.Add(this.aboutTitle);
-			this.MinimumSize = new System.Drawing.Size(300, 217);
+			this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.MinimumSize = new System.Drawing.Size(394, 256);
 			this.Name = "About";
 			this.Text = "About";
 			this.Load += new System.EventHandler(this.About_Load);

@@ -118,11 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="textBox.Text" xml:space="preserve">
-    <value>
-Projector is a tool to simplify the management of Visual Studio solutions.
+    <value>Projector is a tool to simplify the management of Visual Studio solutions.
 Solutions and projects are created as simple XML files which are converted into Visual Studio files on the fly.
 Projector tries to hide much of the complexity of Visual Studio solutions, and manage varying path constellations on different computers.
 
-Copyright (C) 2016 Stefan Elsen</value>
+Copyright (C) 2016-2021 Stefan Elsen</value>
   </data>
 </root>

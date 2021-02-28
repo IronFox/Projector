@@ -1122,6 +1122,7 @@ namespace Projector
 			ListViewItem item = solution.ListViewItem;
 			if (item != null)
 			{
+				item.SubItems[1].Text = solution.Primary?.ToString();
 				item.SubItems[2].Text = solution.Projects.Count().ToString();
 			}
 		}
@@ -1345,6 +1346,21 @@ namespace Projector
 			var sol = new BuildSolutions();
 			ResizeFont(sol.Controls, FontScaleFactor);
 			sol.Begin(GetSelectedSolutions(), GetToolsetVersion(), RebuildSelected);
+		}
+
+		private void reloadAllToolStripMenuItem_Click(object sender, EventArgs e)
+		{
+			FlushProjects();
+			foreach (Solution solution in loadedSolutions)
+			{
+				bool dummy;
+				solution.Reload(out dummy);
+				RefreshListView(solution);
+			}
+
+			ShowSolution(shownSolution);
+			EventLog.Inform(null,null,"All loaded solutions reloaded");
+			ReportAndFlush();
 		}
 	}
 }
