@@ -1544,7 +1544,7 @@ namespace Projector
             }
             if (macros.ContainsKey(xname.Value))
 				Warn(domain, "Redefining macro '" + xname.Value + "' to '" + xmacro.Value + "'");
-            macros.Add(xname.Value, xmacro.Value);
+            macros.Add(xname.Value, xmacro.InnerText);
         }
 
         private void AddReference(XmlNode xreference, Solution domain)

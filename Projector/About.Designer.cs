@@ -44,7 +44,7 @@
 			this.aboutTitle.Name = "aboutTitle";
 			this.aboutTitle.Size = new System.Drawing.Size(379, 37);
 			this.aboutTitle.TabIndex = 0;
-			this.aboutTitle.Text = "Projector v1.1";
+			this.aboutTitle.Text = "Projector v1.2";
 			this.aboutTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
 			// textBox
@@ -52,7 +52,7 @@
 			this.textBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
 			this.textBox.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.textBox.Location = new System.Drawing.Point(0, 37);
-			this.textBox.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.textBox.Margin = new System.Windows.Forms.Padding(4);
 			this.textBox.Multiline = true;
 			this.textBox.Name = "textBox";
 			this.textBox.ReadOnly = true;
@@ -68,7 +68,7 @@
 			this.ClientSize = new System.Drawing.Size(379, 220);
 			this.Controls.Add(this.textBox);
 			this.Controls.Add(this.aboutTitle);
-			this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
+			this.Margin = new System.Windows.Forms.Padding(4);
 			this.MinimumSize = new System.Drawing.Size(394, 256);
 			this.Name = "About";
 			this.Text = "About";
