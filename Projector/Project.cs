@@ -213,7 +213,7 @@ namespace Projector
         public static CodeGroup shader = new CodeGroup() { name = "Shader", tag = "None" };
         public static CodeGroup image = new CodeGroup() { name = "Image", tag = "Image" };
         public static CodeGroup resource = new CodeGroup() { name = "Resource", tag = "ResourceCompile" };
-
+		public static CodeGroup cuda = new CodeGroup() { name = "CUDA", tag = "CudaCompile" };
 
 
 
@@ -221,7 +221,7 @@ namespace Projector
 		/// <summary>
 		/// All supported source extensions. Entries must be lower-case
 		/// </summary>
-        public static Dictionary<string, CodeGroup> ExtensionMap = new Dictionary<string, CodeGroup>()
+		public static Dictionary<string, CodeGroup> ExtensionMap = new Dictionary<string, CodeGroup>()
         {
             {".h", header },
             {".hpp", header },
@@ -232,6 +232,9 @@ namespace Projector
 
             {".hlsl", shader },
 			{".hlsli", shader },
+
+			{".cu", cuda },
+
 
 			{".cpp", cpp },
             {".c++", cpp },
@@ -317,24 +320,18 @@ namespace Projector
                 public List<Folder> subFolders = new List<Folder>();
 
 
-				public void WriteFiles(StreamWriter writer)
+				public void WriteFiles(XmlOut.Section writer)
 				{
 					foreach (var pair in groups)
 					{
 						foreach (var file in pair.Value)
-						{
-							writer.Write("  <" + pair.Key.tag);
-							writer.Write(" Include=\"");
-							writer.Write(file.FullName);
-							if (pair.Key.tag == "None")
+							using (var fileSect = writer.SubSection(pair.Key.tag))
 							{
-								writer.WriteLine("\">");
-								writer.WriteLine("    <FileType>Document</FileType>");
-								writer.WriteLine("  </" + pair.Key.tag + ">");
+								fileSect.AddParameter("Include", file.FullName);
+
+								if (pair.Key.tag == "None")
+									fileSect.SingleLine("FileType", "Document");
 							}
-							else
-								writer.WriteLine("\" />");
-						}
 					}
 					foreach (var child in subFolders)
 						child.WriteFiles(writer);
@@ -491,11 +488,10 @@ namespace Projector
 
 
 
-			public void WriteProjectGroup(StreamWriter writer)
+			public void WriteProjectGroup(XmlOut.Section parent)
 			{
-				writer.WriteLine("<ItemGroup>");
-				root.WriteFiles(writer);
-				writer.WriteLine("</ItemGroup>");
+				using (var group = parent.SubSection("ItemGroup"))
+					root.WriteFiles(group);
 			}
 
 
@@ -903,6 +899,21 @@ namespace Projector
 			foreach (Source source in sources)
 				source.ScanFiles(domain, this);
 
+			bool haveCUDA = false;
+			foreach (Source source in sources)
+			{
+				foreach (var f in source.EnumerateFiles())
+				{
+					if (f.Item1 == cuda)
+					{
+						haveCUDA = true;
+						break;
+					}
+				}
+				if (haveCUDA)
+					break;
+			}
+
 
 			using (StreamWriter writer = new StreamWriter(new MemoryStream()))
 			{
@@ -946,219 +957,381 @@ namespace Projector
 						written = true;
 				}
 
-			using (StreamWriter writer = new StreamWriter(new MemoryStream()))
-            {
-                writer.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-
-                writer.WriteLine("<Project DefaultTargets=\"Build\" ToolsVersion=\"" + toolSetVersion.OutXMLText + "\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
-                writer.WriteLine("<ItemGroup Label=\"ProjectConfigurations\">");
-                foreach (Configuration config in configurations)
-                {
-                    writer.WriteLine("<ProjectConfiguration Include=\"" + config + "\">");
-                    writer.WriteLine("  <Configuration>" + config.Name + "</Configuration>");
-                    writer.WriteLine("  <Platform>" + Configuration.TranslateForVisualStudio(config.Platform) + "</Platform>");
-                    writer.WriteLine("</ProjectConfiguration>");
-                }
-                writer.WriteLine("</ItemGroup>");
-                writer.WriteLine("<PropertyGroup Label=\"Globals\">");
-                writer.WriteLine("\t<ProjectGuid>{" + id + "}</ProjectGuid>");
-                writer.WriteLine("\t<Keyword>Win32Proj</Keyword>");
-                writer.WriteLine("\t<RootNamespace>client</RootNamespace>");
-				if (toolSetVersion.WindowsTargetPlatformVersion != null)
-					writer.WriteLine("\t<WindowsTargetPlatformVersion>"+toolSetVersion.WindowsTargetPlatformVersion+ "</WindowsTargetPlatformVersion>");
-                writer.WriteLine("</PropertyGroup>");
-                writer.WriteLine("<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.Default.props\" />");
-                foreach (Configuration config in configurations)
-                {
-                    writer.WriteLine("<PropertyGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config + "'\" Label=\"Configuration\">");
-                    writer.WriteLine("  <ConfigurationType>" + Type + "</ConfigurationType>");
-                    writer.WriteLine("  <UseDebugLibraries>"+!config.IsRelease+"</UseDebugLibraries>");
-                    writer.WriteLine("  <PlatformToolset>v" + (toolSetVersion.Major*10 + toolSetVersion.Minor) + "</PlatformToolset>");
-                    writer.WriteLine("  <WholeProgramOptimization>"+config.IsRelease+"</WholeProgramOptimization>");
-                    writer.WriteLine("  <CharacterSet>Unicode</CharacterSet>");
-                    writer.WriteLine("</PropertyGroup>");
-                }
-                writer.WriteLine("<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.props\" />");
-                writer.WriteLine("<ImportGroup Label=\"ExtensionSettings\">");
-                writer.WriteLine("</ImportGroup>");
-                foreach (Configuration config in configurations)
-                {
-                    writer.WriteLine("<ImportGroup Label=\"PropertySheets\" Condition=\"'$(Configuration)|$(Platform)'=='" + config + "'\">");
-                    writer.WriteLine("  <Import Project=\"$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props\" Condition=\"exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')\" Label=\"LocalAppDataPlatform\" />");
-                    writer.WriteLine("</ImportGroup>");
-                }
-                writer.WriteLine("<PropertyGroup Label=\"UserMacros\" />");
-                foreach (Configuration config in configurations)
-                {
-                    writer.WriteLine("<PropertyGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config + "'\">");
-                    writer.WriteLine("  <LinkIncremental>" + !config.IsRelease + "</LinkIncremental>");
-					//writer.WriteLine("  <IntDir>" + Path.Combine(file.Directory.FullName, config.Platform.ToString(), config.Name) + Path.DirectorySeparatorChar + "</IntDir>");
-                    if (config.Deploy)
-					{ 
-                        writer.WriteLine("  <OutDir>"+SourcePath.DirectoryName+Path.DirectorySeparatorChar+"</OutDir>");
-						//if (config.platform == "Win32")
-					}
+			using (StreamWriter streamWriter = new StreamWriter(new MemoryStream()))
+			{
+				using (XmlOut.Section rootWriter = new XmlOut.Section(streamWriter))
+				{
+					rootWriter.WriteLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+					using (var projectWriter = rootWriter.SubSection("Project"))
 					{
-						bool dummy;
-						writer.WriteLine("  <TargetName>" + GetReleaseTargetNameFor(config.Platform, out dummy) + "</TargetName>");
-					}
+						projectWriter.AddParameter("DefaultTargets", "Build");
+						projectWriter.AddParameter("ToolsVersion", toolSetVersion.OutXMLText);
+						projectWriter.AddParameter("xmlns", "http://schemas.microsoft.com/developer/msbuild/2003");
 
-
-					List<string> includes, libPaths = new List<string>();
-
-					includes = new List<string>( this.IncludedPaths );
-
-
-					foreach (var lib in includedLibraries)
-					{
-						foreach (var inc in lib.Includes)
+						if (haveCUDA)
 						{
-							if (inc.Item1.Test(config))
-								includes.Add(inc.Item2.FullName);
-						}
-						foreach (var linkDir in lib.LinkDirectories)
-							if (linkDir.Item1.Test(config))
-								libPaths.Add(linkDir.Item2.FullName);
-					}
-
-					if (includes.Count > 0)
-						writer.WriteLine("  <IncludePath>" + includes.Fuse(";") + ";$(IncludePath)</IncludePath>");
-					if (libPaths.Count > 0)
-						writer.WriteLine("  <LibraryPath>" + libPaths.Fuse(";")+ ";$(LibraryPath)</LibraryPath>");
-                    writer.WriteLine("</PropertyGroup>");
-                }
-                foreach (Configuration config in configurations)
-                {
-                    writer.WriteLine("<ItemDefinitionGroup Condition=\"'$(Configuration)|$(Platform)' =='" + config + "'\">");
-                    writer.WriteLine("  <ClCompile>");
-                    writer.WriteLine("    <PrecompiledHeader>NotUsing</PrecompiledHeader>");
-                    writer.WriteLine("    <WarningLevel>Level3</WarningLevel>");
-                    writer.WriteLine("    <Optimization>" + (config.IsRelease ? "MaxSpeed" : "Disabled") + "</Optimization>");
-                    if (config.IsRelease)
-                    {
-                        writer.WriteLine("    <FunctionLevelLinking>true</FunctionLevelLinking>");
-                        writer.WriteLine("    <IntrinsicFunctions>true</IntrinsicFunctions>");
-                    }
-
-                    writer.Write("    <PreprocessorDefinitions>");
-                    foreach (var m in macros)
-                    {
-                        writer.Write(m.Key);
-                        if (m.Value != null && m.Value.Length > 0)
-                            writer.Write("=" + m.Value);
-                        writer.Write(";");
-                    }
-                    if ( !string.IsNullOrWhiteSpace(config.ConfigMacroIdentifier))
-                        writer.Write(config.ConfigMacroIdentifier+";");
-					writer.Write("PLATFORM_"+config.Platform.ToString().ToUpper()+";");
-					writer.Write("PLATFORM_TARGET_NAME_EXTENSION_STR=\"" + (Configuration.DefaultIncludePlatformInReleaseName(config.Platform) ? " "+config.Platform.ToString():"") + "\";");
-					if (SubSystem != null)
-                        writer.Write("_"+ SubSystem.ToUpper()+ ";");
-                    writer.Write("WIN32;");
-                    writer.Write("%(PreprocessorDefinitions)");
-                    writer.WriteLine("</PreprocessorDefinitions>");
-                    writer.WriteLine("    <SDLCheck>true</SDLCheck>");
-                    writer.WriteLine("    <RuntimeLibrary>MultiThreaded" + (config.IsRelease ? "" : "Debug") + "</RuntimeLibrary>");
-                    writer.WriteLine("    <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>");
-                    writer.WriteLine("    <MultiProcessorCompilation>true</MultiProcessorCompilation>");
-                    writer.WriteLine("    <MinimalRebuild>false</MinimalRebuild>");
-
-					if (disableWarnings.Count > 0)
-					{
-						writer.WriteLine("    <DisableSpecificWarnings>");
-						writer.WriteLine(string.Join(",", disableWarnings));
-						writer.WriteLine("    </DisableSpecificWarnings>");
-					}
-
-					if (toolSetVersion.Major >= 14 && toolSetVersion.Minor >= 2)
-						writer.WriteLine($"    <AdditionalOptions>/Zc:__cplusplus {ExtraProjectOptions} %(AdditionalOptions)</AdditionalOptions>");
-					else if (ExtraProjectOptions.Length > 0)
-						writer.WriteLine($"    <AdditionalOptions>{ExtraProjectOptions} %(AdditionalOptions)</AdditionalOptions>");
-
-					writer.WriteLine("  </ClCompile>");
-                    writer.WriteLine("  <Link>");
-                    if (SubSystem != null)
-                        writer.WriteLine("    <SubSystem>"+ SubSystem + "</SubSystem>");
-                    writer.WriteLine("    <GenerateDebugInformation>" + !config.Deploy + "</GenerateDebugInformation>");
-                    if (CustomStackSize != -1)
-                        writer.WriteLine("    <AdditionalOptions>/STACK:" + CustomStackSize + " %(AdditionalOptions)</AdditionalOptions>");
-
-					List<string> libs = new List<string>();
-					foreach (var lib in includedLibraries)
-					{
-						foreach (var link in lib.Link)
-							if (link.Item1.Test(config))
-								libs.Add(link.Item2);
-					}
-					if (libs.Count > 0)
-						writer.WriteLine("    <AdditionalDependencies>"+libs.Fuse(";")+";%(AdditionalDependencies)</AdditionalDependencies>");
-
-                    writer.WriteLine("  </Link>");
-					if (customManifests.Count > 0)
-                    {
-                        writer.WriteLine("  <Manifest>");
-						StringBuilder combined = new StringBuilder();
-						foreach (var manifest in customManifests)
-						combined.Append(" \"").Append(manifest.FullName).Append("\"");
-                        writer.WriteLine("    <AdditionalManifestFiles>" +  combined+ "</AdditionalManifestFiles>");
-                        writer.WriteLine("  </Manifest>");
-                    }
-                    if (preBuildCommands.Count > 0)
-                    {
-                        writer.WriteLine("  <PreBuildEvent>");
-                        foreach (Command cmd in PreBuildCommands)
-                        {
-							if (cmd.locatedExecutable.Exists )
+							using (var group = projectWriter.SubSection("PropertyGroup"))
+							using (var cudaProps = group.SingleLine("CUDAPropsPath"))
 							{
-								writer.Write("    <Command>\"");
-								writer.Write(cmd.locatedExecutable.FullName);
-								writer.Write("\"");
-								foreach (string parameter in cmd.parameters)
-								{ 
-									writer.Write(" \"");
-									writer.Write(parameter);
-									writer.Write("\"");
-								}
-								writer.WriteLine("</Command>");
+								cudaProps.AddParameter("Condition", "'$(CUDAPropsPath)'==''");
+								cudaProps.Write("$(VCTargetsPath)\\BuildCustomizations");
 							}
-							else
-								writer.WriteLine("    <Command>\"" + Path.Combine(new string[] { "..", "..", cmd.originalExecutable })+ "\""+cmd.QuotedParameters+ "</Command>");
-                        }
-                        writer.WriteLine("  </PreBuildEvent>");
-                    }
+						}
+						using (var group = projectWriter.SubSection("ItemGroup"))
+						{
+							group.AddParameter("Label", "ProjectConfigurations");
 
-                    writer.WriteLine("</ItemDefinitionGroup>");
-                }
-                foreach (Source source in sources)
-                {
-					//source.ScanFiles(domain,this);
-					source.WriteProjectGroup(writer);
-                }
+							foreach (Configuration config in configurations)
+							{
+								using (var configSect = group.SubSection("ProjectConfiguration"))
+								{
+									configSect.AddParameter("Include", config.ToString());
+									configSect.SingleLine("Configuration", config.Name);
+									configSect.SingleLine("Platform", Configuration.TranslateForVisualStudio(config.Platform));
+								}
+							}
+						}
 
-                writer.WriteLine("<ItemGroup>");
-                foreach (var r in references)
-                {
-                    if (r.Project.SourcePath.Exists)
-                    {
-                        writer.WriteLine("<ProjectReference Include=\"" + r.Project.OutFile.FullName + "\">");
-                        writer.WriteLine("<Project>{" + r.Project.LocalGuid + "}</Project>");
-                        writer.WriteLine("</ProjectReference>");
-                    }
-                }
-                writer.WriteLine("</ItemGroup>");
+						using (var group = projectWriter.SubSection("PropertyGroup"))
+						{
+							group.AddParameter("Label", "Globals");
+							group.SingleLine("ProjectGuid", "{"+id+"}");
+							group.SingleLine("ProjectName", Name);
+							group.SingleLine("Keyword", Name);
+							group.SingleLine("RootNamespace", Name);
+							if (toolSetVersion.WindowsTargetPlatformVersion != null)
+								group.SingleLine("WindowsTargetPlatformVersion", toolSetVersion.WindowsTargetPlatformVersion);
+							if (haveCUDA)
+								group.SingleLine("CudaToolkitCustomDir", "");
+						}
 
-                writer.WriteLine("<Import Project=\"$(VCTargetsPath)\\Microsoft.Cpp.targets\" />");
-                writer.WriteLine("<ImportGroup Label=\"ExtensionTargets\">");
-                writer.WriteLine("</ImportGroup>");
-                writer.WriteLine("</Project>");
-				
-				written = Program.ExportToDisk(file, writer, written);
-            }
+						using (var group = projectWriter.SubSection("Import"))
+						{
+							group.AddParameter("Project", "$(VCTargetsPath)\\Microsoft.Cpp.Default.props");
+						}
 
-         
+						foreach (Configuration config in configurations)
+						{
+							using (var group = projectWriter.SubSection("PropertyGroup"))
+							{
+								group.AddParameter("Condition", "'$(Configuration)|$(Platform)' =='" + config + "'");
+								group.AddParameter("Label", "Configuration");
 
-            return new Tuple<File, Guid,bool>(file, id,written);
+								group.SingleLine("ConfigurationType", Type);
+								group.SingleLine("UseDebugLibraries", !config.IsRelease);
+								group.SingleLine("PlatformToolset", "v" + (toolSetVersion.Major * 10 + toolSetVersion.Minor));
+								group.SingleLine("WholeProgramOptimization", config.IsRelease);
+								group.SingleLine("CharacterSet", "Unicode");
+							}
+						}
+
+						using (var group = projectWriter.SubSection("Import"))
+						{
+							group.AddParameter("Project", "$(VCTargetsPath)\\Microsoft.Cpp.props");
+						}
+						using (var group = projectWriter.SubSection("ImportGroup"))
+						{
+							group.AddParameter("Label", "ExtensionSettings");
+							if (haveCUDA)
+							{
+								using (var line = group.SingleLine("Import"))
+									line.AddParameter("Project", "$(CUDAPropsPath)\\CUDA " + CUDA.Version + ".props");
+							}
+
+						}
+						foreach (Configuration config in configurations)
+						{
+							using (var group = projectWriter.SubSection("ImportGroup"))
+							{
+								group.AddParameter("Label", "PropertySheets");
+								group.AddParameter("Condition", "'$(Configuration)|$(Platform)'=='" + config + "'");
+								using (var proj = group.SubSection("Import"))
+								{
+									proj.AddParameter("Project", "$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props");
+									proj.AddParameter("Condition", "exists('$(UserRootDir)\\Microsoft.Cpp.$(Platform).user.props')");
+									proj.AddParameter("Label", "LocalAppDataPlatform");
+								}
+							}
+						}
+						using (var group = projectWriter.SubSection("PropertyGroup"))
+						{
+							group.AddParameter("Label", "UserMacros");
+						}
+
+						foreach (Configuration config in configurations)
+						{
+							using (var group = projectWriter.SubSection("PropertyGroup"))
+							{
+								group.AddParameter("Condition", "'$(Configuration)|$(Platform)' == '" + config + "'");
+								group.SingleLine("LinkIncremental", !config.IsRelease);
+
+								if (config.Deploy)
+								{
+									group.SingleLine("OutDir", SourcePath.DirectoryName + Path.DirectorySeparatorChar);
+								}
+								{
+									bool dummy;
+									group.SingleLine("TargetName", GetReleaseTargetNameFor(config.Platform, out dummy));
+								}
+
+
+								List<string> includes, libPaths = new List<string>();
+
+								includes = new List<string>(this.IncludedPaths);
+
+
+								foreach (var lib in includedLibraries)
+								{
+									foreach (var inc in lib.Includes)
+									{
+										if (inc.Item1.Test(config))
+											includes.Add(inc.Item2.FullName);
+									}
+									foreach (var linkDir in lib.LinkDirectories)
+										if (linkDir.Item1.Test(config))
+											libPaths.Add(linkDir.Item2.FullName);
+								}
+
+								if (includes.Count > 0)
+									group.SingleLine("IncludePath", includes.Fuse(";") + ";$(IncludePath)");
+								if (libPaths.Count > 0)
+									group.SingleLine("LibraryPath", libPaths.Fuse(";") + ";$(LibraryPath)");
+							}
+						}
+
+
+
+						foreach (Configuration config in configurations)
+						{
+							using (var group = projectWriter.SubSection("ItemDefinitionGroup"))
+							{
+								group.AddParameter("Condition", "'$(Configuration)|$(Platform)' =='" + config + "'");
+
+								using (var clCompile = group.SubSection("ClCompile"))
+								{
+									clCompile.SingleLine("PrecompiledHeader", "NotUsing");
+									clCompile.SingleLine("WarningLevel", "Level3");
+									clCompile.SingleLine("Optimization", (config.IsRelease ? "MaxSpeed" : "Disabled"));
+
+									if (config.IsRelease)
+									{
+										clCompile.SingleLine("FunctionLevelLinking", true);
+										clCompile.SingleLine("IntrinsicFunctions", true);
+									}
+
+									using (var pred = clCompile.SingleLine("PreprocessorDefinitions"))
+									{
+										foreach (var m in macros)
+										{
+											pred.Write(m.Key);
+											if (m.Value != null && m.Value.Length > 0)
+												pred.Write("=" + m.Value);
+											pred.Write(";");
+										}
+										if (!string.IsNullOrWhiteSpace(config.ConfigMacroIdentifier))
+											pred.Write(config.ConfigMacroIdentifier + ";");
+										pred.Write("PLATFORM_" + config.Platform.ToString().ToUpper() + ";");
+										pred.Write("PLATFORM_TARGET_NAME_EXTENSION_STR=\"" + (Configuration.DefaultIncludePlatformInReleaseName(config.Platform) ? " " + config.Platform.ToString() : "") + "\";");
+										if (SubSystem != null)
+											pred.Write("_" + SubSystem.ToUpper() + ";");
+										pred.Write("WIN32;");
+
+										if (haveCUDA)
+											pred.Write("_MBCS;");
+
+										pred.Write("%(PreprocessorDefinitions)");
+									}
+
+									if (haveCUDA)
+										using (var inc = clCompile.SingleLine("AdditionalIncludeDirectories"))
+										{
+											inc.Write("./;$(CudaToolkitDir)/include;");
+											if (CUDA.CommonInc != null)
+												inc.Write(CUDA.CommonInc.Replace('\\','/'));
+										}
+
+									clCompile.SingleLine("SDLCheck", true);
+									clCompile.SingleLine("RuntimeLibrary", "MultiThreaded" + (config.IsRelease ? "" : "Debug"));
+									clCompile.SingleLine("EnableParallelCodeGeneration", true);
+									clCompile.SingleLine("MultiProcessorCompilation", true);
+									clCompile.SingleLine("MinimalRebuild", false);
+
+
+									if (disableWarnings.Count > 0)
+										using (var dis = clCompile.SingleLine("DisableSpecificWarnings"))
+										{
+											dis.Write(string.Join(",", disableWarnings));
+										}
+
+									if (toolSetVersion.Major >= 14 && toolSetVersion.Minor >= 2)
+										clCompile.SingleLine("AdditionalOptions", $"/Zc:__cplusplus {ExtraProjectOptions} %(AdditionalOptions)");
+									else if (ExtraProjectOptions.Length > 0)
+										clCompile.SingleLine("AdditionalOptions", $"{ExtraProjectOptions} %(AdditionalOptions)");
+								}
+
+								WriteLinkSection(group, config, haveCUDA);
+
+								if (haveCUDA)
+									WriteCUDASection(group, config);
+
+
+								if (customManifests.Count > 0)
+									using (var mani = group.SubSection("Manifest"))
+									using (var additional = mani.SingleLine("AdditionalManifestFiles"))
+									{
+										StringBuilder combined = new StringBuilder();
+										foreach (var manifest in customManifests)
+										{
+											additional.SeparatedWrite("\"", " ");
+											additional.Write(manifest.FullName);
+											additional.Write("\"");
+										}
+									}
+								if (preBuildCommands.Count > 0)
+									using (var pre = group.SubSection("PreBuildEvent"))
+									{
+										foreach (Command cmd in PreBuildCommands)
+											using (var com = pre.SingleLine("Command"))
+											{
+												if (cmd.locatedExecutable.Exists)
+												{
+													com.Write("\"");
+													com.Write(cmd.locatedExecutable.FullName);
+													com.Write("\"");
+													foreach (string parameter in cmd.parameters)
+													{
+														com.Write(" \"");
+														com.Write(parameter);
+														com.Write("\"");
+													}
+												}
+												else
+													com.Write("\"" + Path.Combine(new string[] { "..", "..", cmd.originalExecutable }) + "\"" + cmd.QuotedParameters);
+											}
+									}
+							}
+						}
+						foreach (Source source in sources)
+						{
+							//source.ScanFiles(domain,this);
+							source.WriteProjectGroup(projectWriter);
+						}
+
+						using (var group = projectWriter.SubSection("ItemGroup"))
+						{
+							foreach (var r in references)
+							{
+								if (r.Project.SourcePath.Exists)
+									using (var projRef = group.SubSection("ProjectReference"))
+									{
+										projRef.AddParameter("Include", r.Project.OutFile.FullName);
+										projRef.SingleLine("Project", "{" + r.Project.LocalGuid + "}");
+									}
+							}
+						}
+
+						using (var group = projectWriter.SubSection("Import"))
+						{
+							group.AddParameter("Project", "$(VCTargetsPath)\\Microsoft.Cpp.targets");
+						}
+						using (var group = projectWriter.SubSection("ImportGroup"))
+						{
+							group.AddParameter("Label", "ExtensionTargets");
+							if (haveCUDA)
+							{
+								using (var imp = group.SubSection("Import"))
+								{
+									imp.AddParameter("Project", "$(CUDAPropsPath)\\CUDA "+CUDA.Version+".targets");
+								}
+							}
+						}
+
+					}
+				}
+				written = Program.ExportToDisk(file, streamWriter, written);
+			}
+
+
+
+			return new Tuple<File, Guid,bool>(file, id,written);
         }
+
+		/// <summary>
+		/// Writes the link section of the project into the specified parent section
+		/// </summary>
+		/// <param name="parent"></param>
+		/// <param name="config"></param>
+		/// <param name="haveCUDA"></param>
+		private void WriteLinkSection(XmlOut.Section parent, Configuration config, bool haveCUDA)
+		{
+			using (var linkSect = parent.SubSection("Link"))
+			{
+				if (SubSystem != null)
+					linkSect.SingleLine("SubSystem", SubSystem);
+				linkSect.SingleLine("GenerateDebugInformation", !config.Deploy);
+				if (CustomStackSize != -1)
+					linkSect.SingleLine("AdditionalOptions", $"/STACK:{CustomStackSize} %(AdditionalOptions)");
+
+				List<string> libs = new List<string>();
+				foreach (var lib in includedLibraries)
+				{
+					foreach (var link in lib.Link)
+						if (link.Item1.Test(config))
+							libs.Add(link.Item2);
+				}
+				if (haveCUDA)
+				{
+					libs.Add("cudart_static.lib");
+
+					linkSect.SingleLine("AdditionalLibraryDirectories", "$(CudaToolkitLibDir)");
+					linkSect.SingleLine("LinkTimeCodeGeneration", "UseLinkTimeCodeGeneration");
+				}
+
+
+				if (libs.Count > 0)
+					linkSect.SingleLine("AdditionalDependencies", libs.Fuse(";") + ";%(AdditionalDependencies)");
+			}
+		}
+
+
+		/// <summary>
+		/// Writes the link-like CudaCompile section for the specified config
+		/// </summary>
+		/// <param name="writer">Out writer to put sections into</param>
+		/// <param name="config">Configuration to read</param>
+		private void WriteCUDASection(XmlOut.Section writer, Configuration config)
+		{
+			using (XmlOut.Section cudaCompile = writer.SubSection("CudaCompile"))
+			{
+				using (XmlOut.Line codeGeneration = cudaCompile.SingleLine("CodeGeneration"))
+				{
+					foreach (string version in CUDA.GpuCodes)
+					{
+						codeGeneration.SeparatedWrite($"compute_{version},sm_{version}");
+					}
+				}
+
+				using (var line = cudaCompile.SingleLine("AdditionalOptions"))
+				{
+					line.Write("-Xcompiler \"/wd 4819\" --threads 0 -Wno-deprecated-gpu-targets %(AdditionalOptions)");
+				}
+
+				using (var line = cudaCompile.SingleLine("Include"))
+				{
+					line.SeparatedWrite("./");
+					if (CUDA.CommonInc != null)
+						line.SeparatedWrite(CUDA.CommonInc.Replace('\\', '/'));
+				}
+
+				using (var line = cudaCompile.SingleLine("Defines"))
+				{
+					line.SeparatedWrite("WIN32");
+				}
+
+				cudaCompile.SingleLine("Runtime", config.IsRelease ? "MT" : "MTd");
+				cudaCompile.SingleLine("TargetMachinePlatform", config.Platform == Platform.x64 ? "64" : "32");
+			}
+		}
 
 		public void RegisterDependencyNodes()
 		{

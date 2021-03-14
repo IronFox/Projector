@@ -106,10 +106,12 @@
     <Compile Include="BuildSolutions.Designer.cs">
       <DependentUpon>BuildSolutions.cs</DependentUpon>
     </Compile>
+    <Compile Include="CUDA.cs" />
     <Compile Include="DependencyNode.cs" />
     <Compile Include="DependencyTree.cs" />
     <Compile Include="EventLog.cs" />
     <Compile Include="Extensions.cs" />
+    <Compile Include="Line.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -121,6 +123,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Project.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Section.cs" />
     <Compile Include="Solution.cs" />
     <Compile Include="ToolsetVersion.cs" />
     <Compile Include="VSNotFoundException.cs" />

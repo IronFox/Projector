@@ -44,7 +44,7 @@
 			this.aboutTitle.Name = "aboutTitle";
 			this.aboutTitle.Size = new System.Drawing.Size(379, 37);
 			this.aboutTitle.TabIndex = 0;
-			this.aboutTitle.Text = "Projector v1.2";
+			this.aboutTitle.Text = "Projector v1.3";
 			this.aboutTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
 			// textBox
