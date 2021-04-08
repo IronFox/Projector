@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Projector
 {
+	/// <summary>
+	/// Handler class for Nvidia CUDA
+	/// </summary>
 	public static class CUDA
 	{
 		private static List<string> gpuCodes;
@@ -76,7 +79,9 @@ namespace Projector
 			return null;
 		}
 
-
+		/// <summary>
+		/// Queries the version of the installed CUDA compiler. May return null
+		/// </summary>
 		public static string Version
 		{
 			get
@@ -88,6 +93,10 @@ namespace Projector
 			}
 		}
 
+		/// <summary>
+		/// Attempts to identify the path where common CUDA include files are located. May return null.
+		/// If the property does not return null, then the return path is valid and points to a folder
+		/// </summary>
 		public static string CommonInc
 		{
 			get
@@ -102,7 +111,9 @@ namespace Projector
 			}
 		}
 
-
+		/// <summary>
+		/// Queries the compilation codes supported by the installed CUDA compiler. May return null
+		/// </summary>
 		public static IEnumerable<string> GpuCodes {
 			get
 			{

@@ -198,9 +198,9 @@ namespace Projector
 				}
 				else
 					solutionDesc = new PersistentState.SolutionDescriptor(Source, null);
-				
 
-				PersistentState.MemorizeRecent(solutionDesc, out newRecent);
+
+				newRecent = PersistentState.MemorizeRecent(solutionDesc);
 
 				XmlNodeList xprojects = xdoc.SelectNodes("solution/project");
 

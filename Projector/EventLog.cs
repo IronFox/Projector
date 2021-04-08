@@ -6,34 +6,44 @@ using System.Threading.Tasks;
 
 namespace Projector
 {
+	/// <summary>
+	/// Log cache
+	/// </summary>
 	public static class EventLog
 	{
-		//public enum EventType
-		//{
-		//	Message,
-		//	Warning
-		//}
-
+		/// <summary>
+		/// Notification created by <see cref="EventLog.Warn(Solution, Project, string)"/> or <see cref="EventLog.Inform(Solution, Project, string)"/>
+		/// </summary>
 		public struct Notification
 		{
+			/// <summary>
+			/// Notification content
+			/// </summary>
 			public readonly string Text;
+			/// <summary>
+			/// Notification solution context. May be null
+			/// </summary>
 			public readonly Solution Solution;
+			/// <summary>
+			/// Notification project context. May be null
+			/// </summary>
 			public readonly Project Project;
+			/// <summary>
+			/// Time stamp of this notification
+			/// </summary>
 			public readonly DateTime Stamp;
-			//public readonly EventType Type;
 
 			public override string ToString()
 			{
 				return (Project != null ? (Solution != null ? Solution.Name + "/" : "") + Project.Name +": ": (Solution != null ? Solution.Name + ": " : "") ) + Text;
 			}
 
-			public Notification(Solution s, Project p, string message/*, EventType type*/)
+			public Notification(Solution s, Project p, string message)
 			{
 				this.Project = p;
 				this.Text = message;
 				Solution = s;
 				Stamp = DateTime.Now;
-				//this.Type = type;
 			}
 		}
 
@@ -42,6 +52,13 @@ namespace Projector
 		private static DateTime lastEvent = DateTime.Now;
 
 		private static Solution current = null, currentWarn = null;
+
+		/// <summary>
+		/// Logs a warning
+		/// </summary>
+		/// <param name="s">Solution context. May be null</param>
+		/// <param name="p">Project context. May be null</param>
+		/// <param name="message">Warning message</param>
 		public static void Warn(Solution s, Project p, string message)
 		{
 			var msg = new Notification(s, p, message);
@@ -54,6 +71,12 @@ namespace Projector
 			lastEvent = DateTime.Now;
 		}
 
+		/// <summary>
+		/// Logs a notification
+		/// </summary>
+		/// <param name="s">Solution context. May be null</param>
+		/// <param name="p">Project context. May be null</param>
+		/// <param name="message">Message</param>
 		public static void Inform(Solution s, Project p, string message)
 		{
 			var msg = new Notification(s, p, message);
@@ -67,23 +90,18 @@ namespace Projector
 		}
 
 
-
-		//public IEnumerable<Notification> Events { get { return events; } }
-
-
+		/// <summary>
+		/// Clears all recorded warnings and messages
+		/// </summary>
 		public static void Clear()
 		{
 			warnings.Clear();
 			messages.Clear();
 		}
 
-		//public IEnumerable<Notification> All(EventType type)
-		//{
-		//	foreach (var ev in events)
-		//		if (ev.Type == type)
-		//			yield return ev;
-		//}
-
+		/// <summary>
+		/// All recorded messages since the last call to <see cref="Clear"/>
+		/// </summary>
 		public static IEnumerable<Notification> Messages
 		{
 			get
@@ -92,6 +110,9 @@ namespace Projector
 			}
 		}
 
+		/// <summary>
+		/// All recorded warnings since the last call to <see cref="Clear"/>
+		/// </summary>
 		public static IEnumerable<Notification> Warnings
 		{
 			get
@@ -100,6 +121,9 @@ namespace Projector
 			}
 		}
 
+		/// <summary>
+		/// Timestamp of the last recorded warning or notification
+		/// </summary>
 		public static DateTime LastEvent
 		{
 			get
@@ -108,6 +132,11 @@ namespace Projector
 			}
 		}
 
+		/// <summary>
+		/// If set true, notifications and warnings are logged to the system console as they occur
+		/// and not added to the internal notification/warning records.
+		/// False by default
+		/// </summary>
 		public static bool LogToConsole { get; internal set; }
 	}
 }

@@ -9,14 +9,24 @@ using System.Threading.Tasks;
 
 namespace Projector
 {
+	/// <summary>
+	/// Handler for processes normally executed in a console.
+	/// Output is redirected and a visual console window is suppressed
+	/// </summary>
 	public class ConsoleProcess
 	{
 		private List<string> outputLines = new List<string>();
-		private Process process;
+		private readonly Process process;
 
 
-
-		public ConsoleProcess(string workingDirectory, string executableName, string parameters, ProcessPriorityClass priority = ProcessPriorityClass.BelowNormal)
+		/// <summary>
+		/// Constructs the console process
+		/// </summary>
+		/// <param name="workingDirectory">Working directory of the created process</param>
+		/// <param name="executableName">Executable name, relative to given working directory</param>
+		/// <param name="runtimeArguments">Arguments passed to the started executable</param>
+		/// <param name="priority">Priority to use for the started process</param>
+		public ConsoleProcess(string workingDirectory, string executableName, string runtimeArguments, ProcessPriorityClass priority = ProcessPriorityClass.BelowNormal)
 		{
 			process = new Process();
 			process.StartInfo.RedirectStandardError = true;
@@ -28,7 +38,7 @@ namespace Projector
 
 			process.StartInfo.WorkingDirectory = workingDirectory;
 			process.StartInfo.FileName = Path.Combine(workingDirectory, executableName);
-			process.StartInfo.Arguments = parameters;
+			process.StartInfo.Arguments = runtimeArguments;
 
 			process.Start();
 			process.PriorityClass = priority;
@@ -67,38 +77,49 @@ namespace Projector
 			}
 		}
 
+		/// <summary>
+		/// Kills the local process and any child processes it may have created
+		/// </summary>
 		public void KillTree()
 		{
-			if (process != null)
-				KillProcessAndChildren(process.Id);
+			KillProcessAndChildren(process.Id);
 		}
 
 
+		/// <summary>
+		/// Checks if the local process is still running
+		/// </summary>
 		public bool IsRunning
 		{
 			get
 			{
-				return process != null && !process.HasExited;
+				return !process.HasExited;
 			}
 		}
 
+		/// <summary>
+		/// Retrieves the exit code of the locally started process
+		/// </summary>
 		public int ExitCode
 		{
 			get
 			{
-				if (process == null)
-					throw new InvalidOperationException("Process has not been started");
 				return process.ExitCode;
 			}
 		}
 
+		/// <summary>
+		/// Waits until the local process has exited
+		/// </summary>
 		public void WaitForExit()
 		{
-			if (process == null)
-				return;
 			process.WaitForExit();
 		}
 
+		/// <summary>
+		/// Fetches the accumulated console output of the process.
+		/// The local process must have exited
+		/// </summary>
 		public ICollection<string> Output
 		{
 			get

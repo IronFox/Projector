@@ -5,6 +5,10 @@ using System.Xml;
 
 namespace Projector
 {
+
+    /// <summary>
+    /// Access class for the persistently memorized configuration state
+    /// </summary>
     public static class PersistentState
     {
 
@@ -44,10 +48,10 @@ namespace Projector
 		}
 
 
-		/// <summary>
-		/// Retrieves the revently used solutions, ordered from most to least recently used
-		/// </summary>
-        public static IEnumerable<SolutionDescriptor> Recent { get { return recent; } }
+        /// <summary>
+        /// Retrieves the revently used solutions, ordered from most to least recently used
+        /// </summary>
+        public static IEnumerable<SolutionDescriptor> Recent => recent;
 
 
 		/// <summary>
@@ -75,7 +79,7 @@ namespace Projector
 		/// <summary>
 		/// Fetches the full path of the used state file
 		/// </summary>
-        public static FileInfo StateFile { get { return stateFile; }  }
+        public static FileInfo StateFile => stateFile;
 
 		/// <summary>
 		/// Restores the persistent state from file
@@ -133,7 +137,10 @@ namespace Projector
         private static Dictionary<string, File> outPaths = new Dictionary<string, File>();
         private static string toolset;
 
-        public static void Backup()
+        /// <summary>
+        /// Writes the local state to XML
+        /// </summary>
+        private static void Backup()
         {
             using (XmlWriter writer = XmlWriter.Create(StateFile.FullName))
             {
@@ -164,19 +171,33 @@ namespace Projector
             }
         }
 
-        public static void MemorizeRecent(SolutionDescriptor desc, out bool newRecent)
+        /// <summary>
+        /// Moves the specified solution to the top of recently opened solutions.
+        /// </summary>
+        /// <param name="desc">Solution descriptor</param>
+        /// <returns>True if the solution was newly added to the history, false if merely moved to the top</returns>
+        public static bool MemorizeRecent(SolutionDescriptor desc)
         {
-			newRecent = !recent.Remove(desc);
+			bool newRecent = !recent.Remove(desc);
 			recent.Insert(0, desc);
             Backup();
+            return newRecent;
         }
 
-        internal static void ClearRecent()
+        /// <summary>
+        /// Purges the memory of all recently opened solutions
+        /// </summary>
+        public static void ClearRecent()
         {
             recent.Clear();
             Backup();
         }
 
+        /// <summary>
+        /// Queries the last memorized output path for the specified solution file
+        /// </summary>
+        /// <param name="solutionFile">Path to the solution file to determine the output path of</param>
+        /// <returns>Last memorized output path. May be empty. Never null</returns>
         public static File GetOutPathFor(File solutionFile)
         {
 			File rs;
@@ -185,6 +206,11 @@ namespace Projector
             return new File();
         }
 
+        /// <summary>
+        /// Updates the output path of a solution
+        /// </summary>
+        /// <param name="solutionSourceFile">Path to the solution file to memorize the output path of</param>
+        /// <param name="solutionOutFile">Output path</param>
         public static void SetOutPathFor(File solutionSourceFile, File solutionOutFile)
         {
 			if (outPaths.ContainsKey(solutionSourceFile.FullName))

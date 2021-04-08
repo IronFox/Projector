@@ -36,6 +36,7 @@ This simple example recursively searches for all files (starting at ```[path]```
 * ```.cpp .c++ .cc``` (C++ file)
 * ```.ico``` (icon file)
 * ```.rc .rc2``` (Resource files)
+* ```.cu``` (CUDA files)
 * ```.hlsl .hlsli``` (HLSL shader files, excluded from compilation)
 
 Each source section receives its own filter (project sub-directory) in the final Visual Studio project file.
