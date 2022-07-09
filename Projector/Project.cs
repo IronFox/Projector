@@ -89,7 +89,7 @@ namespace Projector
 		/// <summary>
 		/// Configuration name target to be matched. null if not enabled (always true)
 		/// </summary>
-		public readonly string IfConfig;
+		public readonly string? IfConfig;
 
 		public Condition(Platform ifPlatform, string ifConfig)
 		{
@@ -99,32 +99,32 @@ namespace Projector
 
 		public Condition(XmlNode node, Solution domain, Project warnWhom)
 		{
-			XmlNode ifPlatform = node.Attributes.GetNamedItem("if_platform");
+			XmlNode? ifPlatform = node.Attributes?.GetNamedItem("if_platform");
 			try
 			{
-				if (ifPlatform != null && ifPlatform.Value.Length > 0)
-					IfPlatform = (Platform)Enum.Parse(typeof(Platform),ifPlatform.Value);
+				if (ifPlatform is not null && (ifPlatform.Value?.Length??0) > 0)
+					IfPlatform = (Platform)Enum.Parse(typeof(Platform),ifPlatform.Value!);
 				else
 					IfPlatform = Platform.None;
 			}
 			catch
 			{
-				if (ifPlatform.Value == "x32")
+				if (ifPlatform?.Value == "x32")
 					IfPlatform = Platform.x86;
 				else
 				{
-					warnWhom.Warn(domain, "Unable to decode condition platform '" + ifPlatform.Value + "'. Supported values are ARM, x32, and x64");
+					warnWhom.Warn(domain, "Unable to decode condition platform '" + ifPlatform?.Value + "'. Supported values are ARM, x32, and x64");
 					IfPlatform = Platform.None;
 				}
 			}
-			XmlNode ifConfig = node.Attributes.GetNamedItem("if_config");
-			if (ifConfig != null && ifConfig.Value.Length > 0)
+			XmlNode? ifConfig = node.Attributes?.GetNamedItem("if_config");
+			if (ifConfig is not null && (ifConfig.Value?.Length??0) > 0)
 				IfConfig = ifConfig.Value;
 			else
 				IfConfig = null;
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
 			if (!(obj is Condition))
 				return false;
@@ -187,33 +187,30 @@ namespace Projector
 	/// <summary>
 	/// Loaded project. Each .project file must be loaded only once
 	/// </summary>
-    public class Project
-    {
+	public class Project
+	{
 
 		/// <summary>
 		/// Details a category of possible source files (e.g. all .h files)
 		/// </summary>
-        public class CodeGroup
-        {
-            public string name;
-            public string tag;
-
-            public override int GetHashCode()
-            {
-                return name.GetHashCode();
-            }
-        }
+		public record CodeGroup(string name, string tag)
+		{
+			public override int GetHashCode()
+			{
+				return name.GetHashCode();
+			}
+		}
 
 		static Regex pathSplit = new Regex("(?:^| )(\"(?:[^\"]+|\"\")*\"|[^ ]*)", RegexOptions.Compiled);
 
 
-        public static CodeGroup cpp = new CodeGroup() { name = "C++", tag = "ClCompile" };
-        public static CodeGroup header = new CodeGroup() { name = "header", tag = "ClInclude" };
-        public static CodeGroup c = new CodeGroup() { name = "C", tag = "ClCompile" };
-        public static CodeGroup shader = new CodeGroup() { name = "Shader", tag = "None" };
-        public static CodeGroup image = new CodeGroup() { name = "Image", tag = "Image" };
-        public static CodeGroup resource = new CodeGroup() { name = "Resource", tag = "ResourceCompile" };
-		public static CodeGroup cuda = new CodeGroup() { name = "CUDA", tag = "CudaCompile" };
+		public static readonly CodeGroup cpp = new("C++", "ClCompile");
+		public static readonly CodeGroup header = new("header", "ClInclude");
+		public static readonly CodeGroup c = new("C", "ClCompile");
+		public static readonly CodeGroup shader = new("Shader", "None");
+		public static readonly CodeGroup image = new("Image", "Image");
+		public static readonly CodeGroup resource = new("Resource", "ResourceCompile");
+		public static readonly CodeGroup cuda = new("CUDA", "CudaCompile");
 
 
 
@@ -222,26 +219,26 @@ namespace Projector
 		/// All supported source extensions. Entries must be lower-case
 		/// </summary>
 		public static Dictionary<string, CodeGroup> ExtensionMap = new Dictionary<string, CodeGroup>()
-        {
-            {".h", header },
-            {".hpp", header },
-            {".h++", header },
-            {".hh", header },
+		{
+			{".h", header },
+			{".hpp", header },
+			{".h++", header },
+			{".hh", header },
 
-            {".c", c },
+			{".c", c },
 
-            {".hlsl", shader },
+			{".hlsl", shader },
 			{".hlsli", shader },
 
 			{".cu", cuda },
 
 
 			{".cpp", cpp },
-            {".c++", cpp },
-            {".cc", cpp },
+			{".c++", cpp },
+			{".cc", cpp },
 
-            {".ico", image },
-            { ".rc", resource },
+			{".ico", image },
+			{ ".rc", resource },
 			{ ".rc2", resource },
 		};
 
@@ -250,90 +247,103 @@ namespace Projector
 		/// Project source declaration. Each source targets a directory and may provide any number of exclusion-rules
 		/// </summary>
 		public class Source
-        {
+		{
 			/// <summary>
 			/// Root directory to search from
 			/// </summary>
-            public DirectoryInfo path;
+			public DirectoryInfo Path { get; }
 			/// <summary>
 			/// Set true to recursively check sub-directories
 			/// </summary>
-            public bool recursive = true;
+			public bool recursive = true;
+
+			public Source(DirectoryInfo path)
+			{
+				Path = path;
+			}
 
 
 			/// <summary>
 			/// Exclusion rule effective in the local source
 			/// </summary>
-            public class Exclude
-            {
-                public enum Type
-                {
-                    Find,
-                    Dir,
-                    File
-                }
+			public class Exclude
+			{
+				public enum Type
+				{
+					Find,
+					Dir,
+					File
+				}
 
-                public Type type = Type.Find;
-                public string parameter;
+				public Type type = Type.Find;
+				public string? parameter;
 
 
-                public bool Match(DirectoryInfo info)
-                {
-                    if (info == null)
-                        return false;
-                    switch (type)
-                    {
-                        case Type.Find:
-                            return info.FullName.Contains(parameter);
-                        case Type.Dir:
-                            return info.Name == parameter;// || Match(info.Parent);
-                    }
-                    return false;
-                }
-                public bool Match(FileInfo info)
-                {
-                    if (info == null)
-                        return false;
-                    switch (type)
-                    {
-                        case Type.Find:
-                            return info.FullName.Contains(parameter);
-                        case Type.File:
-                            return info.Name == parameter;
-                    }
-                    return false;
-                }
-            }
+				public bool Match(DirectoryInfo info)
+				{
+					if (info == null)
+						return false;
+					switch (type)
+					{
+						case Type.Find:
+							return parameter is not null && info.FullName.Contains(parameter);
+						case Type.Dir:
+							return info.Name == parameter;// || Match(info.Parent);
+					}
+					return false;
+				}
+				public bool Match(FileInfo info)
+				{
+					if (info == null)
+						return false;
+					switch (type)
+					{
+						case Type.Find:
+							return parameter is not null && info.FullName.Contains(parameter);
+						case Type.File:
+							return info.Name == parameter;
+					}
+					return false;
+				}
+			}
 			/// <summary>
 			/// List of all exclusion rules. May be null if there are none to be evaluated
 			/// </summary>
-            public List<Exclude> exclude = null;
+			public List<Exclude>? exclude = null;
 
 			/// <summary>
 			/// (possibly recursive) sub-directory that has been searched for possible files.
 			/// Instantiated during ScanFiles()
 			/// </summary>
-            public class Folder
-            {
-                public string name;
-                public Dictionary<CodeGroup, List<File>> groups = new Dictionary<CodeGroup, List<File>>();
-                public List<Folder> subFolders = new List<Folder>();
+			public class Folder
+			{
+				public string Name { get; }
 
+				public Dictionary<CodeGroup, List<FilePath>> Groups { get; } = new();
+				
+				public List<Folder> SubFolders { get; } = new();
+
+
+				public Folder(string name)
+				{
+					Name = name;
+				}
 
 				public void WriteFiles(XmlOut.Section writer)
 				{
-					foreach (var pair in groups)
+					foreach (var pair in Groups)
 					{
 						foreach (var file in pair.Value)
 							using (var fileSect = writer.SubSection(pair.Key.tag))
 							{
-								fileSect.AddParameter("Include", file.FullName);
+								if (file.FullName is not null)
+									fileSect.AddParameter("Include", file.FullName);
 
 								if (pair.Key.tag == "None")
 									fileSect.SingleLine("FileType", "Document");
 							}
 					}
-					foreach (var child in subFolders)
+					foreach (var child in SubFolders)
 						child.WriteFiles(writer);
 				}
 
@@ -343,9 +353,9 @@ namespace Projector
 					{
 						if (path.Length > 0)
 							path += "\\";
-						path += name;
+						path += Name;
 					}
-					foreach (var pair in groups)
+					foreach (var pair in Groups)
 					{
 						foreach (var file in pair.Value)
 						{
@@ -357,8 +367,8 @@ namespace Projector
 							writer.WriteLine("  </" + pair.Key.tag + ">");
 						}
 					}
-					foreach (var child in subFolders)
-						child.WriteFilters(writer,path,true);
+					foreach (var child in SubFolders)
+						child.WriteFilters(writer, path, true);
 				}
 
 				public void WriteFilterDeclarations(StreamWriter writer, string path, bool includeName)
@@ -367,23 +377,23 @@ namespace Projector
 					{
 						if (path.Length > 0)
 							path += "\\";
-						path += name;
+						path += Name;
 					}
 
 					WriteFilterDeclaration(writer, path);
-					foreach (var child in subFolders)
-						child.WriteFilterDeclarations(writer,path,true);
+					foreach (var child in SubFolders)
+						child.WriteFilterDeclarations(writer, path, true);
 
 				}
 
-				public IEnumerable<Tuple<CodeGroup, File>> EnumerateFiles()
+				public IEnumerable<Tuple<CodeGroup, FilePath>> EnumerateFiles()
 				{
-					foreach (var g in groups)
+					foreach (var g in Groups)
 					{
 						foreach (var f in g.Value)
-							yield return new Tuple<CodeGroup, File>(g.Key, f);
+							yield return new (g.Key, f);
 					}
-					foreach (var f in subFolders)
+					foreach (var f in SubFolders)
 					{
 						foreach (var rs in f.EnumerateFiles())
 							yield return rs;
@@ -391,7 +401,7 @@ namespace Projector
 				}
 			}
 
-            public Folder root;
+			public Folder? root;
 
 			/// <summary>
 			/// If set indicates that this source should be added to the include-directories of its own project as well as referencing external projects
@@ -406,90 +416,91 @@ namespace Projector
 			/// <param name="dir"></param>
 			/// <returns></returns>
 			public bool IsExcluded(DirectoryInfo dir)
-            {
-                if (dir.Name.StartsWith("."))
-                    return true;
-                if (exclude != null)
-                {
-                    foreach (var ex in exclude)
-                        if (ex.Match(dir))
-                            return true;
-                }
-                return false;
-            }
+			{
+				if (dir.Name.StartsWith("."))
+					return true;
+				if (exclude != null)
+				{
+					foreach (var ex in exclude)
+						if (ex.Match(dir))
+							return true;
+				}
+				return false;
+			}
 			/// <summary>
 			/// Checks whether or not a specific file is excluded
 			/// </summary>
 			/// <param name="file"></param>
 			/// <returns></returns>
-            public bool IsExcluded(FileInfo file)
-            {
-                if (exclude != null)
-                {
-                    foreach (var ex in exclude)
-                        if (ex.Match(file))
-                            return true;
-                }
-                return false;
-            }
+			public bool IsExcluded(FileInfo file)
+			{
+				if (exclude != null)
+				{
+					foreach (var ex in exclude)
+						if (ex.Match(file))
+							return true;
+				}
+				return false;
+			}
 
-            private void ScanFiles(Folder sub, DirectoryInfo current, bool recurse)
-            {
-                sub.name = current.Name;
-                foreach (var f in current.EnumerateFiles())
-                {
-                    if (IsExcluded(f))
-                        continue;
+			private void ScanFiles(Folder sub, DirectoryInfo current, bool recurse)
+			{
+				foreach (var f in current.EnumerateFiles())
+				{
+					if (IsExcluded(f))
+						continue;
 
-                    CodeGroup grp;
-                    if (ExtensionMap.TryGetValue(f.Extension.ToLower(), out grp))
-                    {
-                        List<File> list;
-                        if (!sub.groups.TryGetValue(grp, out list))
-                        {
-                            list = new List<File>();
-                            sub.groups.Add(grp, list);
-                        }
-                        list.Add(new File(f));
-                    }
-                }
+					CodeGroup? grp;
+					if (ExtensionMap.TryGetValue(f.Extension.ToLower(), out grp))
+					{
+						List<FilePath>? list;
+						if (!sub.Groups.TryGetValue(grp, out list))
+						{
+							list = new ();
+							sub.Groups.Add(grp, list);
+						}
+						list.Add(new FilePath(f));
+					}
+				}
 
-                if (recurse)
-                    foreach (DirectoryInfo d in current.EnumerateDirectories())
-                    {
-                        if (!IsExcluded(d))
-                        {
-                            Folder subsub = new Folder();
+				if (recurse)
+					foreach (DirectoryInfo d in current.EnumerateDirectories())
+					{
+						if (!IsExcluded(d))
+						{
+							Folder subsub = new Folder(d.Name);
 							ScanFiles(subsub, d, true);
-							if (subsub.groups.Count != 0 || subsub.subFolders.Count != 0)
-								sub.subFolders.Add(subsub);
-                        }
-                    }
+							if (subsub.Groups.Count != 0 || subsub.SubFolders.Count != 0)
+								sub.SubFolders.Add(subsub);
+						}
+					}
 
 
-            }
+			}
 
 			/// <summary>
 			/// Scans for includable files. Will only search for files when called for the first time. Subsequent calls will have no effect
 			/// </summary>
-            public void ScanFiles(Solution domain, Project parent)
-            {
-                if (root != null)
-                    return;
+			public void ScanFiles(Solution domain, Project parent)
+			{
+				if (root is not null)
+					return;
 
-                root = new Folder();
-                if (path.Exists)
-                {
-					EventLog.Inform(domain, parent,"Scanning "+path.Name+"...");
-                    ScanFiles(root, path, recursive);
-                }
-            }
+				root = new Folder(Path.Name);
+				if (Path.Exists == true)
+				{
+					EventLog.Inform(domain, parent, "Scanning " + Path.Name + "...");
+					ScanFiles(root, Path, recursive);
+				}
+			}
 
 
 
 
 			public void WriteProjectGroup(XmlOut.Section parent)
 			{
+				if (root is null)
+					throw new ArgumentNullException(nameof(root));
 				using (var group = parent.SubSection("ItemGroup"))
 					root.WriteFiles(group);
 			}
@@ -501,16 +512,20 @@ namespace Projector
 			/// <param name="writer">output writer stream</param>
 			/// <param name="rootPath">Path that is put in front of any local filter groups</param>
 			/// <param name="includeRootName">Set true to include the name of the local root folder, false to omit it</param>
-		
+
 			public void WriteProjectFilterGroup(StreamWriter writer, string rootPath, bool includeRootName)
 			{
+				if (root is null)
+					throw new ArgumentNullException(nameof(root));
 				writer.WriteLine("<ItemGroup>");
-				root.WriteFilters(writer,rootPath,includeRootName);
+				root.WriteFilters(writer, rootPath, includeRootName);
 				writer.WriteLine("</ItemGroup>");
 			}
 
-			public IEnumerable<Tuple<CodeGroup, File>> EnumerateFiles()
+			public IEnumerable<Tuple<CodeGroup, FilePath>> EnumerateFiles()
 			{
+				if (root is null)
+					throw new ArgumentNullException(nameof(root));
 				return root.EnumerateFiles();
 			}
 		}
@@ -518,9 +533,9 @@ namespace Projector
 		/// <summary>
 		/// Reference of a remote project
 		/// </summary>
-        public struct Reference
-        {
-            public readonly Project Project;
+		public struct Reference
+		{
+			public readonly Project Project;
 			public readonly bool IncludePath;
 
 			public Reference(Project project, bool includePath)
@@ -528,27 +543,27 @@ namespace Projector
 				Project = project;
 				IncludePath = includePath;
 			}
-        }
+		}
 
 		public class LibraryInclusion
 		{
-			public string Name { get ; private set; }
-			public DirectoryInfo Root { get; private set;}
+			public string Name { get; private set; }
+			public DirectoryInfo? Root { get; private set; }
 			public List<Tuple<Condition, DirectoryInfo>> Includes { get; private set; }
 			public List<Tuple<Condition, DirectoryInfo>> LinkDirectories { get; private set; }
 			public List<Tuple<Condition, string>> Link { get; private set; }
 
-            public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
-				LibraryInclusion other = obj as LibraryInclusion;
-				if (other == null)
+				var other = obj as LibraryInclusion;
+				if (other is null)
 					return false;
-                if (Link.Count == 0)
-                    return other.Link.Count == 0 && Name == other.Name;
+				if (Link.Count == 0)
+					return other.Link.Count == 0 && Name == other.Name;
 				if (Link.Count != other.Link.Count)
 					return false;
 				for (int i = 0; i < Link.Count; i++)
-				{ 
+				{
 					var a = Link[i];
 					var b = other.Link[i];
 					if (a.Item1 != b.Item1)
@@ -568,56 +583,58 @@ namespace Projector
 
 			public LibraryInclusion(XmlNode xLib, Solution domain, Project warn)
 			{
-				XmlNode xWarn = xLib.Attributes.GetNamedItem("warn_if_not_found");
-				bool doWarn = xWarn == null || xWarn.Value.ToUpper() != "FALSE";
-				XmlNode xName = xLib.Attributes.GetNamedItem("name");
-				if (xName == null)
+				var xWarn = xLib.Attributes?.GetNamedItem("warn_if_not_found");
+				bool doWarn = xWarn?.Value is null || xWarn.Value.ToUpper() != "FALSE";
+				var xName = xLib.Attributes?.GetNamedItem("name");
+				if (xName?.Value is null)
 				{
-					warn.Warn(domain,"<includeLibrary> lacks 'name' attribute");
+					warn.Warn(domain, "<includeLibrary> lacks 'name' attribute");
 					Name = "<Unnamed Library>";
 				}
 				else
 					Name = xName.Value;
 
 
-                Includes = new List<Tuple<Condition, DirectoryInfo>>();
-                LinkDirectories = new List<Tuple<Condition, DirectoryInfo>>();
-                Link = new List<Tuple<Condition, string>>();
+				Includes = new List<Tuple<Condition, DirectoryInfo>>();
+				LinkDirectories = new List<Tuple<Condition, DirectoryInfo>>();
+				Link = new List<Tuple<Condition, string>>();
 
 
-                HashSet<string>	knownRoots = new HashSet<string>();
+				HashSet<string> knownRoots = new HashSet<string>();
 
-				List<string>	missed = new List<string>();
-				XmlNodeList xRootHints = xLib.SelectNodes("rootRegistryHint");
-				foreach (XmlNode hint in xRootHints)
-				{
-					string fullKey = hint.InnerText;
-					int lastSlash = fullKey.LastIndexOf('\\');
-					if (lastSlash == -1)
+				List<string> missed = new List<string>();
+				var xRootHints = xLib.SelectNodes("rootRegistryHint");
+				if (xRootHints is not null)
+					foreach (XmlNode hint in xRootHints)
 					{
-						warn.Warn(domain,"<includeLibrary>/<rootRegistryHint>: '"+fullKey+"' is not a valid registry value");
-						continue;
-					}
-					string key = fullKey.Substring(0,lastSlash);
-					string valueName = fullKey.Substring(lastSlash+1);
+						string fullKey = hint.InnerText;
+						int lastSlash = fullKey.LastIndexOf('\\');
+						if (lastSlash == -1)
+						{
+							warn.Warn(domain, "<includeLibrary>/<rootRegistryHint>: '" + fullKey + "' is not a valid registry value");
+							continue;
+						}
+						string key = fullKey.Substring(0, lastSlash);
+						string valueName = fullKey.Substring(lastSlash + 1);
 
-					object result = Registry.GetValue(key,valueName,null);
-					if (result == null)
-					{
-						missed.Add(fullKey);
-						continue;
+						var result = Registry.GetValue(key, valueName, null);
+						var path = result?.ToString();
+						if (path is null)
+						{
+							missed.Add(fullKey);
+							continue;
+						}
+						DirectoryInfo info = new DirectoryInfo(path);
+						if (!info.Exists)
+						{
+							warn.Warn(domain, Name + ": The directory '" + path + " does not exist");
+						}
+						else
+						{
+							if (Root == null)
+								Root = info;
+						}
 					}
-					DirectoryInfo info = new DirectoryInfo(result.ToString());
-					if (!info.Exists)
-					{
-						warn.Warn(domain,Name+": The directory '"+result.ToString()+" does not exist");
-					}
-					else
-					{
-						if (Root == null)
-							Root = info;
-					}
-				}
 				if (Root == null && missed.Count == 0)
 				{
 					Root = domain.Source.Directory;
@@ -625,7 +642,7 @@ namespace Projector
 
 
 				if (Root == null)
-                {
+				{
 					if (doWarn)
 					{
 						if (missed.Count == 1)
@@ -633,81 +650,96 @@ namespace Projector
 						else
 							warn.Warn(domain, Name + ": None of the " + missed.Count + " root locations could be evaluated. Is this library installed on your machine?");
 					}
-                }
-                else
-                {
-                    XmlNodeList xIncludes = xLib.SelectNodes("include");
-                    foreach (XmlNode xInclude in xIncludes)
-                    {
-                        DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName, xInclude.InnerText));
-                        if (dir.Exists)
-							Includes.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xInclude, domain, warn), dir));
-                        else
-                            warn.Warn(domain,Name + ": Declared include directory '" + xInclude.InnerText + "' does not exist");
-                    }
+				}
+				else
+				{
+					var xIncludes = xLib.SelectNodes("include");
 
-                    XmlNodeList xLinkDirs = xLib.SelectNodes("linkDirectory");
-                    foreach (XmlNode xLinkDir in xLinkDirs)
-                    {
-                        DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName, xLinkDir.InnerText));
-                        if (dir.Exists)
-							LinkDirectories.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xLinkDir, domain, warn), dir));
-                        else
-							warn.Warn(domain, Name + ": Declared link directory '" + xLinkDir.InnerText + "' does not exist relative to "+Root.FullName);
-                    }
-                }
-
-                {
-					XmlNodeList xLink = xLib.SelectNodes("link");
-					foreach (XmlNode xl in xLink)
-					{
-						Condition condition = new Condition(xl, domain, warn);
-						bool okayDoAdd = true;
-						foreach (var dir in LinkDirectories)
+					if (xIncludes is not null)
+						foreach (XmlNode xInclude in xIncludes)
 						{
-							if (condition.Excludes(dir.Item1))
-								continue;
-
-							FileInfo file = new FileInfo(Path.Combine(dir.Item2.FullName, xl.InnerText));
-							if (!file.Exists)
-							{
-								okayDoAdd = false;
-								warn.Warn(domain, Name + ": Declared library '" + xl.InnerText + "' could not be located in context '" + dir.Item2.FullName + "'. Skipping");
-								break;
-							}
-
+							DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName, xInclude.InnerText));
+							if (dir.Exists)
+								Includes.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xInclude, domain, warn), dir));
+							else
+								warn.Warn(domain, Name + ": Declared include directory '" + xInclude.InnerText + "' does not exist");
 						}
-						if (okayDoAdd)
-							Link.Add(new Tuple<Condition, string>(condition, xl.InnerText));
-					}
+
+					var xLinkDirs = xLib.SelectNodes("linkDirectory");
+
+					if (xLinkDirs is not null)
+						foreach (XmlNode xLinkDir in xLinkDirs)
+						{
+							DirectoryInfo dir = new DirectoryInfo(Path.Combine(Root.FullName, xLinkDir.InnerText));
+							if (dir.Exists)
+								LinkDirectories.Add(new Tuple<Condition, DirectoryInfo>(new Condition(xLinkDir, domain, warn), dir));
+							else
+								warn.Warn(domain, Name + ": Declared link directory '" + xLinkDir.InnerText + "' does not exist relative to " + Root.FullName);
+						}
+				}
+
+				{
+					var xLink = xLib.SelectNodes("link");
+
+					if (xLink is not null)
+						foreach (XmlNode xl in xLink)
+						{
+							Condition condition = new Condition(xl, domain, warn);
+							bool okayDoAdd = true;
+							foreach (var dir in LinkDirectories)
+							{
+								if (condition.Excludes(dir.Item1))
+									continue;
+
+								FileInfo file = new FileInfo(Path.Combine(dir.Item2.FullName, xl.InnerText));
+								if (!file.Exists)
+								{
+									okayDoAdd = false;
+									warn.Warn(domain, Name + ": Declared library '" + xl.InnerText + "' could not be located in context '" + dir.Item2.FullName + "'. Skipping");
+									break;
+								}
+
+							}
+							if (okayDoAdd)
+								Link.Add(new Tuple<Condition, string>(condition, xl.InnerText));
+						}
 
 				}
 
 			}
-			
+
 
 		}
 
 
-		public struct Command
+		public readonly struct Command
 		{
-			public string		originalExecutable;
-			public File			locatedExecutable;
-			public string[]		parameters;
+			public string OriginalExecutable { get; }
+			public FilePath? LocatedExecutable { get; }
+			public string[] Parameters { get; }
+
+			public string ExecutablePath => LocatedExecutable?.Exists == true ? LocatedExecutable.FullName : OriginalExecutable;
+
+			public Command(string originalExecutable, string[] parameters, FilePath? locatedExecutable)
+			{
+				OriginalExecutable = originalExecutable;
+				LocatedExecutable = locatedExecutable;
+				Parameters = parameters;
+			}
 
 			public string QuotedParameters
 			{
 				get
 				{
-					if (parameters == null || parameters.Length == 0)
+					if (Parameters == null || Parameters.Length == 0)
 						return "";
-					return " \"" + string.Join("\" \"", parameters) + "\"";
+					return " \"" + string.Join("\" \"", Parameters) + "\"";
 				}
 			}
 
 			public override string ToString()
 			{
-				return originalExecutable + " " + string.Join(" ", parameters);
+				return OriginalExecutable + " " + string.Join(" ", Parameters);
 			}
 		}
 
@@ -715,7 +747,7 @@ namespace Projector
 		/// <summary>
 		/// Fetches all conditioned build target names.
 		/// </summary>
-		public IEnumerable<KeyValuePair<Platform, string>> CustomTargetNames { get {  return customTargetNames; } }
+		public IEnumerable<KeyValuePair<Platform, string>> CustomTargetNames { get { return customTargetNames; } }
 		/// <summary>
 		/// Retrieves all external libraries included by the local project
 		/// </summary>
@@ -723,7 +755,7 @@ namespace Projector
 		/// <summary>
 		/// Retrieves all locally referenced projects. May be empty, but never null
 		/// </summary>
-        public ICollection<Reference> References { get { return references; } }
+		public ICollection<Reference> References { get { return references; } }
 
 		/// <summary>
 		/// Options to add to the project configuration
@@ -738,7 +770,7 @@ namespace Projector
 		/// <summary>
 		/// Retrieves all local source directories. May be empty, but never null
 		/// </summary>
-        public ICollection<Source> Sources { get { return sources; } }
+		public ICollection<Source> Sources { get { return sources; } }
 		/// <summary>
 		/// Retrieves all included directories from any source (own sources, referenced projects, explicit inclusions). May be empty, but never null.
 		/// Explicit inclusions are listed first, followed by local sources flagged as 'include', and finally referenced projects flagged as 'include'.
@@ -751,7 +783,7 @@ namespace Projector
 					yield return inc.FullName;
 				foreach (var source in sources)
 					if (source.includeDirectory)
-						yield return source.path.FullName;
+						yield return source.Path.FullName;
 				foreach (var r in references)
 				{
 					if (!r.IncludePath)
@@ -759,7 +791,7 @@ namespace Projector
 					foreach (var source in r.Project.sources)
 					{
 						if (source.includeDirectory)
-							yield return source.path.FullName;
+							yield return source.Path.FullName;
 					}
 				}
 			}
@@ -771,7 +803,7 @@ namespace Projector
 		/// <summary>
 		/// Any configuration custom stack size (in bytes) to be used for the local project. Negative if not used (-1)
 		/// </summary>
-        public int CustomStackSize { get { return customStackSize; }}
+		public int CustomStackSize { get { return customStackSize; } }
 		/// <summary>
 		/// Retrieves all custom manifest files to be included in the local project. May be empty, but never null
 		/// </summary>
@@ -779,11 +811,11 @@ namespace Projector
 		/// <summary>
 		/// Retrieves all custom macros to be defined in the local project. May be empty, but never null
 		/// </summary>
-		public IEnumerable<KeyValuePair<string,string> > Macros { get { return macros; } }
+		public IEnumerable<KeyValuePair<string, string>> Macros { get { return macros; } }
 		/// <summary>
 		/// Details whether or not the local project was loaded as part of the solution (false), or by reference of some other project (true)
 		/// </summary>
-		public bool PurelyImplicitlyLoaded {  get; private set; }
+		public bool PurelyImplicitlyLoaded { get; private set; }
 		/// <summary>
 		/// Retrieves all projects that the local project has cloned ahead of loading its own data. May be empty, but never null
 		/// </summary>
@@ -791,23 +823,23 @@ namespace Projector
 		/// <summary>
 		/// Retrieves the VS-specific type of the local project. Typical values are 'StaticLibrary', or 'Application'
 		/// </summary>
-		public string Type { get; private set; }
+		public string? Type { get; private set; }
 		/// <summary>
 		/// Sub-type to be used with Type='Application'. Typical values are 'Windows', or 'Console'
 		/// </summary>
-		public string SubSystem { get; private set; }
+		public string? SubSystem { get; private set; }
 		/// <summary>
 		/// Name of the local project
 		/// </summary>
-		public readonly string Name;
+		public string Name { get; }
 		/// <summary>
-		/// Retrieves the .project file the local project was loaded from. May be null
+		/// Source .project file path. May be null
 		/// </summary>
-		public File SourcePath { get; private set; }
+		public FilePath? SourcePath { get; private set; }
 		/// <summary>
 		/// Checks whether or not the local project has a source path. Usually this is only false if the local project has not yet been loaded
 		/// </summary>
-		public bool HasSourceProject { get { return SourcePath.Exists; } }
+		public bool HasSourceProject => SourcePath?.Exists == true;
 
 
 
@@ -835,11 +867,12 @@ namespace Projector
 		/// </summary>
 		/// <param name="relativeToSolutionFile"></param>
 		/// <returns></returns>
-        public bool AutoConfigureSourcePath(File relativeToSolutionFile)
+        public bool AutoConfigureSourcePath(FilePath relativeToSolutionFile)
         {
             if (HasSourceProject)
                 return true;
-            SourcePath = GetRelative(relativeToSolutionFile.Directory, Name + ".project");
+
+			SourcePath = relativeToSolutionFile.GetRelative(Name + ".project");
             if (SourcePath.Exists)
                 return true;
             SourcePath = PathRegistry.LocateProject(Name);
@@ -854,7 +887,7 @@ namespace Projector
         {
             get
             {
-				return (SourcePath.Exists ? SourcePath.FullName : "").ToGuid();
+				return (SourcePath?.Exists == true ? SourcePath.FullName : "").ToGuid();
             }
         }
 
@@ -865,13 +898,15 @@ namespace Projector
 
 
 		/// <summary>
-		/// Retrieves the Visual Studio project output file (including extension)
+		/// Retrieves the Visual Studio project output file (including extension). Null if the local project does not have a source file
 		/// </summary>
-        public File OutFile
+        public FilePath? OutFile
         {
             get
             {
-                return new File(Path.Combine(Path.Combine(SourcePath.Directory.FullName, Path.Combine(WorkSubDirectory, "Projects" , Name)), Name + ".vcxproj"));
+                return SourcePath is not null ? 
+					new(Path.Combine(Path.Combine(SourcePath.FullDirectoryName, Path.Combine(WorkSubDirectory, "Projects" , Name)), Name + ".vcxproj")) 
+					: null;
             }
         }
 
@@ -884,17 +919,20 @@ namespace Projector
 		/// <param name="windowsTargetPlatformVersion">String containing the windows target platform version</param>
 		/// <param name="configurations"></param>
 		/// <returns></returns>
-		public Tuple<File, Guid, bool> SaveAs(ToolsetVersion toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
+		public Tuple<FilePath, Guid, bool> SaveAs(ToolsetVersion toolSetVersion, IEnumerable<Configuration> configurations, bool overwriteUserSettings, Solution domain)
         {
-			File file = OutFile;
-            if (!file.Directory.Exists)
+			if (Type is null)
+				throw new ArgumentNullException(nameof(Type));
+			if (SourcePath is null)
+				throw new ArgumentNullException(nameof(SourcePath));
+			FilePath? file = OutFile;
+			if (file is null)
+				throw new ArgumentNullException(nameof(OutFile));
+
+			if (!file.Directory.Exists)
                 Directory.CreateDirectory(file.Directory.FullName);
             Guid id = LocalGuid;
 			bool written = false;
-
-
-
-
 
 			foreach (Source source in sources)
 				source.ScanFiles(domain, this);
@@ -924,7 +962,8 @@ namespace Projector
 				WriteFilterDeclaration(writer, "Files");
 				foreach (Source source in sources)
 				{
-					source.root.WriteFilterDeclarations(writer, "Files", sources.Count != 1);
+					if (source.root is not null)
+						source.root.WriteFilterDeclarations(writer, "Files", sources.Count != 1);
 				}
 				writer.WriteLine("</ItemGroup>");
 
@@ -935,7 +974,7 @@ namespace Projector
 				}
 
 				writer.WriteLine("</Project>");
-				if (Program.ExportToDisk(new File(file.FullName + ".filters"), writer))
+				if (Program.ExportToDisk(new FilePath(file.FullName + ".filters"), writer))
 					written = true;
 			}
 
@@ -948,7 +987,7 @@ namespace Projector
 					foreach (var config in configurations)
 					{
 						writer.WriteLine("  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)' == '" + config + "'\">");
-						writer.WriteLine("    <LocalDebuggerWorkingDirectory>" + SourcePath.DirectoryName + "</LocalDebuggerWorkingDirectory>");
+						writer.WriteLine("    <LocalDebuggerWorkingDirectory>" + SourcePath.FullDirectoryName + "</LocalDebuggerWorkingDirectory>");
 						writer.WriteLine("  </PropertyGroup>");
 					}
 
@@ -1067,7 +1106,7 @@ namespace Projector
 
 								if (config.Deploy)
 								{
-									group.SingleLine("OutDir", SourcePath.DirectoryName + Path.DirectorySeparatorChar);
+									group.SingleLine("OutDir", SourcePath.FullDirectoryName + Path.DirectorySeparatorChar);
 								}
 								{
 									bool dummy;
@@ -1193,12 +1232,12 @@ namespace Projector
 										foreach (Command cmd in PreBuildCommands)
 											using (var com = pre.SingleLine("Command"))
 											{
-												if (cmd.locatedExecutable.Exists)
+												if (cmd.LocatedExecutable?.Exists == true)
 												{
 													com.Write("\"");
-													com.Write(cmd.locatedExecutable.FullName);
+													com.Write(cmd.LocatedExecutable.FullName!);
 													com.Write("\"");
-													foreach (string parameter in cmd.parameters)
+													foreach (string parameter in cmd.Parameters)
 													{
 														com.Write(" \"");
 														com.Write(parameter);
@@ -1206,7 +1245,7 @@ namespace Projector
 													}
 												}
 												else
-													com.Write("\"" + Path.Combine(new string[] { "..", "..", cmd.originalExecutable }) + "\"" + cmd.QuotedParameters);
+													com.Write("\"" + Path.Combine(new string[] { "..", "..", cmd.OriginalExecutable }) + "\"" + cmd.QuotedParameters);
 											}
 									}
 							}
@@ -1221,7 +1260,7 @@ namespace Projector
 						{
 							foreach (var r in references)
 							{
-								if (r.Project.SourcePath.Exists)
+								if (r.Project.SourcePath?.Exists == true && r.Project.OutFile!.FullName is not null)
 									using (var projRef = group.SubSection("ProjectReference"))
 									{
 										projRef.AddParameter("Include", r.Project.OutFile.FullName);
@@ -1253,7 +1292,7 @@ namespace Projector
 
 
 
-			return new Tuple<File, Guid,bool>(file, id,written);
+			return new Tuple<FilePath, Guid,bool>(file, id,written);
         }
 
 		/// <summary>
@@ -1337,7 +1376,7 @@ namespace Projector
 		{
 			foreach (var s in sources)
 			{
-				foreach (Tuple<CodeGroup, File> f in s.EnumerateFiles())
+				foreach (Tuple<CodeGroup, FilePath> f in s.EnumerateFiles())
 				{
 					DependencyTree.RegisterNode(this, f.Item2, f.Item1);
 				}
@@ -1346,7 +1385,7 @@ namespace Projector
 
 		public string GetReleaseTargetNameFor(Platform platform, out bool isCustom)
 		{
-			string customTargetName;
+			string? customTargetName;
 			if (customTargetNames.TryGetValue(platform,out customTargetName))
 			{ 
 				isCustom = true;
@@ -1378,11 +1417,14 @@ namespace Projector
 
         public void Load(XmlNode xproject, Solution domain)
         {
+			if (SourcePath is null)
+				throw new ArgumentNullException(nameof(SourcePath));
+
 			ExtraProjectOptions = "";
 			disableWarnings.Clear();
 
-			XmlNode xType = xproject.Attributes.GetNamedItem("type");
-            if (xType != null)
+			var xType = xproject.Attributes?.GetNamedItem("type");
+            if (xType?.Value is not null)
             {
                 Type = xType.Value;
                 int colon = Type.IndexOf(":");
@@ -1392,28 +1434,30 @@ namespace Projector
                     Type = Type.Substring(0, colon);
                 }
             }
-            XmlNodeList xClones = xproject.SelectNodes("clone");
+            var xClones = xproject.SelectNodes("clone");
             bool allThere = true;
             List<Project> clone = new List<Project>();
-            foreach (XmlNode xClone in xClones)
-            {
-                Project p = AddProjectReference(xClone, SourcePath,domain, this,false);
-				if (p == null)
-					continue;
-				if (p == this)
+			if (xClones is not null)
+				foreach (XmlNode xClone in xClones)
 				{
-					Warn(domain, "Cannot clone self.");
-					continue;
+					var p = AddProjectReference(xClone, SourcePath,domain, this,false);
+					if (p is null)
+						continue;
+					if (p == this)
+					{
+						Warn(domain, "Cannot clone self.");
+						continue;
 
+					}
+					p.AddReferencedBy(this);
+					if (!p.loaded)
+					{
+						allThere = false;
+					}
+					else
+						clone.Add(p);
 				}
-				p.AddReferencedBy(this);
-                if (!p.loaded)
-                {
-                    allThere = false;
-                }
-                else
-                    clone.Add(p);
-            }
+
             if (!allThere)
             {
                 roundTrip++;
@@ -1465,21 +1509,21 @@ namespace Projector
 			if (clone.Count > 0)
 				cloneSources = clone;
 
-            XmlNode xStack = xproject.Attributes.GetNamedItem("stackSize");
+            var xStack = xproject.Attributes?.GetNamedItem("stackSize");
             if (xStack != null)
                 customStackSize = int.Parse( xStack.InnerText);
 
 
-			XmlNode xExtraOptions = xproject.Attributes.GetNamedItem("extraProjectOptions");
+			var xExtraOptions = xproject.Attributes?.GetNamedItem("extraProjectOptions");
 			if (xExtraOptions != null)
 				ExtraProjectOptions = xExtraOptions.InnerText ?? "";
 
-			XmlNodeList xDisableWarnings = xproject.SelectNodes("disableWarning");
+			var xDisableWarnings = xproject.SelectNodes("disableWarning");
 			if (xDisableWarnings != null)
 			{
 				foreach (XmlNode xDisable in xDisableWarnings)
 				{
-					XmlNode xCode = xDisable.Attributes.GetNamedItem("code");
+					var xCode = xDisable.Attributes?.GetNamedItem("code");
 					if (xCode != null && !string.IsNullOrWhiteSpace(xCode.InnerText))
 						disableWarnings.Add(xCode.InnerText.Trim());
 					else
@@ -1490,157 +1534,157 @@ namespace Projector
 
 
 
-			XmlNodeList xmanifests = xproject.SelectNodes("manifest");
-			foreach (XmlNode xmanifest in xmanifests)
-			{ 
-				FileInfo file = new FileInfo(xmanifest.InnerText);
-				if (file.Exists)
-					customManifests.Add(file);
-				else
-					Warn(domain, "Cannot find manifest file '" + xmanifest.InnerText + "' relative to current directory '" + Directory.GetCurrentDirectory() + "'");
-			}
-
-
-            XmlNodeList xsources = xproject.SelectNodes("source");
-            foreach (XmlNode xsource in xsources)
-            {
-                AddSource(xsource, domain);
-            }
-
-			XmlNodeList xincludes = xproject.SelectNodes("include");
-			foreach (XmlNode xinclude in xincludes)
-			{
-				AddInclude(xinclude, domain);
-			}
-
-			XmlNodeList xtargets = xproject.SelectNodes("targetName");
-			foreach (XmlNode xtarget in xtargets)
-			{
-				XmlNode xplatform = xtarget.Attributes.GetNamedItem("platform");
-				if (xplatform == null)
-				{
-					Warn(domain, "'platform' attribute not set for targetName setting. Supported platforms are 'ARM', 'x32', 'x64' Ignoring");
-					continue;
-				}
-				Platform p;
-				try
-				{
-					p = (Platform)Enum.Parse(typeof(Platform),xplatform.Value);
-				}
-				catch (ArgumentException)
-				{
-					Warn(domain, "'platform' attribute value '" + xplatform.Value + "' does not point to a supported platform. Supported platforms are 'ARM', 'x32', 'x64' Ignoring");
-					continue;
+			var xmanifests = xproject?.SelectNodes("manifest");
+			if (xmanifests is not null)
+				foreach (XmlNode xmanifest in xmanifests)
+				{ 
+					FileInfo file = new FileInfo(xmanifest.InnerText);
+					if (file.Exists)
+						customManifests.Add(file);
+					else
+						Warn(domain, "Cannot find manifest file '" + xmanifest.InnerText + "' relative to current directory '" + Directory.GetCurrentDirectory() + "'");
 				}
 
-				if (customTargetNames.ContainsKey(p))
-					customTargetNames[p] = xtarget.InnerText;
-				else
-					customTargetNames.Add(p,xtarget.InnerText);
 
-			}
-
-            XmlNodeList xcommands = xproject.SelectNodes("command");
-            foreach (XmlNode xcommand in xcommands)
-            {
-				string source = xcommand.InnerText;
-
-				//string source = "combined executable split parameter \"joined parameter\"";
-
-				List<string> elements = new List<string>();
-				foreach (Match match in pathSplit.Matches(source))
+            var xsources = xproject?.SelectNodes("source");
+			if (xsources is not null)
+				foreach (XmlNode xsource in xsources)
 				{
-					string param = match.Value.Trim(new char[]{' ','\"'});
-					if (elements.Count > 0)
+					AddSource(xsource, domain);
+				}
+
+			var xincludes = xproject?.SelectNodes("include");
+			if (xincludes is not null)
+				foreach (XmlNode xinclude in xincludes)
+				{
+					AddInclude(xinclude, domain);
+				}
+
+			var xtargets = xproject?.SelectNodes("targetName");
+			if (xtargets is not null)
+				foreach (XmlNode xtarget in xtargets)
+				{
+					var xplatform = xtarget.Attributes?.GetNamedItem("platform");
+					if (xplatform?.Value is null)
 					{
-						FileInfo test = new FileInfo(param);
-						if (test.Exists)
-						{ 
-							//Inform("Parameter '"+param+"' of command '"+elements[0]+"' recognized as file. Replacing parameter with full path '"+test.FullName+"'");
-							Inform(domain, "'" + param + "' -> '" + test.FullName + "'");
-							param = test.FullName;
-						}
+						Warn(domain, "'platform' attribute not set for targetName setting. Supported platforms are 'ARM', 'x32', 'x64' Ignoring");
+						continue;
 					}
-					elements.Add(param);
+					Platform p;
+					try
+					{
+						p = (Platform)Enum.Parse(typeof(Platform),xplatform.Value);
+					}
+					catch (ArgumentException)
+					{
+						Warn(domain, "'platform' attribute value '" + xplatform.Value + "' does not point to a supported platform. Supported platforms are 'ARM', 'x32', 'x64' Ignoring");
+						continue;
+					}
+
+					if (customTargetNames.ContainsKey(p))
+						customTargetNames[p] = xtarget.InnerText;
+					else
+						customTargetNames.Add(p,xtarget.InnerText);
+
 				}
 
-
-
-				if (elements.Count == 0)
+            var xcommands = xproject?.SelectNodes("command");
+			if (xcommands is not null)
+				foreach (XmlNode xcommand in xcommands)
 				{
-					Warn(domain, "Empty command encountered");
-					continue;
+					string source = xcommand.InnerText;
+
+					//string source = "combined executable split parameter \"joined parameter\"";
+
+					List<string> elements = new List<string>();
+					foreach (Match match in pathSplit.Matches(source))
+					{
+						string param = match.Value.Trim(new char[]{' ','\"'});
+						if (elements.Count > 0)
+						{
+							FileInfo test = new FileInfo(param);
+							if (test.Exists)
+							{ 
+								//Inform("Parameter '"+param+"' of command '"+elements[0]+"' recognized as file. Replacing parameter with full path '"+test.FullName+"'");
+								Inform(domain, "'" + param + "' -> '" + test.FullName + "'");
+								param = test.FullName;
+							}
+						}
+						elements.Add(param);
+					}
+
+
+
+					if (elements.Count == 0)
+					{
+						Warn(domain, "Empty command encountered");
+						continue;
+					}
+
+					Command cmd;
+					var originalExecutable = elements[0];
+					FilePath? file = TryFindExecutable(originalExecutable);
+					if (!(file?.Exists == true))
+						file = TryFindExecutable(originalExecutable + ".exe");
+					if (!(file?.Exists == true))
+						file = TryFindExecutable(originalExecutable + ".bat");
+					if (file?.Exists == true)
+						cmd = new Command(originalExecutable: originalExecutable, parameters: elements.ToArray(1), locatedExecutable: file);
+					else
+					{
+						Warn(domain, "Unable to locate executable '" + originalExecutable + "' relative to '" + Directory.GetCurrentDirectory() + "'");
+						cmd = new Command(originalExecutable: originalExecutable, parameters: elements.ToArray(1), locatedExecutable: null);
+					}
+
+					preBuildCommands.Add(cmd);
 				}
 
-				Command cmd = new Command(){originalExecutable = elements[0],parameters = elements.ToArray(1)};
-				File file = TryFindExecutable(cmd.originalExecutable);
-				if (!file.Exists)
-					file = TryFindExecutable(cmd.originalExecutable+".exe");
-				if (!file.Exists)
-					file = TryFindExecutable(cmd.originalExecutable + ".bat");
-				if (file.Exists)
-					cmd.locatedExecutable = file;
-				else
-					Warn(domain, "Unable to locate executable '" + cmd.originalExecutable + "' relative to '"+ Directory.GetCurrentDirectory()+"'");
-
-                preBuildCommands.Add(cmd);
-            }
-
-			XmlNodeList xLibraries = xproject.SelectNodes("includeLibrary");
-			foreach (XmlNode xLib in xLibraries)
-			{
-				LibraryInclusion lib = new LibraryInclusion(xLib, domain, this);
-				if (!includedLibraries.Contains(lib))
-					includedLibraries.Add(lib);
-			}
+			var xLibraries = xproject?.SelectNodes("includeLibrary");
+			if (xLibraries is not null)
+				foreach (XmlNode xLib in xLibraries)
+				{
+					LibraryInclusion lib = new LibraryInclusion(xLib, domain, this);
+					if (!includedLibraries.Contains(lib))
+						includedLibraries.Add(lib);
+				}
 
 
-            XmlNodeList xmacros = xproject.SelectNodes("macro");
-            foreach (XmlNode xmacro in xmacros)
-            {
-                AddMacro(xmacro,domain);
-            }
-            XmlNodeList xreferences = xproject.SelectNodes("referenceProject");
-            foreach (XmlNode xreference in xreferences)
-            {
-                AddReference(xreference,domain);
-            }
+            var xmacros = xproject?.SelectNodes("macro");
+			if (xmacros is not null)
+				foreach (XmlNode xmacro in xmacros)
+				{
+					AddMacro(xmacro,domain);
+				}
+
+            var xreferences = xproject?.SelectNodes("referenceProject");
+			if (xreferences is not null)
+				foreach (XmlNode xreference in xreferences)
+				{
+					AddReference(xreference,domain);
+				}
         }
 
-		private File TryFindExecutable(string executable)
+		private FilePath? TryFindExecutable(string executable)
 		{
-			File file = new File(executable);
+			FilePath file = new(executable);
 			if (file.Exists)
 				return file;
 
-			string pathEnv = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine);
-			string[] paths = pathEnv.Split(Path.PathSeparator);
+			var pathEnv = Environment.GetEnvironmentVariable("PATH", EnvironmentVariableTarget.Machine);
+			string[] paths = pathEnv?.Split(Path.PathSeparator) ?? Array.Empty<string>();
 			foreach (string path in paths)
 			{
-				file = new File(Path.Combine(path, executable));
+				file = new (Path.Combine(path, executable));
 				if (file.Exists)
 					return file;
 			}
-			return new File();
+			return null;
 		}
 
 
 
 
-		/// <summary>
-		/// Determines the final path of fileName (which may be a fully qualified, even absolute path)
-		/// </summary>
-		/// <param name="searchScope"></param>
-		/// <param name="fileName"></param>
-		/// <returns></returns>
-        public static File GetRelative(DirectoryInfo searchScope, string fileName)
-        {
-            string current = Directory.GetCurrentDirectory();
-            Directory.SetCurrentDirectory(searchScope.FullName);
-			File rs = new File(fileName);
-            Directory.SetCurrentDirectory(current);
-            return rs;
-        }
+
         public static DirectoryInfo GetRelativeDir(DirectoryInfo searchScope, string dirName)
         {
             string current = Directory.GetCurrentDirectory();
@@ -1656,14 +1700,13 @@ namespace Projector
 		/// <param name="xproject">Source project declaration</param>
 		/// <param name="searchScope">Source path to look from when looking up relative paths</param>
 		/// <param name="warningsGoTo">Project that is supposed to collect warnings. May be null</param>
-		/// <returns>New or already existing project</returns>
-        public static Project AddProjectReference(XmlNode xproject, File searchScope, Solution domain, Project warningsGoTo, bool listAsLocalProject)
+		/// <returns>New or already existing project. Null if project does not provide a name</returns>
+        public static Project? AddProjectReference(XmlNode xproject, FilePath searchScope, Solution domain, Project? warningsGoTo, bool listAsLocalProject)
         {
-			//Debug.Assert(warningsGoTo == null || warningsGoTo.Solution == domain);
-            XmlNode xname = xproject.Attributes.GetNamedItem("name");
-            if (xname == null)
+			var xname = xproject.Attributes?.GetNamedItem("name");
+            if (xname?.Value is null)
             {
-				warningsGoTo.Warn(domain, "'name' attribute not set while parsing project entry");
+				warningsGoTo?.Warn(domain, "'name' attribute not set while parsing project entry");
                 return null;
             }
             string name = xname.Value;
@@ -1671,26 +1714,26 @@ namespace Projector
 			if (warningsGoTo == null)
 				p.PurelyImplicitlyLoaded = false;
 
-            XmlNode xpath = xproject.Attributes.GetNamedItem("path");
-            if (xpath != null)
+            var xpath = xproject.Attributes?.GetNamedItem("path");
+            if (xpath?.Value is not null)
             {
-                p.SourcePath = GetRelative(searchScope.Directory, xpath.Value);
+                p.SourcePath = searchScope.GetRelative(xpath.Value);
 				if (!p.SourcePath.Exists)
-					p.SourcePath = GetRelative(searchScope.Directory, Path.Combine(xpath.Value,name+".project"));
+					p.SourcePath = searchScope.GetRelative(Path.Combine(xpath.Value,name+".project"));
 				if (!p.SourcePath.Exists)
                 {
 					p.Warn(domain, "Explicit project path '" + xpath.Value + "' does not exist relative to '" + searchScope.FullName + "'");
-                    p.SourcePath = new File();
+                    p.SourcePath = null;
                 }
             }
 
 
 
-            XmlNode xprim = xproject.Attributes.GetNamedItem("primary");
-            if (xprim != null && xprim.Value.ToLower() == "true")
-			{ 
-				domain.SetPrimary(p);
-			}
+            var xprim = xproject.Attributes?.GetNamedItem("primary");
+				if (xprim?.Value?.ToLower() == "true")
+				{ 
+					domain.SetPrimary(p);
+				}
             return p;
         }
 
@@ -1709,8 +1752,8 @@ namespace Projector
 
         private void AddMacro(XmlNode xmacro, Solution domain)
         {
-            XmlNode xname = xmacro.Attributes.GetNamedItem("name");
-            if (xname == null)
+            var xname = xmacro.Attributes?.GetNamedItem("name");
+            if (xname?.Value is null)
             {
 				Warn(domain, "'name' attribute not set for macro");
                 return;
@@ -1722,15 +1765,22 @@ namespace Projector
 
         private void AddReference(XmlNode xreference, Solution domain)
         {
-            XmlNode xinclude = xreference.Attributes.GetNamedItem("includePath");
-            if (xinclude == null)
-                xinclude = xreference.Attributes.GetNamedItem("include");
-            Reference re = new Reference(
-									AddProjectReference(xreference, SourcePath,domain,this,true),
-									xinclude != null ? xinclude.Value == "true" : true
-									);
-            references.Add(re);
-			re.Project.AddReferencedBy(this);
+			if (SourcePath is null)
+				throw new ArgumentNullException(nameof(SourcePath));
+            var xinclude = xreference.Attributes?.GetNamedItem("includePath");
+            if (xinclude is null)
+                xinclude = xreference.Attributes?.GetNamedItem("include");
+
+			var project = AddProjectReference(xreference, SourcePath, domain, this, true);
+			if (project is not null)
+			{
+				Reference re = new Reference(
+										project,
+										xinclude?.Value is not null ? xinclude.Value == "true" : true
+										);
+				references.Add(re);
+				re.Project.AddReferencedBy(this);
+			}
         }
 
 		private void AddReferencedBy(Project project)
@@ -1740,19 +1790,21 @@ namespace Projector
 
 		private void AddSource(XmlNode xsource, Solution domain)
         {
-            
-            XmlNode xPath = xsource.Attributes.GetNamedItem("path");
-            if (xPath == null)
+			if (SourcePath is null)
+				throw new ArgumentNullException(nameof(SourcePath));
+
+			XmlNode? xPath = xsource.Attributes?.GetNamedItem("path");
+            if (xPath is null || xPath.Value is null)
             {
                 Warn(domain, "'path' attribute missing while parsing source entry");
                 return;
             }
-            Source s = new Source();
+            Source s = new Source(GetRelativeDir(SourcePath.Directory, xPath.Value));
 
-			XmlNode xInclude = xsource.Attributes.GetNamedItem("include");
-			if (xInclude != null)
+			XmlNode? xInclude = xsource.Attributes?.GetNamedItem("include");
+			if (xInclude is not null)
 			{
-				string value = xInclude.Value;
+				string value = xInclude.Value ?? "";
 				if (value.ToLower() == "true")
 					s.includeDirectory = true;
 				else
@@ -1762,22 +1814,21 @@ namespace Projector
 					Warn(domain, "source.include expected to be either 'true' or 'false', but got '" + value + "'. Defaulting to " + s.includeDirectory);
 			}
 
-            s.path = GetRelativeDir(SourcePath.Directory, xPath.Value);
-            if (!s.path.Exists)
+            if (!s.Path.Exists)
             {
 				Warn(domain, "Source path '" + xPath.Value + "' does not exist relative to '" + SourcePath.FullName + "'");
                 return;
             }
 
-            XmlNodeList xExcludes = xsource.SelectNodes("exclude");
+            XmlNodeList? xExcludes = xsource.SelectNodes("exclude");
             if (xExcludes != null && xExcludes.Count > 0)
             {
                 s.exclude = new List<Source.Exclude>();
                 foreach (XmlNode xExclude in xExcludes)
                 {
 
-					XmlNode xFind = xExclude.Attributes.GetNamedItem("find") ?? xExclude.Attributes.GetNamedItem("substr");
-                    if (xFind != null)
+					XmlNode? xFind = xExclude.Attributes?.GetNamedItem("find") ?? xExclude.Attributes?.GetNamedItem("substr");
+                    if (xFind is not null)
                     {
                         var ex = new Source.Exclude();
                         ex.type = Source.Exclude.Type.Find;
@@ -1786,10 +1837,10 @@ namespace Projector
                     }
                     else
                     {
-                        XmlNode xDir = xExclude.Attributes.GetNamedItem("dir");
-                        if (xDir == null)
-                            xDir = xExclude.Attributes.GetNamedItem("directory");
-                        if (xDir != null)
+                        XmlNode? xDir = xExclude.Attributes?.GetNamedItem("dir");
+                        if (xDir is null)
+                            xDir = xExclude.Attributes?.GetNamedItem("directory");
+                        if (xDir is not null)
                         {
                             var ex = new Source.Exclude();
                             ex.type = Source.Exclude.Type.Dir;
@@ -1798,8 +1849,8 @@ namespace Projector
                         }
                         else
                         {
-                            XmlNode xFile = xExclude.Attributes.GetNamedItem("file");
-                            if (xFile != null)
+                            XmlNode? xFile = xExclude.Attributes?.GetNamedItem("file");
+                            if (xFile is not null)
                             {
                                 var ex = new Source.Exclude();
                                 ex.type = Source.Exclude.Type.File;
@@ -1817,9 +1868,11 @@ namespace Projector
         }
 		private void AddInclude(XmlNode xinc, Solution domain)
 		{
+			if (SourcePath is null)
+				throw new ArgumentNullException(nameof(SourcePath));
 
-			XmlNode xPath = xinc.Attributes.GetNamedItem("path");
-			if (xPath == null)
+			XmlNode? xPath = xinc.Attributes?.GetNamedItem("path");
+			if (xPath is null || xPath.Value is null)
 			{
 				Warn(domain, "'path' attribute missing while parsing include entry");
 				return;

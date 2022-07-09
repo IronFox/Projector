@@ -31,7 +31,7 @@ namespace Projector
 			}
 		}
 
-		public ListViewItem ListViewItem {  get; set; }
+		public ListViewItem? ListViewItem {  get; set; }
 
 
 		private Dictionary<string, Project> localProjectMap = new Dictionary<string, Project>();
@@ -46,19 +46,19 @@ namespace Projector
 		/// <summary>
 		/// Currently chosen primary project. Can be null, but should not with a loaded solution
 		/// </summary>
-		public Project Primary { get; private set; }
+		public Project? Primary { get; private set; }
 
 
 		private PersistentState.SolutionDescriptor solutionDesc;
 
-		public string Name { get { return solutionDesc.Name; } }
-		public string Domain { get { return solutionDesc.Domain; } }
+		public string Name { get { return solutionDesc.Name ?? "<no name>"; } }
+		public string Domain { get { return solutionDesc.Domain ?? "<no domain>"; } }
 		public PersistentState.SolutionDescriptor Desc { get { return solutionDesc; } }
 
-		public readonly File Source;
-		public System.Diagnostics.Process visualStudioProcess;
+		public FilePath Source { get; }
+		public System.Diagnostics.Process? visualStudioProcess;
 
-		public Solution(File source)
+		public Solution(FilePath source)
 		{
 			this.Source = source;
 			//this.Events = new EventLog();
@@ -90,16 +90,16 @@ namespace Projector
 		/// Dequeues the next not-loaded project from the queue
 		/// </summary>
 		/// <returns>Project to load, or null if the queue is empty</returns>
-		public Project GetNextToLoad()
+		public Project? GetNextToLoad()
 		{
 			if (localProjectLoadQueue.Count == 0)
 				return null;
 			return localProjectLoadQueue.Dequeue();
 		}
 
-		private Project FetchKnownProject(string name, bool listAsLocalProject)
+		private Project? FetchKnownProject(string name, bool listAsLocalProject)
 		{
-			Project p;
+			Project? p;
 			if (localProjectMap.TryGetValue(name, out p))
 				return p;
 			if (globalProjectMap.TryGetValue(name, out p))
@@ -131,8 +131,8 @@ namespace Projector
 
 		public Project GetOrCreateProject(string name, bool listAsLocalProject)
 		{
-			Project p = FetchKnownProject(name, listAsLocalProject);
-			if (p != null)
+			Project? p = FetchKnownProject(name, listAsLocalProject);
+			if (p is not null)
 				return p;
 			p = CreateNewProject(name, listAsLocalProject);
 			return p;
@@ -163,7 +163,7 @@ namespace Projector
 		/// <param name="file">.solution file to load</param>
 		/// <param name="newRecent">Set to true if the solution is not listed in recent solutions, false otherwise</param>
 		/// <returns>New solution or null, if the specified file could not be loaded</returns>
-		public static Solution LoadNew(File file, out bool newRecent)
+		public static Solution? LoadNew(FilePath file, out bool newRecent)
 		{
 			Solution solution = new Solution(file);
 			if (!solution.Reload(out newRecent))
@@ -184,41 +184,36 @@ namespace Projector
 
 
 			{
-				var xreader = new XmlTextReader(Source.FullName);
+				var xreader = new XmlTextReader(Source.FullName!);
 				//int slashAt = Math.Max(file.FullName.LastIndexOf('/'), file.FullName.LastIndexOf('\\'));
 				XmlDocument xdoc = new XmlDocument();
 				xdoc.Load(xreader);
 
-				XmlNode xsolution = xdoc.SelectSingleNode("solution");
-				XmlNode xDomain = xsolution.Attributes.GetNamedItem("domain");
+				XmlNode? xsolution = xdoc.SelectSingleNode("solution");
+				XmlNode? xDomain = xsolution?.Attributes?.GetNamedItem("domain");
 				
-				if (xDomain != null)
-				{
-					solutionDesc = new PersistentState.SolutionDescriptor(Source, xDomain.Value);
-				}
-				else
-					solutionDesc = new PersistentState.SolutionDescriptor(Source, null);
+				solutionDesc = new PersistentState.SolutionDescriptor(Source, xDomain?.Value);
 
 
 				newRecent = PersistentState.MemorizeRecent(solutionDesc);
 
-				XmlNodeList xprojects = xdoc.SelectNodes("solution/project");
-
-				foreach (XmlNode xproject in xprojects)
-				{
-					Project.AddProjectReference(xproject, Source, this, null,true);
-				}
-				Directory.SetCurrentDirectory(Source.DirectoryName);
+				var xprojects = xdoc.SelectNodes("solution/project");
+				if (xprojects is not null)
+					foreach (XmlNode xproject in xprojects)
+					{
+						Project.AddProjectReference(xproject, Source, this, null,true);
+					}
+				Directory.SetCurrentDirectory(Source.FullDirectoryName);
 				xreader.Close();
 			}
 
-			Project p;
+			Project? p;
 			while ((p = GetNextToLoad()) != null)
 			{
 				if (!p.HasSourceProject && !p.AutoConfigureSourcePath(Source))
 					continue;
 
-				string filename = p.SourcePath.FullName;
+				string filename = p.SourcePath!.FullName;
 				try
 				{
 					var xreader = new XmlTextReader(filename);
@@ -226,8 +221,11 @@ namespace Projector
 					{
 						XmlDocument xdoc = new XmlDocument();
 						xdoc.Load(xreader);
-						XmlNode xproject = xdoc.SelectSingleNode("project");
-						p.Load(xproject, this);
+						XmlNode? xproject = xdoc.SelectSingleNode("project");
+						if (xproject is not null)
+							p.Load(xproject, this);
+						else
+							throw new Exception(filename+" lacks 'project' XML node");
 					}
 					catch (Exception e)
 					{
@@ -267,15 +265,15 @@ namespace Projector
 		}
 
 
-		public bool Build(File outPath, ToolsetVersion toolset, bool overwriteExistingVSUserConfig)
+		public bool Build(FilePath outPath, ToolsetVersion toolset, bool overwriteExistingVSUserConfig)
 		{
 			EventLog.Inform(this,null,"Writing solution to '" + outPath.FullName+"'");
 
             //PersistentState.Toolset = toolSet.SelectedItem.ToString();
 
-            DirectoryInfo dir = outPath.Directory;
+            DirectoryInfo? dir = outPath.Directory;
             //DirectoryInfo projectDir = Directory.CreateDirectory(Path.Combine(dir.FullName, ".projects"));
-            List<Tuple<File, Guid, Project>> projects = new List<Tuple<File, Guid, Project>>();
+            List<Tuple<FilePath, Guid, Project>> projects = new ();
 
 			var configurations = GetAllBuildConfigurations();
 
@@ -294,7 +292,7 @@ namespace Projector
 					EventLog.Inform(this,p,"Written to '"+rs.Item1.FullName+"'");
 				else
 					EventLog.Inform(this,p,"No changes: '"+rs.Item1.FullName+"'");
-				projects.Add(new Tuple<File, Guid, Project>(rs.Item1, rs.Item2, p));
+				projects.Add(new (rs.Item1, rs.Item2, p));
             }
 
 			MemoryStream stream = new MemoryStream();
@@ -310,7 +308,9 @@ namespace Projector
 
 			foreach (var tuple in projects)
             {
-                string path = tuple.Item1.FullName;
+                string? path = tuple.Item1.FullName;
+				if (path is null)
+					throw new Exception("Project '"+tuple.Item3.Name+"' lacks full path");
 				//Relativate(dir, tuple.Item1);
                 writer.WriteLine("Project(\"{" + typeGUID + "}\") = \"" + tuple.Item3.Name + "\", \"" + path + "\", \"{"
                     + tuple.Item2 + "}\"");

@@ -45,6 +45,8 @@
 			this.toolStripMenuItem1 = new System.Windows.Forms.ToolStripSeparator();
 			this.quitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.loadedSolutionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.reloadAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+			this.toolStripMenuItem9 = new System.Windows.Forms.ToolStripSeparator();
 			this.generateSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.openGeneratedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.toolStripMenuItem6 = new System.Windows.Forms.ToolStripSeparator();
@@ -74,9 +76,9 @@
 			this.openSelectedButton = new System.Windows.Forms.Button();
 			this.generateSelectedButton = new System.Windows.Forms.Button();
 			this.loadedSolutionsView = new System.Windows.Forms.ListView();
-			this.solutionNameHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-			this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+			this.solutionNameHeader = new System.Windows.Forms.ColumnHeader();
+			this.columnHeader1 = new System.Windows.Forms.ColumnHeader();
+			this.columnHeader2 = new System.Windows.Forms.ColumnHeader();
 			this.tabSelected = new System.Windows.Forms.TabPage();
 			this.solutionView = new System.Windows.Forms.TreeView();
 			this.panel1 = new System.Windows.Forms.Panel();
@@ -91,8 +93,6 @@
 			this.toolsetLabel = new System.Windows.Forms.Label();
 			this.toolSet = new System.Windows.Forms.ComboBox();
 			this.startVSTimer = new System.Windows.Forms.Timer(this.components);
-			this.reloadAllToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.toolStripMenuItem9 = new System.Windows.Forms.ToolStripSeparator();
 			this.menuStrip1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this.solutionViewSplit)).BeginInit();
 			this.solutionViewSplit.Panel1.SuspendLayout();
@@ -227,53 +227,65 @@
 			this.loadedSolutionsToolStripMenuItem.Size = new System.Drawing.Size(138, 24);
 			this.loadedSolutionsToolStripMenuItem.Text = "Loaded Solutions";
 			// 
+			// reloadAllToolStripMenuItem
+			// 
+			this.reloadAllToolStripMenuItem.Name = "reloadAllToolStripMenuItem";
+			this.reloadAllToolStripMenuItem.Size = new System.Drawing.Size(223, 26);
+			this.reloadAllToolStripMenuItem.Text = "Reload All";
+			this.reloadAllToolStripMenuItem.Click += new System.EventHandler(this.reloadAllToolStripMenuItem_Click);
+			// 
+			// toolStripMenuItem9
+			// 
+			this.toolStripMenuItem9.Name = "toolStripMenuItem9";
+			this.toolStripMenuItem9.Size = new System.Drawing.Size(220, 6);
+			// 
 			// generateSelectedToolStripMenuItem
 			// 
 			this.generateSelectedToolStripMenuItem.Name = "generateSelectedToolStripMenuItem";
-			this.generateSelectedToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+			this.generateSelectedToolStripMenuItem.Size = new System.Drawing.Size(223, 26);
 			this.generateSelectedToolStripMenuItem.Text = "Generate Selected";
 			this.generateSelectedToolStripMenuItem.Click += new System.EventHandler(this.GenerateSelectedButton_Click);
 			// 
 			// openGeneratedToolStripMenuItem
 			// 
 			this.openGeneratedToolStripMenuItem.Name = "openGeneratedToolStripMenuItem";
-			this.openGeneratedToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+			this.openGeneratedToolStripMenuItem.Size = new System.Drawing.Size(223, 26);
 			this.openGeneratedToolStripMenuItem.Text = "Open Generated";
 			this.openGeneratedToolStripMenuItem.Click += new System.EventHandler(this.openSelectedButton_Click);
 			// 
 			// toolStripMenuItem6
 			// 
 			this.toolStripMenuItem6.Name = "toolStripMenuItem6";
-			this.toolStripMenuItem6.Size = new System.Drawing.Size(221, 6);
+			this.toolStripMenuItem6.Size = new System.Drawing.Size(220, 6);
 			// 
 			// unloadSelectedToolStripMenuItem
 			// 
 			this.unloadSelectedToolStripMenuItem.Name = "unloadSelectedToolStripMenuItem";
-			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+			this.unloadSelectedToolStripMenuItem.Size = new System.Drawing.Size(223, 26);
 			this.unloadSelectedToolStripMenuItem.Text = "Unload Selected";
 			this.unloadSelectedToolStripMenuItem.Click += new System.EventHandler(this.unloadSelectedToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem7
 			// 
 			this.toolStripMenuItem7.Name = "toolStripMenuItem7";
-			this.toolStripMenuItem7.Size = new System.Drawing.Size(221, 6);
+			this.toolStripMenuItem7.Size = new System.Drawing.Size(220, 6);
 			// 
 			// generateMakefileToolStripMenuItem
 			// 
 			this.generateMakefileToolStripMenuItem.Name = "generateMakefileToolStripMenuItem";
-			this.generateMakefileToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+			this.generateMakefileToolStripMenuItem.Size = new System.Drawing.Size(223, 26);
 			this.generateMakefileToolStripMenuItem.Text = "Generate Makefiles";
 			this.generateMakefileToolStripMenuItem.Click += new System.EventHandler(this.generateMakefileToolStripMenuItem_Click);
 			// 
 			// toolStripMenuItem8
 			// 
 			this.toolStripMenuItem8.Name = "toolStripMenuItem8";
-			this.toolStripMenuItem8.Size = new System.Drawing.Size(221, 6);
+			this.toolStripMenuItem8.Size = new System.Drawing.Size(220, 6);
 			// 
 			// buildSelectedToolStripMenuItem
 			// 
 			this.buildSelectedToolStripMenuItem.Name = "buildSelectedToolStripMenuItem";
-			this.buildSelectedToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
+			this.buildSelectedToolStripMenuItem.Size = new System.Drawing.Size(223, 26);
 			this.buildSelectedToolStripMenuItem.Text = "(Re)Build Selected...";
 			this.buildSelectedToolStripMenuItem.Click += new System.EventHandler(this.buildSelectedToolStripMenuItem_Click);
 			// 
@@ -374,8 +386,8 @@
 			this.solutionViewSplit.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.solutionViewSplit.Location = new System.Drawing.Point(0, 68);
-			this.solutionViewSplit.Margin = new System.Windows.Forms.Padding(4);
+			this.solutionViewSplit.Location = new System.Drawing.Point(0, 85);
+			this.solutionViewSplit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.solutionViewSplit.Name = "solutionViewSplit";
 			this.solutionViewSplit.Orientation = System.Windows.Forms.Orientation.Horizontal;
 			// 
@@ -388,9 +400,9 @@
 			// 
 			this.solutionViewSplit.Panel2.Controls.Add(this.log);
 			this.solutionViewSplit.Panel2.Controls.Add(this.logLabel);
-			this.solutionViewSplit.Size = new System.Drawing.Size(752, 470);
-			this.solutionViewSplit.SplitterDistance = 319;
-			this.solutionViewSplit.SplitterWidth = 5;
+			this.solutionViewSplit.Size = new System.Drawing.Size(752, 595);
+			this.solutionViewSplit.SplitterDistance = 403;
+			this.solutionViewSplit.SplitterWidth = 6;
 			this.solutionViewSplit.TabIndex = 3;
 			// 
 			// mainTabControl
@@ -400,20 +412,20 @@
 			this.mainTabControl.Controls.Add(this.tabSelected);
 			this.mainTabControl.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.mainTabControl.Location = new System.Drawing.Point(0, 0);
-			this.mainTabControl.Margin = new System.Windows.Forms.Padding(4);
+			this.mainTabControl.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.mainTabControl.Name = "mainTabControl";
 			this.mainTabControl.SelectedIndex = 0;
-			this.mainTabControl.Size = new System.Drawing.Size(752, 319);
+			this.mainTabControl.Size = new System.Drawing.Size(752, 403);
 			this.mainTabControl.TabIndex = 3;
 			// 
 			// tabRecent
 			// 
 			this.tabRecent.Controls.Add(this.recentSolutions);
-			this.tabRecent.Location = new System.Drawing.Point(4, 25);
-			this.tabRecent.Margin = new System.Windows.Forms.Padding(4);
+			this.tabRecent.Location = new System.Drawing.Point(4, 29);
+			this.tabRecent.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.tabRecent.Name = "tabRecent";
-			this.tabRecent.Padding = new System.Windows.Forms.Padding(4);
-			this.tabRecent.Size = new System.Drawing.Size(744, 290);
+			this.tabRecent.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.tabRecent.Size = new System.Drawing.Size(744, 370);
 			this.tabRecent.TabIndex = 0;
 			this.tabRecent.Text = "Recent";
 			this.tabRecent.UseVisualStyleBackColor = true;
@@ -423,10 +435,10 @@
 			this.recentSolutions.AllowDrop = true;
 			this.recentSolutions.AutoScroll = true;
 			this.recentSolutions.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.recentSolutions.Location = new System.Drawing.Point(4, 4);
-			this.recentSolutions.Margin = new System.Windows.Forms.Padding(4);
+			this.recentSolutions.Location = new System.Drawing.Point(4, 5);
+			this.recentSolutions.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.recentSolutions.Name = "recentSolutions";
-			this.recentSolutions.Size = new System.Drawing.Size(736, 282);
+			this.recentSolutions.Size = new System.Drawing.Size(736, 360);
 			this.recentSolutions.TabIndex = 7;
 			this.recentSolutions.DragDrop += new System.Windows.Forms.DragEventHandler(this.recentSolutions_DragDrop);
 			this.recentSolutions.DragEnter += new System.Windows.Forms.DragEventHandler(this.recentSolutions_DragEnter);
@@ -435,10 +447,10 @@
 			// 
 			this.tabLoaded.Controls.Add(this.panel3);
 			this.tabLoaded.Controls.Add(this.loadedSolutionsView);
-			this.tabLoaded.Location = new System.Drawing.Point(4, 25);
-			this.tabLoaded.Margin = new System.Windows.Forms.Padding(4);
+			this.tabLoaded.Location = new System.Drawing.Point(4, 29);
+			this.tabLoaded.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.tabLoaded.Name = "tabLoaded";
-			this.tabLoaded.Size = new System.Drawing.Size(744, 290);
+			this.tabLoaded.Size = new System.Drawing.Size(744, 370);
 			this.tabLoaded.TabIndex = 2;
 			this.tabLoaded.Text = "Loaded";
 			this.tabLoaded.UseVisualStyleBackColor = true;
@@ -450,19 +462,19 @@
 			this.panel3.Controls.Add(this.openSelectedButton);
 			this.panel3.Controls.Add(this.generateSelectedButton);
 			this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
-			this.panel3.Location = new System.Drawing.Point(0, 253);
-			this.panel3.Margin = new System.Windows.Forms.Padding(4);
+			this.panel3.Location = new System.Drawing.Point(0, 324);
+			this.panel3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.panel3.Name = "panel3";
-			this.panel3.Size = new System.Drawing.Size(744, 37);
+			this.panel3.Size = new System.Drawing.Size(744, 46);
 			this.panel3.TabIndex = 1;
 			// 
 			// openSelectedButton
 			// 
 			this.openSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
 			this.openSelectedButton.Location = new System.Drawing.Point(380, 0);
-			this.openSelectedButton.Margin = new System.Windows.Forms.Padding(4);
+			this.openSelectedButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.openSelectedButton.Name = "openSelectedButton";
-			this.openSelectedButton.Size = new System.Drawing.Size(364, 33);
+			this.openSelectedButton.Size = new System.Drawing.Size(364, 41);
 			this.openSelectedButton.TabIndex = 1;
 			this.openSelectedButton.Text = "Open Generated";
 			this.openSelectedButton.UseVisualStyleBackColor = true;
@@ -473,9 +485,9 @@
 			this.generateSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.generateSelectedButton.Location = new System.Drawing.Point(-1, 0);
-			this.generateSelectedButton.Margin = new System.Windows.Forms.Padding(4);
+			this.generateSelectedButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.generateSelectedButton.Name = "generateSelectedButton";
-			this.generateSelectedButton.Size = new System.Drawing.Size(380, 33);
+			this.generateSelectedButton.Size = new System.Drawing.Size(380, 41);
 			this.generateSelectedButton.TabIndex = 0;
 			this.generateSelectedButton.Text = "Generate Selected Solutions";
 			this.generateSelectedButton.UseVisualStyleBackColor = true;
@@ -494,15 +506,14 @@
             this.columnHeader2});
 			this.loadedSolutionsView.FullRowSelect = true;
 			this.loadedSolutionsView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
-			this.loadedSolutionsView.HideSelection = false;
 			listViewItem1.StateImageIndex = 0;
 			this.loadedSolutionsView.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
             listViewItem1});
 			this.loadedSolutionsView.Location = new System.Drawing.Point(0, 0);
-			this.loadedSolutionsView.Margin = new System.Windows.Forms.Padding(4);
+			this.loadedSolutionsView.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.loadedSolutionsView.MultiSelect = false;
 			this.loadedSolutionsView.Name = "loadedSolutionsView";
-			this.loadedSolutionsView.Size = new System.Drawing.Size(740, 237);
+			this.loadedSolutionsView.Size = new System.Drawing.Size(740, 314);
 			this.loadedSolutionsView.TabIndex = 0;
 			this.loadedSolutionsView.UseCompatibleStateImageBehavior = false;
 			this.loadedSolutionsView.View = System.Windows.Forms.View.Details;
@@ -530,11 +541,11 @@
 			// 
 			this.tabSelected.Controls.Add(this.solutionView);
 			this.tabSelected.Controls.Add(this.panel1);
-			this.tabSelected.Location = new System.Drawing.Point(4, 25);
-			this.tabSelected.Margin = new System.Windows.Forms.Padding(4);
+			this.tabSelected.Location = new System.Drawing.Point(4, 29);
+			this.tabSelected.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.tabSelected.Name = "tabSelected";
-			this.tabSelected.Padding = new System.Windows.Forms.Padding(4);
-			this.tabSelected.Size = new System.Drawing.Size(744, 290);
+			this.tabSelected.Padding = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.tabSelected.Size = new System.Drawing.Size(744, 370);
 			this.tabSelected.TabIndex = 1;
 			this.tabSelected.Text = "Focused (none)";
 			this.tabSelected.UseVisualStyleBackColor = true;
@@ -543,11 +554,11 @@
 			// 
 			this.solutionView.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.solutionView.FullRowSelect = true;
-			this.solutionView.Location = new System.Drawing.Point(4, 32);
-			this.solutionView.Margin = new System.Windows.Forms.Padding(4);
+			this.solutionView.Location = new System.Drawing.Point(4, 40);
+			this.solutionView.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.solutionView.Name = "solutionView";
 			this.solutionView.ShowLines = false;
-			this.solutionView.Size = new System.Drawing.Size(736, 254);
+			this.solutionView.Size = new System.Drawing.Size(736, 325);
 			this.solutionView.TabIndex = 6;
 			// 
 			// panel1
@@ -555,10 +566,10 @@
 			this.panel1.Controls.Add(this.openGeneratedSolutionButton);
 			this.panel1.Controls.Add(this.buildSolutionButton);
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-			this.panel1.Location = new System.Drawing.Point(4, 4);
-			this.panel1.Margin = new System.Windows.Forms.Padding(4);
+			this.panel1.Location = new System.Drawing.Point(4, 5);
+			this.panel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.panel1.Name = "panel1";
-			this.panel1.Size = new System.Drawing.Size(736, 28);
+			this.panel1.Size = new System.Drawing.Size(736, 35);
 			this.panel1.TabIndex = 5;
 			// 
 			// openGeneratedSolutionButton
@@ -566,9 +577,9 @@
 			this.openGeneratedSolutionButton.Dock = System.Windows.Forms.DockStyle.Right;
 			this.openGeneratedSolutionButton.Enabled = false;
 			this.openGeneratedSolutionButton.Location = new System.Drawing.Point(369, 0);
-			this.openGeneratedSolutionButton.Margin = new System.Windows.Forms.Padding(4);
+			this.openGeneratedSolutionButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.openGeneratedSolutionButton.Name = "openGeneratedSolutionButton";
-			this.openGeneratedSolutionButton.Size = new System.Drawing.Size(367, 28);
+			this.openGeneratedSolutionButton.Size = new System.Drawing.Size(367, 35);
 			this.openGeneratedSolutionButton.TabIndex = 3;
 			this.openGeneratedSolutionButton.Text = "Open Generated";
 			this.openGeneratedSolutionButton.UseVisualStyleBackColor = true;
@@ -580,9 +591,9 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.buildSolutionButton.Enabled = false;
 			this.buildSolutionButton.Location = new System.Drawing.Point(0, 0);
-			this.buildSolutionButton.Margin = new System.Windows.Forms.Padding(4);
+			this.buildSolutionButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.buildSolutionButton.Name = "buildSolutionButton";
-			this.buildSolutionButton.Size = new System.Drawing.Size(371, 28);
+			this.buildSolutionButton.Size = new System.Drawing.Size(371, 35);
 			this.buildSolutionButton.TabIndex = 2;
 			this.buildSolutionButton.Text = "Build Solution";
 			this.buildSolutionButton.UseVisualStyleBackColor = true;
@@ -593,23 +604,23 @@
 			this.log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this.log.Location = new System.Drawing.Point(0, 27);
-			this.log.Margin = new System.Windows.Forms.Padding(4);
+			this.log.Location = new System.Drawing.Point(4, 34);
+			this.log.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.log.MaxLength = 65536;
 			this.log.Multiline = true;
 			this.log.Name = "log";
 			this.log.ReadOnly = true;
 			this.log.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this.log.Size = new System.Drawing.Size(751, 116);
+			this.log.Size = new System.Drawing.Size(744, 143);
 			this.log.TabIndex = 1;
 			// 
 			// logLabel
 			// 
 			this.logLabel.AutoSize = true;
-			this.logLabel.Location = new System.Drawing.Point(4, 7);
+			this.logLabel.Location = new System.Drawing.Point(4, 9);
 			this.logLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.logLabel.Name = "logLabel";
-			this.logLabel.Size = new System.Drawing.Size(32, 17);
+			this.logLabel.Size = new System.Drawing.Size(34, 20);
 			this.logLabel.TabIndex = 0;
 			this.logLabel.Text = "Log";
 			// 
@@ -618,7 +629,7 @@
 			this.statusStrip.ImageScalingSize = new System.Drawing.Size(20, 20);
 			this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toolStripStatusLabel1});
-			this.statusStrip.Location = new System.Drawing.Point(0, 543);
+			this.statusStrip.Location = new System.Drawing.Point(0, 685);
 			this.statusStrip.Name = "statusStrip";
 			this.statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 19, 0);
 			this.statusStrip.Size = new System.Drawing.Size(752, 26);
@@ -637,19 +648,19 @@
             | System.Windows.Forms.AnchorStyles.Right)));
 			this.toolsetPanel.Controls.Add(this.toolsetLabel);
 			this.toolsetPanel.Controls.Add(this.toolSet);
-			this.toolsetPanel.Location = new System.Drawing.Point(0, 30);
-			this.toolsetPanel.Margin = new System.Windows.Forms.Padding(4);
+			this.toolsetPanel.Location = new System.Drawing.Point(0, 38);
+			this.toolsetPanel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.toolsetPanel.Name = "toolsetPanel";
-			this.toolsetPanel.Size = new System.Drawing.Size(751, 38);
+			this.toolsetPanel.Size = new System.Drawing.Size(751, 48);
 			this.toolsetPanel.TabIndex = 6;
 			// 
 			// toolsetLabel
 			// 
 			this.toolsetLabel.AutoSize = true;
-			this.toolsetLabel.Location = new System.Drawing.Point(0, 9);
+			this.toolsetLabel.Location = new System.Drawing.Point(0, 11);
 			this.toolsetLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.toolsetLabel.Name = "toolsetLabel";
-			this.toolsetLabel.Size = new System.Drawing.Size(107, 17);
+			this.toolsetLabel.Size = new System.Drawing.Size(109, 20);
 			this.toolsetLabel.TabIndex = 3;
 			this.toolsetLabel.Text = "Toolset Version";
 			// 
@@ -660,10 +671,10 @@
 			this.toolSet.DisplayMember = "1";
 			this.toolSet.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.toolSet.FormattingEnabled = true;
-			this.toolSet.Location = new System.Drawing.Point(115, 6);
-			this.toolSet.Margin = new System.Windows.Forms.Padding(4);
+			this.toolSet.Location = new System.Drawing.Point(115, 8);
+			this.toolSet.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.toolSet.Name = "toolSet";
-			this.toolSet.Size = new System.Drawing.Size(236, 24);
+			this.toolSet.Size = new System.Drawing.Size(632, 28);
 			this.toolSet.TabIndex = 2;
 			this.toolSet.ValueMember = "14.0 (VS 2015)";
 			this.toolSet.SelectedIndexChanged += new System.EventHandler(this.toolSet_SelectedIndexChanged_1);
@@ -673,31 +684,19 @@
 			this.startVSTimer.Interval = 1000;
 			this.startVSTimer.Tick += new System.EventHandler(this.startVSTimer_Tick);
 			// 
-			// reloadAllToolStripMenuItem
-			// 
-			this.reloadAllToolStripMenuItem.Name = "reloadAllToolStripMenuItem";
-			this.reloadAllToolStripMenuItem.Size = new System.Drawing.Size(224, 26);
-			this.reloadAllToolStripMenuItem.Text = "Reload All";
-			this.reloadAllToolStripMenuItem.Click += new System.EventHandler(this.reloadAllToolStripMenuItem_Click);
-			// 
-			// toolStripMenuItem9
-			// 
-			this.toolStripMenuItem9.Name = "toolStripMenuItem9";
-			this.toolStripMenuItem9.Size = new System.Drawing.Size(221, 6);
-			// 
 			// ProjectView
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(752, 569);
+			this.ClientSize = new System.Drawing.Size(752, 711);
 			this.Controls.Add(this.toolsetPanel);
 			this.Controls.Add(this.statusStrip);
 			this.Controls.Add(this.solutionViewSplit);
 			this.Controls.Add(this.menuStrip1);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MainMenuStrip = this.menuStrip1;
-			this.Margin = new System.Windows.Forms.Padding(4);
-			this.MinimumSize = new System.Drawing.Size(766, 603);
+			this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+			this.MinimumSize = new System.Drawing.Size(766, 742);
 			this.Name = "ProjectView";
 			this.Text = "Projector";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ProjectView_FormClosed);

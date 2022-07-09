@@ -4,10 +4,12 @@ namespace Projector
 {
     public struct ToolsetVersion
     {
-        public readonly int Major,
-                        Minor;
-		public readonly string VSName,Path, WindowsTargetPlatformVersion;
-		
+		public int Major { get; }
+		public int Minor { get; }
+		public string VSName { get; }
+		public string? WindowsTargetPlatformVersion { get; }
+		public string? Path { get; }
+
 
 		public string OutXMLText
 		{
@@ -18,7 +20,7 @@ namespace Projector
 		}
 			
 
-		public ToolsetVersion(int major, int minor, string vsName, string windowsTargetPlatformVersion, string path)
+		public ToolsetVersion(int major, int minor, string vsName, string? windowsTargetPlatformVersion, string? path)
         {
             Major = major;
             Minor = minor;
@@ -27,7 +29,7 @@ namespace Projector
 			WindowsTargetPlatformVersion = windowsTargetPlatformVersion;
 		}
 
-		public ToolsetVersion(int major, int minor, string vsName, string windowsTargetPlatformVersion) : this(major,minor,vsName, windowsTargetPlatformVersion, null)
+		public ToolsetVersion(int major, int minor, string vsName, string? windowsTargetPlatformVersion) : this(major,minor,vsName, windowsTargetPlatformVersion, null)
 		{}
 
 
@@ -52,15 +54,15 @@ namespace Projector
 			return ((VSName.GetHashCode() * 17 + Major) * 17 + Minor);
 		}
 
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
-			if (obj is ToolsetVersion)
+			if (obj is ToolsetVersion tv)
 			{
-				return this == (ToolsetVersion)obj;
+				return this == tv;
 			}
-			if (obj is string)
+			if (obj is string s)
 			{
-				return ToString() == (string)obj;
+				return ToString() == s;
 			}
 			return false;
 		}

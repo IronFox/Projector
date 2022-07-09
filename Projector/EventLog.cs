@@ -23,11 +23,11 @@ namespace Projector
 			/// <summary>
 			/// Notification solution context. May be null
 			/// </summary>
-			public readonly Solution Solution;
+			public readonly Solution? Solution;
 			/// <summary>
 			/// Notification project context. May be null
 			/// </summary>
-			public readonly Project Project;
+			public readonly Project? Project;
 			/// <summary>
 			/// Time stamp of this notification
 			/// </summary>
@@ -38,7 +38,7 @@ namespace Projector
 				return (Project != null ? (Solution != null ? Solution.Name + "/" : "") + Project.Name +": ": (Solution != null ? Solution.Name + ": " : "") ) + Text;
 			}
 
-			public Notification(Solution s, Project p, string message)
+			public Notification(Solution? s, Project? p, string message)
 			{
 				this.Project = p;
 				this.Text = message;
@@ -51,7 +51,7 @@ namespace Projector
 								messages = new List<Notification>();
 		private static DateTime lastEvent = DateTime.Now;
 
-		private static Solution current = null, currentWarn = null;
+		private static Solution? current = null, currentWarn = null;
 
 		/// <summary>
 		/// Logs a warning
@@ -59,7 +59,7 @@ namespace Projector
 		/// <param name="s">Solution context. May be null</param>
 		/// <param name="p">Project context. May be null</param>
 		/// <param name="message">Warning message</param>
-		public static void Warn(Solution s, Project p, string message)
+		public static void Warn(Solution? s, Project? p, string message)
 		{
 			var msg = new Notification(s, p, message);
 			if (LogToConsole)
@@ -77,7 +77,7 @@ namespace Projector
 		/// <param name="s">Solution context. May be null</param>
 		/// <param name="p">Project context. May be null</param>
 		/// <param name="message">Message</param>
-		public static void Inform(Solution s, Project p, string message)
+		public static void Inform(Solution? s, Project? p, string message)
 		{
 			var msg = new Notification(s, p, message);
 			if (LogToConsole)

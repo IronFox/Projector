@@ -36,7 +36,7 @@ namespace Projector
         {
             if (openSolutionDialog.ShowDialog() == DialogResult.OK)
             {
-                LoadSolution(new File(openSolutionDialog.FileName));
+                LoadSolution(new FilePath(openSolutionDialog.FileName));
             }
         }
 
@@ -62,15 +62,15 @@ namespace Projector
 
         private void AddSourceFolder(TreeNode tsource, Project.Source.Folder root)
         {
-            foreach (var grp in root.groups)
+            foreach (var grp in root.Groups)
             { 
                 //TreeNode tgroup = tsource.Nodes.Add(grp.Key.name);
                 foreach (var f in grp.Value)
                     tsource.Nodes.Add(f.Name+ " ("+grp.Key.name+")");
             }
 
-            foreach (var sub in root.subFolders)
-                AddSourceFolder(tsource.Nodes.Add(sub.name), sub);
+            foreach (var sub in root.SubFolders)
+                AddSourceFolder(tsource.Nodes.Add(sub.Name), sub);
         }
 
         private void SplitContainer1_Panel1_Paint(object sender, PaintEventArgs e)
@@ -78,31 +78,31 @@ namespace Projector
 
         }
 
-		private void ResizeFont(Control.ControlCollection coll, float scaleFactor)
-		{
-			foreach (Control c in coll)
-			{
-				if (c.HasChildren)
-				{
-					ResizeFont(c.Controls, scaleFactor);
-				}
-				c.Font = new Font(c.Font.FontFamily.Name, c.Font.Size * scaleFactor);
-			}
-			toolsetPanel.Top = MainMenuStrip.Height;
-			solutionViewSplit.Top = toolsetPanel.Top + toolsetPanel.Height;
-			solutionViewSplit.Height = ClientSize.Height - statusStrip.Height - solutionViewSplit.Top;
-		}
+		//private void ResizeFont(Control.ControlCollection coll, float scaleFactor)
+		//{
+		//	foreach (Control c in coll)
+		//	{
+		//		if (c.HasChildren)
+		//		{
+		//			ResizeFont(c.Controls, scaleFactor);
+		//		}
+		//		c.Font = new Font(c.Font.FontFamily.Name, c.Font.Size * scaleFactor);
+		//	}
+		//	toolsetPanel.Top = MainMenuStrip.Height;
+		//	solutionViewSplit.Top = toolsetPanel.Top + toolsetPanel.Height;
+		//	solutionViewSplit.Height = ClientSize.Height - statusStrip.Height - solutionViewSplit.Top;
+		//}
 
-		public  float FontScaleFactor
-		{
-			get
-			{
-				Graphics graphics = this.CreateGraphics();
-				float dpiX = graphics.DpiX;
-				return dpiX / 96.0f;
-			}
+		//public  float FontScaleFactor
+		//{
+		//	get
+		//	{
+		//		Graphics graphics = this.CreateGraphics();
+		//		float dpiX = graphics.DpiX;
+		//		return dpiX / 96.0f;
+		//	}
 
-		}
+		//}
 
 		public bool ForceOverwriteProjectFiles { get { return forceOverwriteProjectFilesToolStripMenuItem.Checked; } }
 
@@ -146,7 +146,7 @@ namespace Projector
 			Console.WriteLine();
 		}
 
-		private static string InstancePath(ISetupInstance instance, ISetupHelper helper, string name, string version)
+		private static string? InstancePath(ISetupInstance instance, ISetupHelper helper, string name, string version)
 		{
 			var instance2 = (ISetupInstance2)instance;
 			var state = instance2.GetState();
@@ -185,8 +185,8 @@ namespace Projector
 				en.Next(1, inst, out got);
 				if (got > 0)
 				{
-					string rs = InstancePath(inst[0], (ISetupHelper)configuration,"Microsoft.VisualStudio", version);
-					if (rs != null)
+					var rs = InstancePath(inst[0], (ISetupHelper)configuration,"Microsoft.VisualStudio", version);
+					if (rs is not null)
 						return rs;
 				}
 			}
@@ -201,18 +201,18 @@ namespace Projector
 				version += minorVersion;
 			if (majorVersion >= 15)
 				return TryGetVSSetupPath(version);
-			string installationPath = null;
+			string? installationPath = null;
 			if (Environment.Is64BitOperatingSystem)
 			{
-				installationPath = (string)Registry.GetValue($"HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\{version}\\",
+				installationPath = Registry.GetValue($"HKEY_LOCAL_MACHINE\\SOFTWARE\\Wow6432Node\\Microsoft\\VisualStudio\\{version}\\",
 					"InstallDir",
-					null);
+					null) as string;
 			}
 			else
 			{
-				installationPath = (string)Registry.GetValue($"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\{version}\\",
+				installationPath = Registry.GetValue($"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\VisualStudio\\{version}\\",
 					"InstallDir",
-					null);
+					null) as string;
 			}
 			if (installationPath == null)
 				throw new VSNotFoundException($"Visual Studio v{version} not found in registry");
@@ -222,7 +222,7 @@ namespace Projector
 
 		private void RegisterToolSet(int major, int minor, string vsName, int vsMajorVersion, int vsMinorVersion)
 		{
-			string windowsTargetPlatformVersion = vsMajorVersion >= 15 ? GetWindowsTargetPlatformVersion() : null;
+			string? windowsTargetPlatformVersion = vsMajorVersion >= 15 ? GetWindowsTargetPlatformVersion() : null;
 			try
 			{
 				string path = TryGetVSPath(vsMajorVersion, vsMinorVersion);
@@ -240,7 +240,7 @@ namespace Projector
 
 		private void ProjectView_Load(object sender, EventArgs e)
         {
-			ResizeFont(this.Controls, FontScaleFactor);
+			//ResizeFont(this.Controls, FontScaleFactor);
 			toolsetLabel.Size = toolsetLabel.PreferredSize;
 			toolSet.Left = toolsetLabel.Right + 4;
 
@@ -248,6 +248,7 @@ namespace Projector
 			RegisterToolSet(14, 0, "VS 2015", 14,0);
 			RegisterToolSet(14, 1, "VS 2017", 15,-1);
 			RegisterToolSet(14, 2, "VS 2019", 16, -1);
+			RegisterToolSet(14, 3, "VS 2022", 17, -1);
 
 			PersistentState.Restore();
 			if (PersistentState.Toolset != null)
@@ -273,13 +274,13 @@ namespace Projector
         }
 
 
-		private Solution shownSolution = null;
+		private Solution? shownSolution = null;
 
-		private void ShowSolution(Solution solution)
+		private void ShowSolution(Solution? solution)
 		{
 			shownSolution = solution;
 			solutionView.Nodes.Clear();
-			if (solution == null)
+			if (solution is null)
 			{
 				solutionToolStripMenuItem.Enabled = false;
 				buildSolutionButton.Enabled = false;
@@ -294,6 +295,11 @@ namespace Projector
 			TreeNode tsolution = solutionView.Nodes.Add(solution.ToString());
 			foreach (Project project in solution.Projects)
 			{
+				if (project.SourcePath is null)
+				{
+					EventLog.Warn(solution, project, "Source path is null");
+					continue;
+				}
 				List<String> options = new List<string>();
 				if (project == solution.Primary)
 					options.Add("primary");
@@ -343,8 +349,8 @@ namespace Projector
 					TreeNode tcommands = tproject.Nodes.Add("Pre-Build Commands");
 					foreach (var m in project.PreBuildCommands)
 					{
-						TreeNode tparameters = tcommands.Nodes.Add(m.locatedExecutable.Exists ? m.locatedExecutable.FullName : m.originalExecutable);
-						foreach (var param in m.parameters)
+						TreeNode tparameters = tcommands.Nodes.Add(m.ExecutablePath);
+						foreach (var param in m.Parameters)
 							tparameters.Nodes.Add(param);
 					}
 				}
@@ -353,7 +359,7 @@ namespace Projector
 				foreach (var s in project.Sources)
 				{
 					s.ScanFiles(solution,project);
-					AddSourceFolder(tsource.Nodes.Add(s.root.name), s.root);
+					AddSourceFolder(tsource.Nodes.Add(s.root!.Name), s.root);
 				}
 
 				TreeNode ttarget = tproject.Nodes.Add("TargetNames");
@@ -427,7 +433,7 @@ namespace Projector
 			buildSolutionButton.Enabled = solution.Primary != null;
 			tabSelected.Text = solution.ToString();
 
-			openGeneratedSolutionToolStripMenuItem.Enabled = PersistentState.GetOutPathFor(solution.Source).Exists;
+			openGeneratedSolutionToolStripMenuItem.Enabled = PersistentState.GetOutPathFor(solution.Source)?.Exists == true;
 			openGeneratedSolutionButton.Enabled = openGeneratedSolutionToolStripMenuItem.Enabled;
 
 		}
@@ -495,7 +501,7 @@ namespace Projector
 			EndLogSession();
 		}
 
-		private Solution LoadSolution(File file, bool batchLoad=false)
+		private Solution? LoadSolution(FilePath file, bool batchLoad=false)
         {
 			BeginLogSession();
 			startVSTimer.Enabled = false;
@@ -506,7 +512,7 @@ namespace Projector
 				return null;
 			}
 			bool newRecent;
-			Solution solution;
+			Solution? solution;
 			if (solutions.TryGetValue(file.FullName,out solution))
 			{
 				EventLog.Inform(solution,null, "Solution '" + file + "' already loaded");
@@ -552,7 +558,7 @@ namespace Projector
 			return solution;
         }
 
-		public static string LogNextEvent(ref Solution currentSolution, EventLog.Notification n)
+		public static string LogNextEvent(ref Solution? currentSolution, EventLog.Notification n)
 		{
 			string head0 = "", head1 = "";
 			if (currentSolution != n.Solution)
@@ -585,7 +591,7 @@ namespace Projector
 		private void ReportAndFlush()
 		{
 			//LogLine(solution+":");
-			Solution current = null;
+			Solution? current = null;
 			foreach (var message in EventLog.Messages)
 			{
 				LogLine(LogNextEvent(ref current , message));
@@ -608,7 +614,7 @@ namespace Projector
 		{
 			List<LinkLabel> allLabels = new List<LinkLabel>();
 			Dictionary<string, List<LinkLabel>> domainMap = new Dictionary<string, List<LinkLabel>>();
-			Font defaultFont, litFont;
+			Font? defaultFont, litFont;
 
 			public void Clear()
 			{
@@ -616,7 +622,7 @@ namespace Projector
 				domainMap.Clear();
 			}
 
-			public void Add(string domain, LinkLabel label)
+			public void Add(string? domain, LinkLabel label)
 			{
 				if (defaultFont == null)
 				{
@@ -645,8 +651,7 @@ namespace Projector
 			internal void HighlightDomain(string domain)
 			{
 				ClearHighlight();
-				List<LinkLabel> hightlighted;
-				if (domainMap.TryGetValue(domain, out hightlighted))
+				if (domainMap.TryGetValue(domain, out var hightlighted))
 					foreach (var label in hightlighted)
 					{
 						label.Font = litFont;
@@ -690,7 +695,7 @@ namespace Projector
 			bool rebuildPanel = recentListChanged || mainTabControl.SelectedTab != tabRecent;
 
 			int top = 10;
-			Font f = null;
+			Font? f = null;
 			if (rebuildPanel)
 			{
 				recentSolutions.Controls.Clear();
@@ -700,7 +705,7 @@ namespace Projector
 				{
 					Label title = new Label();
 
-					f = new Font(title.Font.FontFamily, title.Font.Size * 1.2f * FontScaleFactor);
+					f = new Font(title.Font.FontFamily, title.Font.Size * 1.2f /** FontScaleFactor*/);
 					title.Font = f;
 					title.Text = "Recent Solutions: (shift+click to load but stay on this tab)";
 					title.Left = 15;
@@ -742,10 +747,12 @@ namespace Projector
 						left = 20 + ldomain.Width;
 						recentSolutions.Controls.Add(ldomain);
 						tooltip.SetToolTip(ldomain, "Load all recent projects of domain '"+recent.Domain+"'");
-						ldomain.MouseEnter += (sender, item2) => recentItems.HighlightDomain(recent.Domain);
-						ldomain.MouseLeave += (sender, item2) => recentItems.ClearHighlight();
-						//top += lrecent.Height;
-						ldomain.Click += (sender, item2) => LoadDomain(recent.Domain);
+						if (recent.Domain is not null)
+						{
+							ldomain.MouseEnter += (sender, item2) => recentItems.HighlightDomain(recent.Domain);
+							ldomain.MouseLeave += (sender, item2) => recentItems.ClearHighlight();
+							ldomain.Click += (sender, item2) => LoadDomain(recent.Domain);
+						}
 					}
 					else
 						left = 20;
@@ -814,11 +821,11 @@ namespace Projector
 
 		private void LoadFromParameter(string p)
 		{
-			Solution solution = LoadSolution(new File(p));
-			if (solution != null)
+			var solution = LoadSolution(new FilePath(p));
+			if (solution is not null)
 			{
-				File outPath = PersistentState.GetOutPathFor(solution.Source);
-				if (outPath.DirectoryExists)
+				var outPath = PersistentState.GetOutPathFor(solution.Source);
+				if (outPath?.DirectoryExists == true)
 					BuildCurrentSolution(solution, outPath);
 					
 			}
@@ -833,12 +840,12 @@ namespace Projector
         {
 			if (shownSolution == null)
 				return;
-			File outPath = PersistentState.GetOutPathFor(shownSolution.Source);
-            if (!outPath.DirectoryExists)
+			var outPath = PersistentState.GetOutPathFor(shownSolution.Source);
+            if (!(outPath?.DirectoryExists == true))
             {
 				string solutionName = shownSolution.Name + ".sln";
 				DirectoryInfo preferred = shownSolution.Source.Directory.CreateSubdirectory(Project.WorkSubDirectory);
-				outPath = new File( Path.Combine(preferred.FullName,solutionName) );
+				outPath = new FilePath( Path.Combine(preferred.FullName,solutionName) );
 
 
 				//buildAtToolStripMenuItem_Click(sender, e);
@@ -868,7 +875,7 @@ namespace Projector
             return (ToolsetVersion)(toolSet.SelectedItem);
         }
 
-		private string GetWindowsTargetPlatformVersion()
+		private string? GetWindowsTargetPlatformVersion()
         {
 			string path;
 			if (Environment.Is64BitOperatingSystem)
@@ -955,7 +962,7 @@ namespace Projector
             }
         }
 
-        private void BuildCurrentSolution(Solution solution, File outPath)
+        private void BuildCurrentSolution(Solution solution, FilePath outPath)
 		{
             try
             {
@@ -979,8 +986,8 @@ namespace Projector
         private void BuildAtToolStripMenuItem_Click(object sender, EventArgs e)
         {
             //string name = Project.Primary.Name;
-			Solution solution = shownSolution;
-			if (solution == null)
+			var solution = shownSolution;
+			if (solution is null)
 				return;
             chooseDestination.Filter = "Solution | " + solution.Name + ".sln";
             chooseDestination.FileName = solution.Name + ".sln";
@@ -988,7 +995,7 @@ namespace Projector
 			chooseDestination.InitialDirectory = preferred.FullName;
             if (chooseDestination.ShowDialog() == DialogResult.OK)
             {
-                PersistentState.SetOutPathFor(solution.Source, new File(chooseDestination.FileName));
+                PersistentState.SetOutPathFor(solution.Source, new FilePath(chooseDestination.FileName));
                 BuildToolStripMenuItem_Click(sender, e);
             }
         }
@@ -1019,7 +1026,7 @@ namespace Projector
 
 		private void OpenGeneratedSolutionToolStripMenuItem_Click(object sender, EventArgs e)
 		{
-			Solution solution = shownSolution;
+			var solution = shownSolution;
 			OpenGeneratedSolution(solution);
 		}
 
@@ -1027,12 +1034,12 @@ namespace Projector
 
 
 
-		private bool OpenGeneratedSolution(Solution solution)
+		private bool OpenGeneratedSolution(Solution? solution)
 		{
-			if (solution == null)
+			if (solution is null)
 				return false;
-			File slnPath = PersistentState.GetOutPathFor(solution.Source);
-			if (slnPath.IsEmpty)
+			var slnPath = PersistentState.GetOutPathFor(solution.Source);
+			if (slnPath is null)
 			{
 				LogLine("Error: Out location unknown for '"+solution+"'. Chances are, this solution has not been generated.");
 				return false;
@@ -1084,20 +1091,20 @@ namespace Projector
             BeginLogSession();
             try
             {
-                File outPath = PersistentState.GetOutPathFor(solution.Source);
-                if (!outPath.Exists)
+                var outPath = PersistentState.GetOutPathFor(solution.Source);
+                if (!(outPath?.Exists == true))
                 {
                     DirectoryInfo preferred = solution.Source.Directory.CreateSubdirectory(Project.WorkSubDirectory);
                     if (preferred != null)
                     {
                         string outName = Path.Combine(preferred.FullName, solution.Name + ".sln");
                         EventLog.Inform(solution, null, "Out path for '" + solution + "' not known. Defaulting to " + outName);
-                        outPath = new File(outName);
+                        outPath = new(outName);
                         PersistentState.SetOutPathFor(solution.Source, outPath);
                     }
                 }
 
-                if (outPath.DirectoryExists)
+                if (outPath?.DirectoryExists == true)
                 {
 					bool newRecent;
 					solution.Reload(out newRecent); //refresh
@@ -1119,8 +1126,8 @@ namespace Projector
 
 		private void RefreshListView(Solution solution)
 		{
-			ListViewItem item = solution.ListViewItem;
-			if (item != null)
+			var item = solution.ListViewItem;
+			if (item is not null)
 			{
 				item.SubItems[1].Text = solution.Primary?.ToString();
 				item.SubItems[2].Text = solution.Projects.Count().ToString();
@@ -1258,7 +1265,7 @@ namespace Projector
 
 		private void recentSolutions_DragEnter(object sender, DragEventArgs e)
 		{
-			if (e.Data.GetDataPresent(DataFormats.FileDrop))
+			if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
 			{
 				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
 				foreach (string file in files)
@@ -1272,10 +1279,10 @@ namespace Projector
 		private void recentSolutions_DragDrop(object sender, DragEventArgs e)
 		{
 			BeginLogSession();
-			string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+			string[] files = e.Data?.GetData(DataFormats.FileDrop) as string[] ?? Array.Empty<string>();
 			foreach (string file in files)
 			{
-				LoadSolution(new File(file), true);
+				LoadSolution(new FilePath(file), true);
 
 			}
 
@@ -1302,7 +1309,7 @@ namespace Projector
 
 			BeginLogSession();
 
-			GenerateSelectedButton_Click(null, null);
+			RebuildSelected();
 
 			foreach (var s in GetSelectedSolutions())
 			{
@@ -1344,7 +1351,7 @@ namespace Projector
 		{
 			RebuildSelected();
 			var sol = new BuildSolutions();
-			ResizeFont(sol.Controls, FontScaleFactor);
+			//ResizeFont(sol.Controls, FontScaleFactor);
 			sol.Begin(GetSelectedSolutions(), GetToolsetVersion(), RebuildSelected);
 		}
 

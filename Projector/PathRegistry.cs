@@ -5,108 +5,58 @@ using System.Windows.Forms;
 namespace Projector
 {
 
+
+
 	/// <summary>
-	/// Helper structure to provide properties of a given file path
+	/// Helper structure to provide properties of a given file path with non-null path
 	/// </summary>
-	public struct File
+	public class FilePath
 	{
-		private string fullPath;
+		/// <summary>
+		/// Full path of the local file descriptor. Never null
+		/// </summary>
+		public string FullName { get; }
+
+		public string FullDirectoryName { get; }
 
 		/// <summary>
 		/// Constructs the file path from a given absolute or relative path
 		/// </summary>
 		/// <param name="path">Absolute or relative path to the file. May or may not exist. May be null</param>
-		public File(string path)
+		public FilePath(string path)
 		{
-			this.fullPath = path != null ? new System.IO.FileInfo(path).FullName : null;
+			FullName = new System.IO.FileInfo(path).FullName;
+			FullDirectoryName = Path.GetDirectoryName(FullName) ?? throw new ArgumentException("Given path '"+path+"' is not valid");
 		}
 
 		/// <summary>
 		/// Constructs the file from a file info struct
 		/// </summary>
-		/// <param name="info">File info struct to read from. May be null</param>
-		public File(System.IO.FileInfo info)
+		/// <param name="info">File info struct to read from</param>
+		public FilePath(FileInfo info)
 		{
-			fullPath = info?.FullName;
+			FullName = info.FullName;
+			FullDirectoryName = Path.GetDirectoryName(FullName) ?? throw new ArgumentException("Given path '" + info + "' is not valid");
 		}
 
-		/// <summary>
-		/// Fetches the full path of the local file descriptor. May return null
-		/// </summary>
-		public string FullName
-		{
-			get
-			{
-				return fullPath;
-			}
-		}
+
 
 		/// <summary>
 		/// Checks if the local file descriptor identifies an existing file
 		/// </summary>
-		public bool Exists
-		{
-			get
-			{
-				return fullPath != null && System.IO.File.Exists(fullPath);
-			}
-		}
+		public bool Exists => File.Exists(FullName);
 
-		/// <summary>
-		/// Checks if the local file descriptor has been initialized with null
-		/// </summary>
-		public bool IsEmpty
-		{
-			get
-			{
-				return fullPath == null;
-			}
-		}
-
-		/// <summary>
-		/// Checks if the local file descriptor has been initialized with a non-null path
-		/// </summary>
-		public bool IsNotEmpty
-		{
-			get
-			{
-				return fullPath != null;
-			}
-		}
 
 		/// <summary>
 		/// Checks if the directory, containing the local file descriptor, exists.
 		/// </summary>
-		public bool DirectoryExists
-		{
-			get
-			{
-				return fullPath != null && System.IO.Directory.Exists(new System.IO.FileInfo(fullPath).Directory.FullName);
-			}
-
-		}
+		public bool DirectoryExists => System.IO.Directory.Exists(FullDirectoryName);
 
 		/// <summary>
-		/// Fetches the directory containing the local file. May return null
+		/// Fetches the directory containing the local file. Never null
 		/// </summary>
-		public System.IO.DirectoryInfo Directory
-		{
-			get
-			{
-				return fullPath != null ? new System.IO.FileInfo(fullPath).Directory : null;
-			}
-		}
+		public System.IO.DirectoryInfo Directory => new DirectoryInfo(FullDirectoryName);
 
-		/// <summary>
-		/// Fetches the name of the directory containing the local file. May return an empty string. Never null
-		/// </summary>
-		public string DirectoryName
-		{
-			get
-			{
-				return fullPath != null ? new System.IO.FileInfo(fullPath).DirectoryName : "";
-			}
-		}
 
 		/// <summary>
 		/// Adds a file extension or other kind of appendix to a given file descriptor
@@ -114,11 +64,11 @@ namespace Projector
 		/// <param name="a">File descriptor to append to</param>
 		/// <param name="ext">Appendix</param>
 		/// <returns>Concatenated file descriptor</returns>
-		public static File operator +(File a, string ext)
+		public static FilePath operator +(FilePath? a, string ext)
 		{
-			if (a == null || a.IsEmpty)
-				throw new ArgumentException("File descriptor is not valid for appending: "+a);
-			return new File(a.FullName + ext);
+			if (a is null)
+				throw new ArgumentException("File descriptor is not valid for appending: " + a);
+			return new FilePath(a.FullName + ext);
 		}
 
 		/// <summary>
@@ -128,10 +78,7 @@ namespace Projector
 		{
 			get
 			{
-				if (fullPath == null)
-					return null;
-				var fi = new System.IO.FileInfo(fullPath);
-				return fi.Name;
+				return Path.GetFileName(FullName);
 			}
 		}
 
@@ -142,42 +89,47 @@ namespace Projector
 		{
 			get
 			{
-				if (fullPath == null)
-					return null;
-				var fi = new System.IO.FileInfo(fullPath);
-				return fi.Name.Substring(0, fi.Name.IndexOf(fi.Extension));
+				return Path.GetFileNameWithoutExtension(FullName);
 			}
 		}
 		public override int GetHashCode()
 		{
-			return fullPath.GetHashCode();
+			return FullName.GetHashCode();
 		}
-		public override bool Equals(object obj)
+		public override bool Equals(object? obj)
 		{
-			return obj is File && ((File)obj) == this;
+			return obj is FilePath fp && fp == this;
 		}
 
 		public override string ToString()
 		{
-			return fullPath ?? "<null>";
+			return FullName;
 		}
 
-		public static bool operator ==(File a, File b)
+		public static bool operator ==(FilePath a, FilePath b)
 		{
-			return a.fullPath == b.fullPath;
+			return a.FullName == b.FullName;
 		}
-		public static bool operator !=(File a, File b)
+		public static bool operator !=(FilePath a, FilePath b) => !(a == b);
+
+		/// <summary>
+		/// Resolves the given file-name relative to the local directory
+		/// </summary>
+		/// <param name="fileName">Relative or absolute file path</param>
+		/// <returns>Descriptor for the resolved file name. Not required to exist</returns>
+		public FilePath GetRelative(string fileName)
 		{
-			return a.fullPath != b.fullPath;
+			return new(Path.Combine(FullDirectoryName, fileName));
 		}
 	}
+
 
 	/// <summary>
 	/// Registry for project folders
 	/// </summary>
 	public static class PathRegistry
     {
-        private static Dictionary<string, File> map;
+        private static Dictionary<string, FilePath>? map;
 		private static HashSet<string>	ignore = new HashSet<string>();
 
 		/// <summary>
@@ -188,13 +140,13 @@ namespace Projector
 		/// Automatically saves the local registry if deemed necessary.
 		/// </summary>
 		/// <param name="name">Project name to lookup</param>
-		/// <returns>Existing full path to the project file or unset File descriptor if none was chosen</returns>
-        public static File LocateProject(string name)
+		/// <returns>Existing full path to the project file or null if none was chosen</returns>
+        public static FilePath? LocateProject(string name)
         {
-            LoadMap();
+            var map = LoadMap();
 			if (ignore.Contains(name))
-				return new File();
-			File info;
+				return null;
+			FilePath? info;
             if (map.TryGetValue(name, out info))
 			{ 
 				if (info.Exists)
@@ -211,7 +163,7 @@ namespace Projector
 				if (dialog.ShowDialog() == DialogResult.OK)
 				{
 					dialog.Filter = "Projects|*.project|All files|*.*";
-					info = new File(dialog.FileName);
+					info = new FilePath(dialog.FileName);
 					if (info.CoreName != name)
 					{
                         MessageBox.Show("The selected file's name does not match the expected project name '" + name + '"');
@@ -224,7 +176,7 @@ namespace Projector
 				}
 				dialog.Filter = "Projects|*.project|All files|*.*";
 				ignore.Add(name);
-				return new File();
+				return null;
 			}
 			while (true);
         }
@@ -232,53 +184,56 @@ namespace Projector
 		/// <summary>
 		/// Retrieves the file descriptor for the file presistently storing the local project registry
 		/// </summary>
-        public static File StateFile
+        public static FilePath StateFile
         {
             get
             {
-                return new File(System.IO.Path.Combine(PersistentState.StateFile.Directory.FullName, "pathRegistry.txt"));
+                return new (Path.Combine(PersistentState.StateFile.FullDirectoryName, "pathRegistry.txt"));
             }
         }
 
         
-        private static void LoadMap()
+        private static Dictionary<string, FilePath> LoadMap()
         {
-            if (map != null)
-                return;
-            map = new Dictionary<string, File>();
+            if (map is not null)
+                return map;
+            map = new Dictionary<string, FilePath>();
             try
             {
-                using (System.IO.StreamReader file = new System.IO.StreamReader(StateFile.FullName))
-                {
-                    string line;
-                    while ((line = file.ReadLine()) != null)
-                    {
-                        string[] segs = line.Split('\t');
-                        if (segs.Length == 2)
-                        {
-                            map.Add(segs[0], new File(segs[1]));
-                        }
+				if (StateFile.FullName is not null)
+					using (System.IO.StreamReader file = new System.IO.StreamReader(StateFile.FullName))
+					{
+						string? line;
+						while ((line = file.ReadLine()) is not null)
+						{
+							string[] segs = line.Split('\t');
+							if (segs.Length == 2)
+							{
+								map.Add(segs[0], new FilePath(segs[1]));
+							}
 
-                    }
-                }
+						}
+					}
             }
             catch
             { }
+			return map;
         }
 
 
         private static void SaveMap()
         {
-            using (System.IO.StreamWriter file = new System.IO.StreamWriter(StateFile.FullName))
-            {
-                foreach (var entry in map)
-                {
-                    // If the line doesn't contain the word 'Second', write the line to the file. 
-                    file.Write(entry.Key);
-                    file.Write("\t");
-                    file.WriteLine(entry.Value.FullName);
-                }
-            }
+			if (StateFile.FullName is not null && map is not null)
+				using (System.IO.StreamWriter file = new System.IO.StreamWriter(StateFile.FullName))
+				{
+					foreach (var entry in map)
+					{
+						// If the line doesn't contain the word 'Second', write the line to the file. 
+						file.Write(entry.Key);
+						file.Write("\t");
+						file.WriteLine(entry.Value.FullName);
+					}
+				}
 
 
 
@@ -290,8 +245,7 @@ namespace Projector
 		/// <returns>Enumerable of all known project names. Never null</returns>
 		public static IEnumerable<string> GetAllProjectNames()
 		{
-			LoadMap();
-			return map.Keys;
+			return LoadMap().Keys;
 		}
 
 		/// <summary>
@@ -301,7 +255,7 @@ namespace Projector
 		/// <param name="name">Project name to remove</param>
 		public static void UnsetPathFor(string name)
 		{
-			if (map.Remove(name))
+			if (map?.Remove(name) == true)
 				SaveMap();
 		}
 
@@ -310,8 +264,13 @@ namespace Projector
 		/// </summary>
 		public static void Clear()
 		{
-			map.Clear();
-			SaveMap();
+			if (map is not null)
+			{
+				map.Clear();
+				SaveMap();
+			}
 		}
+
+
 	}
 }

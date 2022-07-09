@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -59,10 +58,9 @@ namespace Projector
 			{
 				return;
 			}
-			ManagementObjectSearcher searcher = new ManagementObjectSearcher
-			  ("Select * From Win32_Process Where ParentProcessID=" + pid);
-			ManagementObjectCollection moc = searcher.Get();
-			foreach (ManagementObject mo in moc)
+			System.Management.ManagementObjectSearcher searcher = new ("Select * From Win32_Process Where ParentProcessID=" + pid);
+			System.Management.ManagementObjectCollection moc = searcher.Get();
+			foreach (var mo in moc)
 			{
 				KillProcessAndChildren(Convert.ToInt32(mo["ProcessID"]));
 			}

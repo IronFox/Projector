@@ -37,7 +37,7 @@ namespace Projector
 			{
 				if (f.Name.ToUpper() == "MSBUILD.EXE")
 				{
-					msBuildPath = f.DirectoryName;
+					msBuildPath = f.DirectoryName??"";
 					return true;
 				}
 			}
@@ -56,7 +56,7 @@ namespace Projector
 				Project = p;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (!(obj is JobID))
 					return false;
@@ -105,14 +105,14 @@ namespace Projector
 			public bool IsCompiled { get; set; } = false;
 			public bool IsSelected { get; set; } = false;
 
-			private ConsoleProcess process;
+			private ConsoleProcess? process;
 
 			public BuildJob(JobID id)
 			{
 				ID = id;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (!(obj is BuildJob))
 					return false;
@@ -157,8 +157,10 @@ namespace Projector
 				}
 			}
 
-			public ICollection<string> WaitForMsBuildExit()
+			public ICollection<string>? WaitForMsBuildExit()
 			{
+				if (process is null)
+					throw new InvalidOperationException("Process not started");
 				process.WaitForExit();
 				if (process.ExitCode != 0)
 					return process.Output;
@@ -183,17 +185,19 @@ namespace Projector
 				return false;
 			}
 
-			public int CompareTo(BuildJob other)
+			public int CompareTo(BuildJob? other)
 			{
+				if (other is null)
+					return 1;
 				return ID.CompareTo(other.ID);
 			}
 		}
 
 
 
-		List<JobID> projects = new List<JobID>();
+		readonly List<JobID> projects = new List<JobID>();
 
-		Action rebuildProjects;
+		Action? rebuildProjects;
 
 		public void Begin(IEnumerable<Solution> loadedSolutions, ToolsetVersion toolset, Action rebuildProjects)
 		{
@@ -366,7 +370,7 @@ namespace Projector
 
 		private BuildJob ScanDependencyGraph(Dictionary<JobID, BuildJob> outList, JobID build)
 		{
-			BuildJob existing;
+			BuildJob? existing;
 			if (outList.TryGetValue(build,out existing))
 				return existing;
 			var job = new BuildJob(build);
@@ -434,12 +438,12 @@ namespace Projector
 				return;
 			}
 
-			rebuildProjects();
+			rebuildProjects?.Invoke();
 
 			eventLog.Text = "";
 
 			var workSet = GetSelectedBuildTargets();
-			string config = buildConfigurations.SelectedItem.ToString();
+			string config = buildConfigurations.SelectedItem.ToString() ?? throw new ArgumentNullException("Selected build configuration");
 
 			toolStripProgressBar.Value = 0;
 			projectsBuilt = 0;
@@ -492,7 +496,7 @@ namespace Projector
 							if (canBuild)
 							{
 								activeJobs.Add(c);
-								c.BeginMsBuild(buildConfigurations.SelectedItem.ToString(), forceRebuildSelected.Checked, LogEvent);
+								c.BeginMsBuild(buildConfigurations.SelectedItem.ToString() ?? throw new ArgumentNullException("Selected build configuration"), forceRebuildSelected.Checked, LogEvent);
 							}
 						}
 					}

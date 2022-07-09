@@ -6,18 +6,19 @@ namespace Projector
 {
 	public class DependencyNode
 	{
-		public readonly File File;
+		public readonly FilePath File;
 		public readonly bool DoCompile;
-		public readonly Project.CodeGroup Group;
+		public readonly Project.CodeGroup? Group;
 		public List<Project> Parents { get; private set; } = new List<Project>();
-		public Dictionary<File, Tuple<DependencyNode, string>> Dependencies { get; private set; } = new Dictionary<File, Tuple<DependencyNode, string>>();
+		public Dictionary<FilePath, Tuple<DependencyNode, string>> Dependencies { get; private set; } = new ();
 
-		public DependencyNode(Project parent, File file, Project.CodeGroup group)
+		public DependencyNode(Project? parent, FilePath file, Project.CodeGroup? group)
 		{
 			File = file;
 			DoCompile = group == Project.c || group == Project.cpp;
 			Group = group;
-			Parents.Add(parent);
+			if (parent is not null)
+				Parents.Add(parent);
 		}
 
 		internal IEnumerable<Tuple<DependencyNode, string>> GetRecursiveDependencies(int depth)

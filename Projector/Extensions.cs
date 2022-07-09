@@ -24,7 +24,7 @@ namespace Projector
 
 
 
-		public static string Fuse<T>(this IEnumerable<T> items, string glue)
+		public static string Fuse<T>(this IEnumerable<T> items, string glue) where T : notnull
 		{
 			StringBuilder builder = new StringBuilder();
 			bool first = true;
@@ -62,7 +62,7 @@ namespace Projector
 			return bytes;
 		}
 
-		static SHA1 sha = new SHA1CryptoServiceProvider();
+		static readonly SHA1 sha = SHA1.Create();
 
 		/// <summary>
 		/// Computes the Sha1-hash of the local string

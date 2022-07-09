@@ -12,23 +12,23 @@ namespace Projector
     public static class PersistentState
     {
 
-		/// <summary>
-		/// Descriptor structure for persistently memorized solutions
-		/// </summary>
-		public struct SolutionDescriptor
-		{
-			public readonly string Name;
-			public readonly string Domain;
-			public readonly File File;
+        /// <summary>
+        /// Descriptor structure for persistently memorized solutions
+        /// </summary>
+        public readonly struct SolutionDescriptor
+        {
+            public string? Name { get; }
+			public string? Domain { get; }
+			public FilePath File { get; }
 
-			public SolutionDescriptor(File file, string domain)
+			public SolutionDescriptor(FilePath file, string? domain)
 			{
 				Domain = domain;
 				File = file;
 				Name = file.CoreName;
 			}
 
-			public override bool Equals(object obj)
+			public override bool Equals(object? obj)
 			{
 				if (!(obj is SolutionDescriptor))
 					return false;
@@ -38,12 +38,12 @@ namespace Projector
 
 			public override string ToString()
 			{
-				return Domain != null && Domain.Length > 0 ? Domain + "/" + Name : Name;
+				return Domain is not null && Domain.Length > 0 ? Domain + "/" + Name : Name??"";
 			}
 
 			public override int GetHashCode()
 			{
-				return File.FullName.GetHashCode();
+				return File.GetHashCode();
 			}
 		}
 
@@ -57,7 +57,7 @@ namespace Projector
 		/// <summary>
 		/// Persistent access to the last used toolset (required during solution building)
 		/// </summary>
-        public static string Toolset
+        public static string? Toolset
         {
             get
             {
@@ -74,12 +74,12 @@ namespace Projector
         }
 
 		
-		private static FileInfo stateFile = new FileInfo(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),"projector","persistentState.xml"));
+		private static FilePath stateFile = new FilePath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),"projector","persistentState.xml"));
 
 		/// <summary>
 		/// Fetches the full path of the used state file
 		/// </summary>
-        public static FileInfo StateFile => stateFile;
+        public static FilePath StateFile => stateFile;
 
 		/// <summary>
 		/// Restores the persistent state from file
@@ -87,55 +87,60 @@ namespace Projector
 		/// <returns>true, if a state could be restored, false otherwise</returns>
         public static bool Restore()
         {
-			if (!StateFile.Directory.Exists)
+            if (StateFile.Directory is null)
+                throw new InvalidOperationException(nameof(StateFile.Directory)+" is null");
+
+            if (!StateFile.Directory.Exists)
 				StateFile.Directory.Create();
             if (StateFile.Exists)
             {
                 var xreader = new XmlTextReader(StateFile.FullName);
                 XmlDocument xdoc = new XmlDocument();
                 xdoc.Load(xreader);
-                XmlNodeList xrecent = xdoc.SelectNodes("state/recent/solution");
+                XmlNodeList? xrecent = xdoc.SelectNodes("state/recent/solution");
                 recent.Clear();
-                HashSet<string> recentKnown = new HashSet<string>();
-                foreach (XmlNode xr in xrecent)
-                {
-					File f = new File(xr.InnerText);
-                    if (f.Exists && !recentKnown.Contains(f.FullName))
+                HashSet<string?> recentKnown = new();
+                if (xrecent is not null)
+                    foreach (XmlNode xr in xrecent)
                     {
-						XmlNode xdomain = xr.Attributes.GetNamedItem("domain");
-						SolutionDescriptor desc;
-						desc = new SolutionDescriptor(f, xdomain != null ? xdomain.Value : null);
+					    FilePath f = new FilePath(xr.InnerText);
+                        if (f.Exists && !recentKnown.Contains(f.FullName))
+                        {
+						    XmlNode? xdomain = xr.Attributes?.GetNamedItem("domain");
+						    SolutionDescriptor desc;
+						    desc = new SolutionDescriptor(f, xdomain is not null ? xdomain.Value : null);
 
-                        recentKnown.Add(f.FullName);
-                        recent.Add(desc);
+                            recentKnown.Add(f.FullName);
+                            recent.Add(desc);
+                        }
                     }
-                }
                 outPaths.Clear();
-                XmlNodeList xtargets = xdoc.SelectNodes("state/solution/target");
-                foreach (XmlNode xt in xtargets)
-                {
-                    XmlNode xsolution = xt.Attributes.GetNamedItem("solutionFile");
-                    if (xsolution == null)
-                        continue;
-					File sol = new File(xsolution.Value);
-					File ot = new File(xt.InnerText);
-                    if (!sol.Exists)
-                        continue;
-                    if (!ot.Directory.Exists)
-                        continue;
-                    outPaths.Add(sol.FullName, ot);
-                }
-                XmlNode xtoolset = xdoc.SelectSingleNode("state/toolset");
-                if (xtoolset != null)
+                XmlNodeList? xtargets = xdoc.SelectNodes("state/solution/target");
+                if (xtargets is not null)
+                    foreach (XmlNode xt in xtargets)
+                    {
+                        XmlNode? xsolution = xt.Attributes?.GetNamedItem("solutionFile");
+                        if (xsolution?.Value is null)
+                            continue;
+					    FilePath sol = new (xsolution.Value);
+					    FilePath ot = new (xt.InnerText);
+                        if (!sol.Exists)
+                            continue;
+                        if (!ot.DirectoryExists)
+                            continue;
+                        outPaths.Add(sol.FullName!, ot);
+                    }
+                XmlNode? xtoolset = xdoc.SelectSingleNode("state/toolset");
+                if (xtoolset is not null)
                     toolset = xtoolset.InnerText;
                 xreader.Close();
 				return true;
             }
 			return false;
         }
-        private static List<SolutionDescriptor> recent = new List<SolutionDescriptor>();
-        private static Dictionary<string, File> outPaths = new Dictionary<string, File>();
-        private static string toolset;
+        private static List<SolutionDescriptor> recent = new ();
+        private static Dictionary<string, FilePath> outPaths = new ();
+        private static string? toolset;
 
         /// <summary>
         /// Writes the local state to XML
@@ -198,12 +203,12 @@ namespace Projector
         /// </summary>
         /// <param name="solutionFile">Path to the solution file to determine the output path of</param>
         /// <returns>Last memorized output path. May be empty. Never null</returns>
-        public static File GetOutPathFor(File solutionFile)
+        public static FilePath? GetOutPathFor(FilePath solutionFile)
         {
-			File rs;
-            if (outPaths.TryGetValue(solutionFile.FullName, out rs))
+			FilePath? rs;
+            if (solutionFile.FullName is not null && outPaths.TryGetValue(solutionFile.FullName, out rs))
                 return rs;
-            return new File();
+            return null;
         }
 
         /// <summary>
@@ -211,16 +216,16 @@ namespace Projector
         /// </summary>
         /// <param name="solutionSourceFile">Path to the solution file to memorize the output path of</param>
         /// <param name="solutionOutFile">Output path</param>
-        public static void SetOutPathFor(File solutionSourceFile, File solutionOutFile)
+        public static void SetOutPathFor(FilePath solutionSourceFile, FilePath solutionOutFile)
         {
-			if (outPaths.ContainsKey(solutionSourceFile.FullName))
-			{
-				if (outPaths[solutionSourceFile.FullName] == solutionOutFile)
-					return;
-				outPaths[solutionSourceFile.FullName] = solutionOutFile;
-			}
-			else
-				outPaths.Add(solutionSourceFile.FullName, solutionOutFile);
+            if (outPaths.ContainsKey(solutionSourceFile.FullName))
+            {
+                if (outPaths[solutionSourceFile.FullName] == solutionOutFile)
+                    return;
+                outPaths[solutionSourceFile.FullName] = solutionOutFile;
+            }
+            else
+                outPaths.Add(solutionSourceFile.FullName, solutionOutFile);
             Backup();
         }
     }

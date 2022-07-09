@@ -16,9 +16,9 @@ namespace Projector
 			/// <summary>
 			/// Node name
 			/// </summary>
-			public string Name { get; private set; }
-			private readonly Section parent;
-			private readonly StreamWriter writer;
+			public string? Name { get; private set; }
+			private readonly Section? parent;
+			private readonly StreamWriter? writer;
 			private bool headerWritten = false;
 
 			private readonly Dictionary<string, string> parameters = new Dictionary<string, string>();
@@ -95,6 +95,8 @@ namespace Projector
 					parent.WriteLine(indentation + 1, text);
 				else
 				{
+					if (writer is null)
+						throw new InvalidOperationException("Local section ("+Name+") was created without writer");
 					for (int i = 0; i < indentation; i++)
 						writer.Write('\t');
 					writer.WriteLine(text);

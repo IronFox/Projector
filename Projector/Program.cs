@@ -23,20 +23,20 @@ namespace Projector
 		private static extern bool SetProcessDPIAware();
 
 
-		static NamedPipeServerStream pipeServer;
-		static Thread pipeServerThread;
-		static ProjectView view;
-		static object pipeServerLock = new object();
+		static NamedPipeServerStream? pipeServer;
+		static Thread? pipeServerThread;
+		static ProjectView? view;
+		static readonly object pipeServerLock = new object();
 
 
 		private static void CreatePipeServer()
 		{
 			pipeServer = new NamedPipeServerStream(PipeName, PipeDirection.In, 1);
-			pipeServerThread = new Thread(new ThreadStart(PipeServerThread));
+			pipeServerThread = new Thread(new ThreadStart(() => PipeServerThread(pipeServer)));
 			pipeServerThread.Start();
 		}
 
-		private static void PipeServerThread()
+		private static void PipeServerThread(NamedPipeServerStream pipeServer)
 		{
 	
 			StreamReader sr = new StreamReader(pipeServer);
@@ -48,9 +48,9 @@ namespace Projector
 					try
 					{
 						pipeServer.WaitForConnection();
-						string input = sr.ReadLine();
+						string? input = sr.ReadLine();
 
-						if (view != null)
+						if (view is not null && input is not null)
 							view.HandleInput(input);
 					}
 					catch (Exception)
@@ -138,6 +138,8 @@ namespace Projector
 		[STAThread]
         static void Main()
         {
+			ApplicationConfiguration.Initialize();
+
 			var cmds = Environment.GetCommandLineArgs();
 
 			if (cmds.Length > 1)
@@ -163,7 +165,16 @@ namespace Projector
 					List<Project> projects = new List<Project>();
 
 					bool isNew;
-					Solution solution = Solution.LoadNew(new File(cmds[2]), out isNew);
+					var solutionPath = new FilePath(cmds[2]);
+					var solution = Solution.LoadNew(solutionPath, out isNew);
+					if (solution is null)
+					{
+						EventLog.Warn(null, null, "Unable to load solution from " + solutionPath);
+						Console.Error.WriteLine("Unable to load solution from " + solutionPath);
+						Application.Exit();
+						return;
+
+					}
 
 					solution.ScanEmptySources();
 					foreach (var p in solution.Projects)
@@ -184,8 +195,8 @@ namespace Projector
 				Application.Exit();
 			}
 
-			if (Environment.OSVersion.Version.Major >= 6)
-				SetProcessDPIAware();
+			//if (Environment.OSVersion.Version.Major >= 6)
+				//SetProcessDPIAware();
 			//Application.EnableVisualStyles();
 			//Application.SetCompatibleTextRenderingDefault(false);
 			//Application.Run(new Form1());             // Edit as needed
@@ -246,7 +257,7 @@ namespace Projector
 		/// <param name="writer">Writer to flush, write to disk (if necessary) and close</param>
 		/// <param name="forceWrite">Force writing this file. Writing may also be force via global settings</param>
 		/// <returns>True, if the file was written, false if it already matched</returns>
-		internal static bool ExportToDisk(File outPath, StreamWriter writer, bool forceWrite=false)
+		internal static bool ExportToDisk(FilePath outPath, StreamWriter writer, bool forceWrite=false)
 		{
 			writer.Flush();
 			Stream stream = writer.BaseStream;
@@ -259,7 +270,7 @@ namespace Projector
 			return changed;
 		}
 
-		private static bool ContentMatches(File path, Stream stream)
+		private static bool ContentMatches(FilePath path, Stream stream)
 		{
 			try
 			{
@@ -295,7 +306,7 @@ namespace Projector
 			return a.EndOfStream && b.EndOfStream;
 		}
 
-		private static void WriteToFile(File outPath, Stream stream)
+		private static void WriteToFile(FilePath outPath, Stream stream)
 		{
 			stream.Seek(0, SeekOrigin.Begin);
 			StreamWriter writer = System.IO.File.CreateText(outPath.FullName);

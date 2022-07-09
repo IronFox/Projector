@@ -7,10 +7,10 @@ namespace Projector
 {
 	public static class DependencyTree
 	{
-		private static Dictionary<File, DependencyNode> nodes = new Dictionary<File, DependencyNode>();
+		private static readonly Dictionary<FilePath, DependencyNode> nodes = new ();
 
 
-		private static HashSet<string> standardHeaders = new HashSet<string>(new string[]{
+		private static readonly HashSet<string> standardHeaders = new HashSet<string>(new string[]{
 			"ppl.h",
 			"iostream",
 			"stdlib.h",
@@ -74,9 +74,9 @@ namespace Projector
 			nodes.Clear();
 		}
 
-		public static void RegisterNode(Project owner, File path, Project.CodeGroup group)
+		public static void RegisterNode(Project owner, FilePath path, Project.CodeGroup group)
 		{
-			DependencyNode node;
+			DependencyNode? node;
 			if (nodes.TryGetValue(path, out node))
 				node.Parents.Add(owner);
 			else
@@ -87,88 +87,95 @@ namespace Projector
 		{
 			foreach (DependencyNode node in nodes.Values)
 			{
-				Project parent = node.Parents[0];
-				//EventLog.Inform(null, parent, "Parsing " + node.File);
-				node.Dependencies.Clear();
-				string line;
-				File file = node.File;
-				System.IO.StreamReader read = new System.IO.StreamReader(file.FullName);
-				int lineIndex = 0;
-				while ((line = read.ReadLine()) != null)
+				try
 				{
-					lineIndex++;
-					line = line.Trim();
-					string original = line;
-					if (!line.StartsWith("#include"))
-						continue;
-					line = line.Substring(8).Trim();
-					if (line.StartsWith("\""))
+					Project parent = node.Parents[0];
+					//EventLog.Inform(null, parent, "Parsing " + node.File);
+					node.Dependencies.Clear();
+					string? line;
+					var file = node.File;
+					StreamReader read = new(file.FullName);
+					int lineIndex = 0;
+					while ((line = read.ReadLine()) != null)
 					{
-						line = line.Substring(1);
-						int endAt = line.IndexOf('"');
-						if (endAt == -1)
-						{
-							EventLog.Warn(null, parent, file.Name + ": Malformatted include directive in line " + lineIndex + " '" + original + "'");
+						lineIndex++;
+						line = line.Trim();
+						string original = line;
+						if (!line.StartsWith("#include"))
 							continue;
-						}
-						line = line.Substring(0, endAt);
-						File candidate = new File(System.IO.Path.Combine(file.DirectoryName, line));
-						if (!candidate.Exists)
-							EventLog.Warn(null, parent, file.Name + ": Referenced file not found: '" + line + "' in line " + lineIndex);
-						else
+						line = line.Substring(8).Trim();
+						if (line.StartsWith("\""))
 						{
-							if (node.Dependencies.ContainsKey(candidate))
-								continue;
-							DependencyNode other;
-							if (nodes.TryGetValue(candidate, out other))
-								node.Dependencies.Add(candidate,new Tuple<DependencyNode, string>(other, line));
-							else
-								node.Dependencies.Add(candidate,new Tuple<DependencyNode, string>(new DependencyNode(null, candidate, null), line));
-						}
-						continue;
-					}
-
-					if (line.StartsWith("<"))
-					{
-						line = line.Substring(1);
-						int endAt = line.IndexOf('>');
-						if (endAt == -1)
-						{
-							EventLog.Warn(null, parent, file.Name + ": Malformatted include directive in line " + lineIndex + " '" + original + "'");
-							continue;
-						}
-						line = line.Substring(0, endAt);
-
-						if (standardHeaders.Contains(line.ToLower()))
-							continue;
-						bool found = false;
-
-						foreach (Project p in node.Parents)
-						{
-							foreach (string path in p.IncludedPaths)
+							line = line.Substring(1);
+							int endAt = line.IndexOf('"');
+							if (endAt == -1)
 							{
-								File candidate = new File(Path.Combine(path, line));
-								if (candidate.Exists)
-								{
-									found = true;
-									if (!node.Dependencies.ContainsKey(candidate))
-									{
-										DependencyNode other;
-										if (nodes.TryGetValue(candidate, out other))
-											node.Dependencies.Add(candidate,new Tuple<DependencyNode, string>(other, line));
-										else
-											node.Dependencies.Add(candidate, new Tuple<DependencyNode, string>(new DependencyNode(null, candidate, null), line));
-									}
-									break;
-								}
+								EventLog.Warn(null, parent, file.Name + ": Malformatted include directive in line " + lineIndex + " '" + original + "'");
+								continue;
 							}
-							if (found)
-								break;
+							line = line.Substring(0, endAt);
+							FilePath candidate = new(System.IO.Path.Combine(file.FullDirectoryName, line));
+							if (!candidate.Exists)
+								EventLog.Warn(null, parent, file.Name + ": Referenced file not found: '" + line + "' in line " + lineIndex);
+							else
+							{
+								if (node.Dependencies.ContainsKey(candidate))
+									continue;
+								DependencyNode? other;
+								if (nodes.TryGetValue(candidate, out other))
+									node.Dependencies.Add(candidate, new Tuple<DependencyNode, string>(other, line));
+								else
+									node.Dependencies.Add(candidate, new Tuple<DependencyNode, string>(new DependencyNode(null, candidate, null), line));
+							}
+							continue;
 						}
-						if (!found)
-							EventLog.Warn(null, parent, file.Name + ": Dependency not found: '" + line + "' in line " + lineIndex);
-					}
 
+						if (line.StartsWith("<"))
+						{
+							line = line.Substring(1);
+							int endAt = line.IndexOf('>');
+							if (endAt == -1)
+							{
+								EventLog.Warn(null, parent, file.Name + ": Malformatted include directive in line " + lineIndex + " '" + original + "'");
+								continue;
+							}
+							line = line.Substring(0, endAt);
+
+							if (standardHeaders.Contains(line.ToLower()))
+								continue;
+							bool found = false;
+
+							foreach (Project p in node.Parents)
+							{
+								foreach (string path in p.IncludedPaths)
+								{
+									FilePath candidate = new(Path.Combine(path, line));
+									if (candidate.Exists)
+									{
+										found = true;
+										if (!node.Dependencies.ContainsKey(candidate))
+										{
+											DependencyNode? other;
+											if (nodes.TryGetValue(candidate, out other))
+												node.Dependencies.Add(candidate, new Tuple<DependencyNode, string>(other, line));
+											else
+												node.Dependencies.Add(candidate, new Tuple<DependencyNode, string>(new DependencyNode(null, candidate, null), line));
+										}
+										break;
+									}
+								}
+								if (found)
+									break;
+							}
+							if (!found)
+								EventLog.Warn(null, parent, file.Name + ": Dependency not found: '" + line + "' in line " + lineIndex);
+						}
+
+					}
+				}
+				catch (Exception ex)
+				{
+					EventLog.Warn(null, node.Parents[0], node.File.FullName + ": Read failed: "+ex.Message);
 				}
 			}
 
@@ -215,7 +222,7 @@ namespace Projector
 				{
 					foreach (Project p in node.Parents)
 					{
-						List<DependencyNode> list;
+						List<DependencyNode>? list;
 						if (!projects.TryGetValue(p, out list))
 						{
 							list = new List<DependencyNode>();
@@ -227,7 +234,13 @@ namespace Projector
 			}
 			foreach (var scope in projects)
 			{
-				string outFile = Path.Combine(scope.Key.SourcePath.DirectoryName, scope.Key.Name + ".make");
+				if (scope.Key.SourcePath is null)
+				{
+					EventLog.Warn(null, scope.Key, "Project lacks source file");
+					continue;
+				}
+
+				string outFile = Path.Combine(scope.Key.SourcePath.FullDirectoryName, scope.Key.Name + ".make");
 
 				using (StreamWriter writer = new StreamWriter(new MemoryStream()))
 				{
@@ -242,6 +255,12 @@ namespace Projector
 					{
 						if (dep.Project.Type == "StaticLibrary")
 						{
+							if (dep.Project.SourcePath is null)
+							{
+								EventLog.Warn(null, dep.Project, "Project lacks source file");
+								continue;
+							}
+
 							string path = MakeRelativePath(scope.Key.SourcePath.Directory, dep.Project.SourcePath.Directory);
 							writer.Write(" -L" + path + " -l" + dep.Project.Name + ".lib");
 						}
@@ -308,7 +327,7 @@ namespace Projector
 						writer.WriteLine();
 
 					}
-					Program.ExportToDisk(new File(outFile), writer);
+					Program.ExportToDisk(new FilePath(outFile), writer);
 				}
 			}
 		}
