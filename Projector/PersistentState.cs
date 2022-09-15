@@ -220,7 +220,7 @@ namespace Projector
         {
             if (outPaths.ContainsKey(solutionSourceFile.FullName))
             {
-                if (outPaths[solutionSourceFile.FullName] == solutionOutFile)
+                if (outPaths[solutionSourceFile.FullName].Equals(solutionOutFile))
                     return;
                 outPaths[solutionSourceFile.FullName] = solutionOutFile;
             }

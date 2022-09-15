@@ -77,107 +77,6 @@ namespace Projector
         
     }
 
-	/// <summary>
-	/// Condition for certain operations declared by platform-name and config-name. If both are set, they are combined via and
-	/// </summary>
-	public struct Condition
-	{
-		/// <summary>
-		/// Platform target to be matched. Platform.None if not enabled (always true)
-		/// </summary>
-		public readonly Platform IfPlatform;
-		/// <summary>
-		/// Configuration name target to be matched. null if not enabled (always true)
-		/// </summary>
-		public readonly string? IfConfig;
-
-		public Condition(Platform ifPlatform, string ifConfig)
-		{
-			IfPlatform = ifPlatform;
-			IfConfig = ifConfig;
-		}
-
-		public Condition(XmlNode node, Solution domain, Project warnWhom)
-		{
-			XmlNode? ifPlatform = node.Attributes?.GetNamedItem("if_platform");
-			try
-			{
-				if (ifPlatform is not null && (ifPlatform.Value?.Length??0) > 0)
-					IfPlatform = (Platform)Enum.Parse(typeof(Platform),ifPlatform.Value!);
-				else
-					IfPlatform = Platform.None;
-			}
-			catch
-			{
-				if (ifPlatform?.Value == "x32")
-					IfPlatform = Platform.x86;
-				else
-				{
-					warnWhom.Warn(domain, "Unable to decode condition platform '" + ifPlatform?.Value + "'. Supported values are ARM, x32, and x64");
-					IfPlatform = Platform.None;
-				}
-			}
-			XmlNode? ifConfig = node.Attributes?.GetNamedItem("if_config");
-			if (ifConfig is not null && (ifConfig.Value?.Length??0) > 0)
-				IfConfig = ifConfig.Value;
-			else
-				IfConfig = null;
-		}
-
-		public override bool Equals(object? obj)
-		{
-			if (!(obj is Condition))
-				return false;
-			Condition other = (Condition)obj;
-			return other == this;
-		}
-
-		public override int GetHashCode()
-		{
-			int hash = 17;
-			//if (IfPlatform != Pla)
-			hash = hash * 31 + IfPlatform.GetHashCode();
-			if (IfConfig != null)
-				hash = hash * 31 + IfConfig.GetHashCode();
-			return hash;
-		}
-
-		public static bool operator ==(Condition a, Condition b)
-		{
-			return a.IfPlatform == b.IfPlatform && a.IfConfig == b.IfConfig;
-		}
-		public static bool operator !=(Condition a, Condition b)
-		{
-			return a.IfPlatform != b.IfPlatform || a.IfConfig != b.IfConfig;
-		}
-
-		public override string ToString()
-		{
-			return "if (" + (IfPlatform != Platform.None ? IfPlatform.ToString(): "") + "," + (IfConfig ?? "") + ")";
-		}
-
-		public bool AlwaysTrue
-		{
-			get { return IfPlatform == Platform.None && IfConfig == null; }
-		}
-
-		public bool Excludes(Condition other)
-		{
-			bool differentA = IfPlatform != Platform.None && other.IfPlatform != Platform.None && IfPlatform != other.IfPlatform;
-			bool differentB = IfConfig != null && other.IfConfig != null && IfConfig != other.IfConfig;
-			return differentA || differentB;
-		}
-
-		public bool Test(Configuration config)
-		{
-			return (IfPlatform == Platform.None || IfPlatform == config.Platform)
-					&&
-					(IfConfig == null || IfConfig == config.Name);
-		}
-
-	}
-
-
 
 
 	public static partial class Extensions
@@ -309,7 +208,14 @@ namespace Projector
 			/// <summary>
 			/// List of all exclusion rules. May be null if there are none to be evaluated
 			/// </summary>
-			public List<Exclude>? exclude = null;
+			private List<Exclude>? Excluded { get; set; } = null;
+
+
+
+			public void AddExclusion(Exclude ex)
+			{
+				(Excluded ??= new()).Add(ex);
+			}
 
 			/// <summary>
 			/// (possibly recursive) sub-directory that has been searched for possible files.
@@ -419,9 +325,9 @@ namespace Projector
 			{
 				if (dir.Name.StartsWith("."))
 					return true;
-				if (exclude != null)
+				if (Excluded is not null)
 				{
-					foreach (var ex in exclude)
+					foreach (var ex in Excluded)
 						if (ex.Match(dir))
 							return true;
 				}
@@ -434,9 +340,9 @@ namespace Projector
 			/// <returns></returns>
 			public bool IsExcluded(FileInfo file)
 			{
-				if (exclude != null)
+				if (Excluded != null)
 				{
-					foreach (var ex in exclude)
+					foreach (var ex in Excluded)
 						if (ex.Match(file))
 							return true;
 				}
@@ -1245,7 +1151,7 @@ namespace Projector
 													}
 												}
 												else
-													com.Write("\"" + Path.Combine(new string[] { "..", "..", cmd.OriginalExecutable }) + "\"" + cmd.QuotedParameters);
+													com.Write("\"" + Path.Combine("..", "..", cmd.OriginalExecutable) + "\"" + cmd.QuotedParameters);
 											}
 									}
 							}
@@ -1699,7 +1605,7 @@ namespace Projector
 		/// </summary>
 		/// <param name="xproject">Source project declaration</param>
 		/// <param name="searchScope">Source path to look from when looking up relative paths</param>
-		/// <param name="warningsGoTo">Project that is supposed to collect warnings. May be null</param>
+		/// <param name="warningsGoTo">Project that is supposed to collect warnings. May be null. If null, the loaded project is interpreted as explicitly loaded</param>
 		/// <returns>New or already existing project. Null if project does not provide a name</returns>
         public static Project? AddProjectReference(XmlNode xproject, FilePath searchScope, Solution domain, Project? warningsGoTo, bool listAsLocalProject)
         {
@@ -1823,7 +1729,6 @@ namespace Projector
             XmlNodeList? xExcludes = xsource.SelectNodes("exclude");
             if (xExcludes != null && xExcludes.Count > 0)
             {
-                s.exclude = new List<Source.Exclude>();
                 foreach (XmlNode xExclude in xExcludes)
                 {
 
@@ -1833,7 +1738,7 @@ namespace Projector
                         var ex = new Source.Exclude();
                         ex.type = Source.Exclude.Type.Find;
                         ex.parameter = xFind.Value;
-                        s.exclude.Add(ex);
+                        s.AddExclusion(ex);
                     }
                     else
                     {
@@ -1845,7 +1750,7 @@ namespace Projector
                             var ex = new Source.Exclude();
                             ex.type = Source.Exclude.Type.Dir;
                             ex.parameter = xDir.Value;
-                            s.exclude.Add(ex);
+                            s.AddExclusion(ex);
                         }
                         else
                         {
@@ -1855,7 +1760,7 @@ namespace Projector
                                 var ex = new Source.Exclude();
                                 ex.type = Source.Exclude.Type.File;
                                 ex.parameter = xFile.Value;
-                                s.exclude.Add(ex);
+                                s.AddExclusion(ex);
                             }
                             else
 								Warn(domain, "Unable to determine type of exclusion in source '" + xPath.Value + "' (supported types are 'find'/'substr', 'dir', and 'file')");

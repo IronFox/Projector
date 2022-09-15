@@ -6,26 +6,136 @@ namespace Projector
 {
 
 
-
-	/// <summary>
-	/// Helper structure to provide properties of a given file path with non-null path
-	/// </summary>
-	public class FilePath
+	public abstract class CommonPath : IEquatable<CommonPath>
 	{
 		/// <summary>
 		/// Full path of the local file descriptor. Never null
 		/// </summary>
 		public string FullName { get; }
 
+		/// <summary>
+		/// Queries the name of the locally identified file. Never null
+		/// </summary>
+		public string Name
+		{
+			get
+			{
+				return Path.GetFileName(FullName);
+			}
+		}
+
+		protected CommonPath(string fullName)
+		{
+			FullName = fullName;
+		}
+
+		public override int GetHashCode()
+		{
+			return FullName.GetHashCode();
+		}
+
+
+		public override bool Equals(object? obj)
+		{
+			return obj is CommonPath fp && fp.Equals(this);
+		}
+
+		public bool Equals(CommonPath? other)
+		{
+			return other is not null && other.FullName == FullName;
+		}
+
+		public override string ToString()
+		{
+			return FullName;
+		}
+
+
+	}
+
+	public class DirectoryPath : CommonPath
+	{
+		public string? FullParentName { get; }
+
+		/// <summary>
+		/// Constructs the directory path from a given absolute or relative path
+		/// </summary>
+		/// <param name="path">Absolute or relative path to the directory. May or may not exist</param>
+		public DirectoryPath(string path) : base(new DirectoryInfo(path).FullName)
+		{
+			FullParentName = Path.GetDirectoryName(FullName);
+		}
+
+		/// <summary>
+		/// Constructs the directory from a directory info struct
+		/// </summary>
+		/// <param name="info">File info struct to read from</param>
+		public DirectoryPath(DirectoryInfo info) : base(info.FullName)
+		{
+			FullParentName = Path.GetDirectoryName(FullName);
+		}
+
+
+
+		/// <summary>
+		/// Checks if the local directory descriptor identifies an existing directory
+		/// </summary>
+		public bool Exists => System.IO.Directory.Exists(FullName);
+
+		/// <summary>
+		/// Checks if the directory, containing the local directory descriptor, exists.
+		/// </summary>
+		public bool ParentExists => FullParentName is not null && System.IO.Directory.Exists(FullParentName);
+
+
+
+		/// <summary>
+		/// Fetches the directory containing the local directory. Never null
+		/// </summary>
+		public DirectoryInfo Directory => new DirectoryInfo(FullName);
+
+		public DirectoryPath? Parent => FullParentName is not null ? new(FullParentName) : null;
+
+
+
+
+		/// <summary>
+		/// Resolves the given file name relative to the local directory
+		/// </summary>
+		/// <param name="fileName">Relative or absolute file path</param>
+		/// <returns>Descriptor for the resolved file name. Not required to exist</returns>
+		public FilePath GetRelative(string fileName)
+		{
+			return new(Path.Combine(FullName, fileName));
+		}
+
+
+		/// <summary>
+		/// Resolves the given directory name relative to the local directory
+		/// </summary>
+		/// <param name="fileName">Relative or absolute directory path</param>
+		/// <returns>Descriptor for the resolved directory name. Not required to exist</returns>
+		public DirectoryPath GetRelativeDirectory(string fileName)
+		{
+			return new(Path.Combine(FullName, fileName));
+		}
+	}
+
+
+	/// <summary>
+	/// Helper structure to provide properties of a given file path with non-null path
+	/// </summary>
+	public class FilePath : CommonPath
+	{
+
 		public string FullDirectoryName { get; }
 
 		/// <summary>
 		/// Constructs the file path from a given absolute or relative path
 		/// </summary>
-		/// <param name="path">Absolute or relative path to the file. May or may not exist. May be null</param>
-		public FilePath(string path)
+		/// <param name="path">Absolute or relative path to the file. May or may not exist</param>
+		public FilePath(string path):base(new System.IO.FileInfo(path).FullName)
 		{
-			FullName = new System.IO.FileInfo(path).FullName;
 			FullDirectoryName = Path.GetDirectoryName(FullName) ?? throw new ArgumentException("Given path '"+path+"' is not valid");
 		}
 
@@ -33,9 +143,8 @@ namespace Projector
 		/// Constructs the file from a file info struct
 		/// </summary>
 		/// <param name="info">File info struct to read from</param>
-		public FilePath(FileInfo info)
+		public FilePath(FileInfo info):base(info.FullName)
 		{
-			FullName = info.FullName;
 			FullDirectoryName = Path.GetDirectoryName(FullName) ?? throw new ArgumentException("Given path '" + info + "' is not valid");
 		}
 
@@ -55,7 +164,9 @@ namespace Projector
 		/// <summary>
 		/// Fetches the directory containing the local file. Never null
 		/// </summary>
-		public System.IO.DirectoryInfo Directory => new DirectoryInfo(FullDirectoryName);
+		public DirectoryInfo Directory => new DirectoryInfo(FullDirectoryName);
+
+		public DirectoryPath DirectoryPath => new(FullDirectoryName);
 
 
 		/// <summary>
@@ -71,16 +182,7 @@ namespace Projector
 			return new FilePath(a.FullName + ext);
 		}
 
-		/// <summary>
-		/// Queries the name of the locally identified file. May return null
-		/// </summary>
-		public string Name
-		{
-			get
-			{
-				return Path.GetFileName(FullName);
-			}
-		}
+
 
 		/// <summary>
 		/// Queries the name of the locally identified file without extension. May return null
@@ -92,28 +194,11 @@ namespace Projector
 				return Path.GetFileNameWithoutExtension(FullName);
 			}
 		}
-		public override int GetHashCode()
-		{
-			return FullName.GetHashCode();
-		}
-		public override bool Equals(object? obj)
-		{
-			return obj is FilePath fp && fp == this;
-		}
 
-		public override string ToString()
-		{
-			return FullName;
-		}
 
-		public static bool operator ==(FilePath a, FilePath b)
-		{
-			return a.FullName == b.FullName;
-		}
-		public static bool operator !=(FilePath a, FilePath b) => !(a == b);
 
 		/// <summary>
-		/// Resolves the given file-name relative to the local directory
+		/// Resolves the given file-name relative to the local parent directory
 		/// </summary>
 		/// <param name="fileName">Relative or absolute file path</param>
 		/// <returns>Descriptor for the resolved file name. Not required to exist</returns>
@@ -121,6 +206,18 @@ namespace Projector
 		{
 			return new(Path.Combine(FullDirectoryName, fileName));
 		}
+
+
+		/// <summary>
+		/// Resolves the given directory name relative to the local parent directory
+		/// </summary>
+		/// <param name="fileName">Relative or absolute directory path</param>
+		/// <returns>Descriptor for the resolved directory name. Not required to exist</returns>
+		public DirectoryPath GetRelativeDirectory(string fileName)
+		{
+			return new(Path.Combine(FullDirectoryName, fileName));
+		}
+
 	}
 
 
