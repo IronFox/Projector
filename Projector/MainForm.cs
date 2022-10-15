@@ -905,6 +905,10 @@ namespace Projector
 
 			Array.Sort(keys);
 			string rs = keys[keys.Length - 1];
+			//var split = ;
+			int[] asInts = rs.Split('.').Select(str => int.TryParse(str, out var i) ? i : -1).ToArray();
+			if (asInts[0] >= 10)
+				return asInts[0] + "." + asInts[1];	//notify VS to use latest installed toolkit. Otherwise, this toolkit might not be available to this version of VS
 			return rs;
 		}
 
