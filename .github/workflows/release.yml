@@ -1,0 +1,66 @@
+name: Release
+
+# Publishes a GitHub Release with a self-contained Projector bundle
+# (Projector.exe plus the .NET runtime, so no .NET install is needed).
+# Trigger it by pushing a version tag, e.g.:
+#   git tag v1.5.0 && git push origin v1.5.0
+# or run it manually from the Actions tab with an existing or new tag.
+
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.5.0). Created from the selected branch if it does not exist.'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    env:
+      TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Determine version
+        id: version
+        shell: pwsh
+        run: |
+          $tag = $env:TAG
+          if ($tag -notmatch '^v(\d+\.\d+\.\d+)$') { throw "Tag '$tag' must look like v1.2.3" }
+          "version=$($Matches[1])" >> $env:GITHUB_OUTPUT
+
+      - name: Publish self-contained build
+        run: >
+          dotnet publish Projector/Projector.csproj -c Release -r win-x64 --self-contained
+          -p:Version=${{ steps.version.outputs.version }}
+          -p:DebugType=none
+          -o bundle/Projector
+
+      - name: Create bundle
+        id: bundle
+        shell: pwsh
+        run: |
+          Copy-Item LICENSE, README.md, PROJECT.md, SOLUTION.md bundle/Projector/
+          $zip = "Projector-$env:TAG-win-x64.zip"
+          Compress-Archive -Path bundle/Projector -DestinationPath $zip
+          "zip=$zip" >> $env:GITHUB_OUTPUT
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          target_commitish: ${{ github.sha }}
+          name: Projector ${{ env.TAG }}
+          files: ${{ steps.bundle.outputs.zip }}
+          generate_release_notes: true
+          body: |
+            Self-contained Windows x64 build. The .NET 10 runtime is included, so nothing else needs to be installed.
+            Unzip anywhere and run `Projector/Projector.exe`.
