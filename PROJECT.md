@@ -189,6 +189,30 @@ If any evaluates to false, the entire section is ignored for the given constella
 </project>
 ```
 
+## vcpkg Packages
+Libraries can also come from [vcpkg](https://vcpkg.io) in manifest mode. List them in a `vcpkg.json` file and add a `vcpkg` element:
+```xml
+<project type="[type]">
+	<vcpkg />
+</project>
+```
+The generated project imports vcpkg's MSBuild integration. On the first build, MSBuild installs the packages listed in `vcpkg.json` and adds their include directories and link libraries automatically, so no `includeLibrary` section is needed for them.
+
+Attributes (all optional):
+
+| Attribute | Default | Meaning |
+|---|---|---|
+| `manifest` | nearest `vcpkg.json` in the `.project` folder or any parent folder | Path to `vcpkg.json` or to the folder containing it, relative to the `.project` file |
+| `triplet` | `{arch}-windows-static` | vcpkg triplet. `{arch}` becomes `x86`, `x64` or `arm64` per platform. The static triplets match Projector's static runtime (`/MT`, `/MTd`) |
+| `root` | auto-detected | vcpkg installation folder, relative to the `.project` file |
+| `install` | `true` | Set to `false` to skip the automatic package restore during the build |
+
+If `root` is not set, Projector uses the `VCPKG_ROOT` environment variable, then the vcpkg copy bundled with the selected Visual Studio (`<VS>\VC\vcpkg`, part of the "vcpkg package manager" component). If neither is found, the project falls back to `$(VCPKG_ROOT)` at build time and the build stops with a clear error if vcpkg is still missing.
+
+Projects that reference a project with a `vcpkg` element, directly or indirectly, inherit its settings. Static libraries do not carry their link dependencies, so an application that uses such a library must link the same packages. A project's own `vcpkg` element takes precedence over inherited ones; in that case its `vcpkg.json` must also list the packages its referenced libraries need.
+
+Packages are installed to `vcpkg_installed/<triplet>/` next to `vcpkg.json`. Add that folder to `.gitignore`.
+
 ## Extra Parameters
 The project section allows a number of special parameters:
 ### extraProjectOptions

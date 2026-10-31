@@ -659,6 +659,31 @@ namespace Projector
 		/// </summary>
 		public IEnumerable<LibraryInclusion> IncludedLibraries { get { return includedLibraries; } }
 		/// <summary>
+		/// vcpkg integration declared by the local project (or a cloned project) via &lt;vcpkg&gt;. Null if not declared
+		/// </summary>
+		public VcpkgSettings? Vcpkg => vcpkg;
+		/// <summary>
+		/// vcpkg integration to apply to the local project: its own &lt;vcpkg&gt; if declared, otherwise the first one found
+		/// among the (transitively) referenced projects. Static libraries do not carry their link dependencies, so an
+		/// application referencing a library that uses vcpkg must link the same packages.
+		/// </summary>
+		public VcpkgSettings? EffectiveVcpkg => FindEffectiveVcpkg(new HashSet<Project>());
+
+		private VcpkgSettings? FindEffectiveVcpkg(HashSet<Project> visited)
+		{
+			if (!visited.Add(this))
+				return null;
+			if (vcpkg is not null)
+				return vcpkg;
+			foreach (var r in references)
+			{
+				var rs = r.Project.FindEffectiveVcpkg(visited);
+				if (rs is not null)
+					return rs;
+			}
+			return null;
+		}
+		/// <summary>
 		/// Retrieves all locally referenced projects. May be empty, but never null
 		/// </summary>
 		public ICollection<Reference> References { get { return references; } }
@@ -752,6 +777,7 @@ namespace Projector
         //private XmlNode xproject;
 
 		List<LibraryInclusion> includedLibraries = new List<LibraryInclusion>();
+		VcpkgSettings? vcpkg = null;
 		List<FileInfo> customManifests = new List<FileInfo>();
 		List<Command> preBuildCommands = new List<Command>();
         List<Source> sources = new List<Source>();
@@ -817,6 +843,36 @@ namespace Projector
         }
 
 
+
+		private static void WriteVcpkgSettings(XmlOut.Section projectWriter, VcpkgSettings settings, string vcpkgRoot, IEnumerable<Configuration> configurations)
+		{
+			using (var group = projectWriter.SubSection("PropertyGroup"))
+			{
+				group.AddParameter("Label", "Vcpkg");
+				group.SingleLine("VcpkgEnabled", true);
+				group.SingleLine("VcpkgEnableManifest", true);
+				group.SingleLine("VcpkgManifestInstall", settings.Install);
+				group.SingleLine("VcpkgManifestRoot", settings.ManifestRoot.FullName.TrimEnd('\\', '/') + "\\");
+				group.SingleLine("VcpkgRoot", vcpkgRoot.TrimEnd('\\', '/') + "\\");
+			}
+			foreach (Configuration config in configurations)
+			{
+				string triplet = settings.TripletFor(config.Platform);
+				bool useMD = triplet.EndsWith("-static-md");
+				bool useStatic = useMD || triplet.EndsWith("-static");
+				using (var group = projectWriter.SubSection("PropertyGroup"))
+				{
+					group.AddParameter("Condition", "'$(Configuration)|$(Platform)'=='" + config + "'");
+					group.AddParameter("Label", "Vcpkg");
+					group.SingleLine("VcpkgTriplet", triplet);
+					group.SingleLine("VcpkgUseStatic", useStatic);
+					if (useMD)
+						group.SingleLine("VcpkgUseMD", true);
+					// OptimizedDebug would not be recognized by vcpkg; Projector uses debug runtime libraries for every non-release configuration
+					group.SingleLine("VcpkgConfiguration", config.IsRelease ? "Release" : "Debug");
+				}
+			}
+		}
 
 		/// <summary>
 		/// Constructs the local project
@@ -948,6 +1004,20 @@ namespace Projector
 								group.SingleLine("WindowsTargetPlatformVersion", toolSetVersion.WindowsTargetPlatformVersion);
 							if (haveCUDA)
 								group.SingleLine("CudaToolkitCustomDir", "");
+						}
+
+						var effectiveVcpkg = EffectiveVcpkg;
+						string? vcpkgRoot = null;
+						if (effectiveVcpkg is not null)
+						{
+							vcpkgRoot = effectiveVcpkg.ResolveRoot(toolSetVersion, msg => Warn(domain, msg));
+							WriteVcpkgSettings(projectWriter, effectiveVcpkg, vcpkgRoot, configurations);
+							using (var group = projectWriter.SubSection("Import"))
+							{
+								string props = Path.Combine(vcpkgRoot, "scripts", "buildsystems", "msbuild", "vcpkg.props");
+								group.AddParameter("Project", props);
+								group.AddParameter("Condition", "Exists('" + props + "')");
+							}
 						}
 
 						using (var group = projectWriter.SubSection("Import"))
@@ -1179,6 +1249,23 @@ namespace Projector
 						{
 							group.AddParameter("Project", "$(VCTargetsPath)\\Microsoft.Cpp.targets");
 						}
+						if (effectiveVcpkg is not null && vcpkgRoot is not null)
+						{
+							string targets = Path.Combine(vcpkgRoot, "scripts", "buildsystems", "msbuild", "vcpkg.targets");
+							using (var group = projectWriter.SubSection("Import"))
+							{
+								group.AddParameter("Project", targets);
+								group.AddParameter("Condition", "Exists('" + targets + "')");
+							}
+							using (var target = projectWriter.SubSection("Target"))
+							{
+								target.AddParameter("Name", "ProjectorCheckVcpkg");
+								target.AddParameter("BeforeTargets", "PrepareForBuild");
+								target.AddParameter("Condition", "!Exists('" + targets + "')");
+								using (var err = target.SingleLine("Error"))
+									err.AddParameter("Text", "vcpkg was not found at '" + vcpkgRoot + "'. Install vcpkg (or the Visual Studio vcpkg component), set VCPKG_ROOT, or set the root attribute of the vcpkg element in " + (SourcePath?.FullName ?? Name) + ", then regenerate the project with Projector.");
+							}
+						}
 						using (var group = projectWriter.SubSection("ImportGroup"))
 						{
 							group.AddParameter("Label", "ExtensionTargets");
@@ -1393,6 +1480,8 @@ namespace Projector
 				foreach (var lib in p.IncludedLibraries)
 					if (!includedLibraries.Contains(lib))
 						includedLibraries.Add(lib);
+				if (p.vcpkg is not null)
+					vcpkg = p.vcpkg;
                 preBuildCommands.AddRange(p.preBuildCommands);
                 sources.AddRange(p.sources);
 				explicitIncludePaths.AddRange(p.explicitIncludePaths);
@@ -1553,6 +1642,19 @@ namespace Projector
 					if (!includedLibraries.Contains(lib))
 						includedLibraries.Add(lib);
 				}
+
+			var xVcpkgs = xproject?.SelectNodes("vcpkg");
+			if (xVcpkgs is not null && xVcpkgs.Count > 0)
+			{
+				if (xVcpkgs.Count > 1)
+					Warn(domain, "Only one <vcpkg> element is supported per project. Using the last one.");
+				foreach (XmlNode xVcpkg in xVcpkgs)
+				{
+					var parsed = VcpkgSettings.Parse(xVcpkg, SourcePath.Directory, msg => Warn(domain, msg));
+					if (parsed is not null)
+						vcpkg = parsed;
+				}
+			}
 
 
             var xmacros = xproject?.SelectNodes("macro");
