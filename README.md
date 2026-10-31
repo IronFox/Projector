@@ -10,6 +10,14 @@ Generated projects loaded by Visual Studio will compile as parallel as possible
 
  
 
+## Download
+
+Ready-to-run builds are published on the [Releases page](https://github.com/IronFox/Projector/releases).
+Each release contains `Projector-<version>-win-x64.zip`, a self-contained bundle that includes the .NET runtime, so no separate .NET installation is needed.
+Unzip it anywhere and run `Projector/Projector.exe`.
+
+To publish a new release, push a version tag (for example `git tag v1.5.0 && git push origin v1.5.0`) or run the *Release* workflow from the Actions tab.
+
 ## Building Projector
 
 Projector is a Windows Forms application targeting .NET 10.
