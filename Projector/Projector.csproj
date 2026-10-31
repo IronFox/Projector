@@ -17,7 +17,7 @@
     <Product>Projector</Product>
     <Description>Generates Visual Studio C++ solutions and projects from simple XML files</Description>
     <Copyright>Copyright (C) 2016-2026 Stefan Elsen</Copyright>
-    <Version>1.4.0</Version>
+    <Version>1.5.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
