@@ -122,6 +122,6 @@
 Solutions and projects are created as simple XML files which are converted into Visual Studio files on the fly.
 Projector tries to hide much of the complexity of Visual Studio solutions, and manage varying path constellations on different computers.
 
-Copyright (C) 2016-2021 Stefan Elsen</value>
+Copyright (C) 2016-2026 Stefan Elsen</value>
   </data>
 </root>

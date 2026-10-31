@@ -228,7 +228,7 @@ namespace Projector
 				string path = TryGetVSPath(vsMajorVersion, vsMinorVersion);
 				if (path == null)
 					throw new Exception($"Visual Studio v{vsMajorVersion}.{vsMinorVersion} not found in registry");
-				toolSet.Items.Add(new ToolsetVersion(major, minor, vsName, windowsTargetPlatformVersion, path));
+				toolSet.Items.Add(new ToolsetVersion(major, minor, vsName, vsMajorVersion, windowsTargetPlatformVersion, path));
 
 				LogLine(vsName + " found in " + path);
 			}
@@ -236,40 +236,40 @@ namespace Projector
 			{
 				LogLine(vsName+$" installation folder not found. Skipping. Toolset v{major}.{minor} will not be available");
 			}
+			catch (System.Runtime.InteropServices.COMException ex)
+			{
+				//Visual Studio setup COM API not registered or broken (e.g. no VS2017+ installed)
+				LogLine(vsName + $" could not be queried via the Visual Studio setup API ({ex.Message}). Skipping. Toolset v{major}.{minor} will not be available");
+			}
 		}
 
 		private void ProjectView_Load(object sender, EventArgs e)
         {
-			//ResizeFont(this.Controls, FontScaleFactor);
-			toolsetLabel.Size = toolsetLabel.PreferredSize;
-			toolSet.Left = toolsetLabel.Right + 4;
-
 			RegisterToolSet(12, 0, "VS 2013", 12,0);
 			RegisterToolSet(14, 0, "VS 2015", 14,0);
 			RegisterToolSet(14, 1, "VS 2017", 15,-1);
 			RegisterToolSet(14, 2, "VS 2019", 16, -1);
 			RegisterToolSet(14, 3, "VS 2022", 17, -1);
+			RegisterToolSet(14, 5, "VS 2026", 18, -1);
 
 			PersistentState.Restore();
-			if (PersistentState.Toolset != null)
+			if (toolSet.Items.Count == 0)
 			{
-				toolSet.SelectedIndex = toolSet.Items.IndexOf(PersistentState.Toolset);
-
-				if (toolSet.SelectedIndex == -1)	//toolset no longer available
-				{
-					if (toolSet.Items.Count > 0)
-					{
-						toolSet.SelectedIndex = 0;
-						PersistentState.Toolset = toolSet.SelectedItem.ToString();
-					}
-					else
-						LogLine("No Installation of Visual Studio found");
-				}
+				LogLine("No Installation of Visual Studio found");
+				return;
 			}
-			else
+			if (PersistentState.Toolset != null)
+				for (int i = 0; i < toolSet.Items.Count; i++)
+					if (toolSet.Items[i]?.ToString() == PersistentState.Toolset)
+					{
+						toolSet.SelectedIndex = i;
+						break;
+					}
+
+			if (toolSet.SelectedIndex == -1)	//no toolset stored or stored toolset no longer available
 			{
-				toolSet.SelectedIndex = 0;
-				PersistentState.Toolset = toolSet.SelectedItem.ToString();
+				toolSet.SelectedIndex = toolSet.Items.Count - 1;	//newest
+				PersistentState.Toolset = toolSet.SelectedItem?.ToString();
 			}
         }
 
@@ -694,21 +694,26 @@ namespace Projector
 
 			bool rebuildPanel = recentListChanged || mainTabControl.SelectedTab != tabRecent;
 
-			int top = 10;
+			//manual layout: offsets are given in 96 DPI units and scaled to the current DPI
+			int Px(int logical) => recentSolutions.LogicalToDeviceUnits(logical);
+			int indent = Px(20);
+			int top = Px(10);
 			Font? f = null;
 			if (rebuildPanel)
 			{
+				recentSolutions.SuspendLayout();
 				recentSolutions.Controls.Clear();
+				recentSolutions.AutoScrollPosition = new Point(0, 0);
 				recentItems.Clear();
 
 
 				{
 					Label title = new Label();
 
-					f = new Font(title.Font.FontFamily, title.Font.Size * 1.2f /** FontScaleFactor*/);
+					f = new Font(recentSolutions.Font.FontFamily, recentSolutions.Font.Size * 1.2f);
 					title.Font = f;
 					title.Text = "Recent Solutions: (shift+click to load but stay on this tab)";
-					title.Left = 15;
+					title.Left = Px(15);
 					title.Top = top;
 					title.Height = title.PreferredHeight;
 					top += title.Height;
@@ -722,7 +727,7 @@ namespace Projector
 			{
 				ShowAlways = true
 			};
-			int left = 20;
+			int left = indent;
 			//string lastDomain = null;
 			foreach (var recent in PersistentState.Recent)
 			{
@@ -739,12 +744,12 @@ namespace Projector
 							Top = top,
 
 							Font = f,
-							Left = 20,
+							Left = indent,
 							Text = recent.Domain + "/"
 						};
 						ldomain.Width = ldomain.PreferredWidth;
 						ldomain.Height = ldomain.PreferredHeight;
-						left = 20 + ldomain.Width;
+						left = indent + ldomain.Width;
 						recentSolutions.Controls.Add(ldomain);
 						tooltip.SetToolTip(ldomain, "Load all recent projects of domain '"+recent.Domain+"'");
 						if (recent.Domain is not null)
@@ -755,7 +760,7 @@ namespace Projector
 						}
 					}
 					else
-						left = 20;
+						left = indent;
 					//lastDomain = recent.Domain;
 
 					{
@@ -797,8 +802,16 @@ namespace Projector
 
             }
             recentSolutionsToolStripMenuItem.Enabled = PersistentState.Recent.Count() > 0;
-
+			if (rebuildPanel)
+				recentSolutions.ResumeLayout(true);
         }
+
+		protected override void OnDpiChanged(DpiChangedEventArgs e)
+		{
+			base.OnDpiChanged(e);
+			//the recent solutions panel is laid out manually and must be rebuilt for the new DPI
+			UpdateRecentAndPaths(true);
+		}
 
 
 		private void ToolSet_SelectedIndexChanged(object sender, EventArgs e)
@@ -872,7 +885,9 @@ namespace Projector
 
         private ToolsetVersion GetToolsetVersion()
         {
-            return (ToolsetVersion)(toolSet.SelectedItem);
+            if (toolSet.SelectedItem is ToolsetVersion version)
+                return version;
+            throw new VSNotFoundException("No Visual Studio installation found. Install Visual Studio 2013 or newer and restart Projector.");
         }
 
 		private string? GetWindowsTargetPlatformVersion()
@@ -1051,6 +1066,11 @@ namespace Projector
 			if (!slnPath.Exists)
 			{
 				LogLine("Error: '"+slnPath.FullName+"' does not exist");
+				return false;
+			}
+			if (toolSet.SelectedItem is null)
+			{
+				LogLine("Error: No Visual Studio installation found");
 				return false;
 			}
 			if (solution.visualStudioProcess == null || solution.visualStudioProcess.HasExited)
@@ -1246,7 +1266,7 @@ namespace Projector
 
 		private void toolSet_SelectedIndexChanged_1(object sender, EventArgs e)
 		{
-			PersistentState.Toolset = toolSet.SelectedItem.ToString();
+			PersistentState.Toolset = toolSet.SelectedItem?.ToString();
 		}
 
 		private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1271,7 +1291,7 @@ namespace Projector
 		{
 			if (e.Data?.GetDataPresent(DataFormats.FileDrop) == true)
 			{
-				string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+				string[] files = e.Data.GetData(DataFormats.FileDrop) as string[] ?? Array.Empty<string>();
 				foreach (string file in files)
 					if (!file.ToLower().EndsWith(".solution"))
 						return;
@@ -1353,9 +1373,13 @@ namespace Projector
 
 		private void buildSelectedToolStripMenuItem_Click(object sender, EventArgs e)
 		{
+			if (toolSet.SelectedItem is null)
+			{
+				LogLine("Error: No Visual Studio installation found");
+				return;
+			}
 			RebuildSelected();
 			var sol = new BuildSolutions();
-			//ResizeFont(sol.Controls, FontScaleFactor);
 			sol.Begin(GetSelectedSolutions(), GetToolsetVersion(), RebuildSelected);
 		}
 

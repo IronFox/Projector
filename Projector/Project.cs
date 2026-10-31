@@ -964,7 +964,7 @@ namespace Projector
 
 								group.SingleLine("ConfigurationType", Type);
 								group.SingleLine("UseDebugLibraries", !config.IsRelease);
-								group.SingleLine("PlatformToolset", "v" + (toolSetVersion.Major * 10 + toolSetVersion.Minor));
+								group.SingleLine("PlatformToolset", toolSetVersion.PlatformToolset);
 								group.SingleLine("WholeProgramOptimization", config.IsRelease);
 								group.SingleLine("CharacterSet", "Unicode");
 							}
@@ -1108,7 +1108,7 @@ namespace Projector
 											dis.Write(string.Join(",", disableWarnings));
 										}
 
-									if (toolSetVersion.Major >= 14 && toolSetVersion.Minor >= 2)
+									if (toolSetVersion.VSMajorVersion >= 16)	//VS2019+ supports /Zc:__cplusplus
 										clCompile.SingleLine("AdditionalOptions", $"/Zc:__cplusplus {ExtraProjectOptions} %(AdditionalOptions)");
 									else if (ExtraProjectOptions.Length > 0)
 										clCompile.SingleLine("AdditionalOptions", $"{ExtraProjectOptions} %(AdditionalOptions)");

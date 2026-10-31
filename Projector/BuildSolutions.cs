@@ -22,26 +22,51 @@ namespace Projector
 		}
 
 		private ToolsetVersion toolset;
+		/// <summary>
+		/// MSBuild folder per Visual Studio IDE path, so switching the toolset also switches MSBuild
+		/// </summary>
+		private static readonly Dictionary<string, string> msBuildPaths = new Dictionary<string, string>();
 		private static string msBuildPath = "";
 
-		bool FindBuildPath(string current)
+		/// <summary>
+		/// Locates the MSBuild.exe folder of a Visual Studio installation
+		/// </summary>
+		/// <param name="vsIdePath">Path to the Common7\IDE folder of the installation</param>
+		/// <returns>Folder containing MSBuild.exe, or null if not found</returns>
+		static string? LocateMSBuild(string vsIdePath)
 		{
-			var dir = new DirectoryInfo(current);
-			foreach (var d in dir.EnumerateDirectories())
+			var installRoot = Directory.GetParent(vsIdePath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))?.Parent;
+			if (installRoot is null || !installRoot.Exists)
+				return null;
+			//VS2019+ use MSBuild\Current, VS2017 uses MSBuild\15.0
+			foreach (var sub in new[] { "Current", "15.0" })
 			{
-				if (FindBuildPath(d.FullName))
-					return true;
+				string candidate = Path.Combine(installRoot.FullName, "MSBuild", sub, "Bin");
+				if (File.Exists(Path.Combine(candidate, "MSBuild.exe")))
+					return candidate;
 			}
+			return FindBuildPath(installRoot);
+		}
 
-			foreach (var f in dir.EnumerateFiles())
+		static string? FindBuildPath(DirectoryInfo dir)
+		{
+			try
 			{
-				if (f.Name.ToUpper() == "MSBUILD.EXE")
+				foreach (var f in dir.EnumerateFiles())
+					if (string.Equals(f.Name, "MSBuild.exe", StringComparison.OrdinalIgnoreCase))
+						return f.DirectoryName;
+				foreach (var d in dir.EnumerateDirectories())
 				{
-					msBuildPath = f.DirectoryName??"";
-					return true;
+					var rs = FindBuildPath(d);
+					if (rs is not null)
+						return rs;
 				}
 			}
-			return false;
+			catch (UnauthorizedAccessException)
+			{ }
+			catch (IOException)
+			{ }
+			return null;
 		}
 
 
@@ -204,11 +229,22 @@ namespace Projector
 			this.toolset = toolset;
 			this.rebuildProjects = rebuildProjects;
 
-			if (msBuildPath == "" && toolset.Path != null)
+			msBuildPath = "";
+			if (toolset.Path != null)
 			{
-				string[] segments = toolset.Path.Split(Path.DirectorySeparatorChar);
-				if (FindBuildPath(string.Join(Path.DirectorySeparatorChar.ToString(),segments.Take(segments.Length - 2).ToArray())))
+				if (!msBuildPaths.TryGetValue(toolset.Path, out var found))
+				{
+					found = LocateMSBuild(toolset.Path);
+					if (found is not null)
+						msBuildPaths[toolset.Path] = found;
+				}
+				if (found is not null)
+				{
+					msBuildPath = found;
 					LogEvent("Found MSBuild in " + msBuildPath);
+				}
+				else
+					LogEvent("Warning: MSBuild.exe not found for " + toolset.VSName + ". Builds will rely on MSBuild.exe being in PATH");
 			}
 
 
@@ -443,7 +479,7 @@ namespace Projector
 			eventLog.Text = "";
 
 			var workSet = GetSelectedBuildTargets();
-			string config = buildConfigurations.SelectedItem.ToString() ?? throw new ArgumentNullException("Selected build configuration");
+			string config = buildConfigurations.SelectedItem?.ToString() ?? throw new ArgumentNullException("Selected build configuration");
 
 			toolStripProgressBar.Value = 0;
 			projectsBuilt = 0;
@@ -496,7 +532,7 @@ namespace Projector
 							if (canBuild)
 							{
 								activeJobs.Add(c);
-								c.BeginMsBuild(buildConfigurations.SelectedItem.ToString() ?? throw new ArgumentNullException("Selected build configuration"), forceRebuildSelected.Checked, LogEvent);
+								c.BeginMsBuild(buildConfigurations.SelectedItem?.ToString() ?? throw new ArgumentNullException("Selected build configuration"), forceRebuildSelected.Checked, LogEvent);
 							}
 						}
 					}

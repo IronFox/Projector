@@ -300,8 +300,8 @@ namespace Projector
 			//File.CreateText(outPath.FullName);
 
 			writer.WriteLine("Microsoft Visual Studio Solution File, Format Version 12.00");
-			writer.WriteLine("# Visual Studio "+toolset);
-			writer.WriteLine("VisualStudioVersion = " + toolset);
+			writer.WriteLine(toolset.SolutionVersionComment);
+			writer.WriteLine("VisualStudioVersion = " + toolset.SolutionVisualStudioVersion);
 			writer.WriteLine("MinimumVisualStudioVersion = 10.0.40219.1");
 			//Guid solutionGuid = Guid.NewGuid();
 			string typeGUID = "8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942";   //C++. see http://www.codeproject.com/Reference/720512/List-of-Visual-Studio-Project-Type-GUIDs

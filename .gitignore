@@ -8,3 +8,5 @@ Projector.exe.config
 .projector/
 .vs/
 /.vs.old
+Compiled/
+packages/

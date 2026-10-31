@@ -1,36 +1,32 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net6.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationIcon>Projector.ico</ApplicationIcon>
-    <BaseOutputPath>D:\projects\projector\Compiled</BaseOutputPath>
-  </PropertyGroup>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationVisualStyles>true</ApplicationVisualStyles>
+    <ApplicationUseCompatibleTextRendering>false</ApplicationUseCompatibleTextRendering>
+    <!-- Allows building (not running) on non-Windows machines, e.g. CI. -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <DebugType>portable</DebugType>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DebugType>full</DebugType>
+    <Product>Projector</Product>
+    <Description>Generates Visual Studio C++ solutions and projects from simple XML files</Description>
+    <Copyright>Copyright (C) 2016-2026 Stefan Elsen</Copyright>
+    <Version>1.4.0</Version>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  
-  
-  <PropertyGroup Condition="'$(Configuration)'=='Release'">
-  <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-  <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
-</PropertyGroup>
 
   <ItemGroup>
     <Content Include="Projector.ico" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="3.2.2146" />
-    <PackageReference Include="System.Management" Version="6.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Setup.Configuration.Interop" Version="3.14.2075" />
+    <PackageReference Include="System.Management" Version="10.0.14" />
   </ItemGroup>
 
 </Project>

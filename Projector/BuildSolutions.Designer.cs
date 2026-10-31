@@ -35,6 +35,7 @@
 			this.toolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
 			this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
 			this.buildControl = new System.Windows.Forms.Panel();
+			this.buildOptionsRow = new System.Windows.Forms.TableLayoutPanel();
 			this.eventLog = new System.Windows.Forms.TextBox();
 			this.forceRebuildSelected = new System.Windows.Forms.CheckBox();
 			this.buildButton = new System.Windows.Forms.Button();
@@ -48,6 +49,7 @@
 			this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
 			this.statusStrip1.SuspendLayout();
 			this.buildControl.SuspendLayout();
+			this.buildOptionsRow.SuspendLayout();
 			this.groupBox1.SuspendLayout();
 			this.SuspendLayout();
 			// 
@@ -77,9 +79,7 @@
 			// buildControl
 			// 
 			this.buildControl.Controls.Add(this.eventLog);
-			this.buildControl.Controls.Add(this.forceRebuildSelected);
-			this.buildControl.Controls.Add(this.buildButton);
-			this.buildControl.Controls.Add(this.buildConfigurations);
+			this.buildControl.Controls.Add(this.buildOptionsRow);
 			this.buildControl.Dock = System.Windows.Forms.DockStyle.Bottom;
 			this.buildControl.Location = new System.Drawing.Point(0, 308);
 			this.buildControl.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
@@ -87,11 +87,28 @@
 			this.buildControl.Size = new System.Drawing.Size(779, 356);
 			this.buildControl.TabIndex = 2;
 			// 
+			// buildOptionsRow
+			// 
+			this.buildOptionsRow.AutoSize = true;
+			this.buildOptionsRow.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+			this.buildOptionsRow.ColumnCount = 3;
+			this.buildOptionsRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize));
+			this.buildOptionsRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.buildOptionsRow.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.buildOptionsRow.Controls.Add(this.forceRebuildSelected, 0, 0);
+			this.buildOptionsRow.Controls.Add(this.buildConfigurations, 1, 0);
+			this.buildOptionsRow.Controls.Add(this.buildButton, 2, 0);
+			this.buildOptionsRow.Dock = System.Windows.Forms.DockStyle.Top;
+			this.buildOptionsRow.Location = new System.Drawing.Point(0, 0);
+			this.buildOptionsRow.Name = "buildOptionsRow";
+			this.buildOptionsRow.RowCount = 1;
+			this.buildOptionsRow.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
+			this.buildOptionsRow.Size = new System.Drawing.Size(779, 36);
+			this.buildOptionsRow.TabIndex = 0;
+			// 
 			// eventLog
 			// 
-			this.eventLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.eventLog.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.eventLog.Location = new System.Drawing.Point(4, 41);
 			this.eventLog.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.eventLog.Multiline = true;
@@ -103,6 +120,7 @@
 			// 
 			// forceRebuildSelected
 			// 
+			this.forceRebuildSelected.Anchor = System.Windows.Forms.AnchorStyles.Left;
 			this.forceRebuildSelected.AutoSize = true;
 			this.forceRebuildSelected.Checked = true;
 			this.forceRebuildSelected.CheckState = System.Windows.Forms.CheckState.Checked;
@@ -117,7 +135,8 @@
 			// 
 			// buildButton
 			// 
-			this.buildButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.buildButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+			this.buildButton.AutoSize = true;
 			this.buildButton.Location = new System.Drawing.Point(527, 7);
 			this.buildButton.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
 			this.buildButton.Name = "buildButton";
@@ -129,8 +148,7 @@
 			// 
 			// buildConfigurations
 			// 
-			this.buildConfigurations.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.buildConfigurations.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
 			this.buildConfigurations.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.buildConfigurations.FormattingEnabled = true;
 			this.buildConfigurations.Location = new System.Drawing.Point(289, 7);
@@ -217,13 +235,15 @@
 			this.Controls.Add(this.statusStrip1);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.Margin = new System.Windows.Forms.Padding(4, 4, 4, 4);
-			this.MinimumSize = new System.Drawing.Size(794, 728);
+			this.MinimumSize = new System.Drawing.Size(560, 480);
 			this.Name = "BuildSolutions";
 			this.Text = "(Re)build Projects";
 			this.Load += new System.EventHandler(this.BuildSolutions_Load);
 			this.Shown += new System.EventHandler(this.BuildSolutions_Shown);
 			this.statusStrip1.ResumeLayout(false);
 			this.statusStrip1.PerformLayout();
+			this.buildOptionsRow.ResumeLayout(false);
+			this.buildOptionsRow.PerformLayout();
 			this.buildControl.ResumeLayout(false);
 			this.buildControl.PerformLayout();
 			this.groupBox1.ResumeLayout(false);
@@ -235,6 +255,7 @@
 		#endregion
 		private System.Windows.Forms.StatusStrip statusStrip1;
 		private System.Windows.Forms.Panel buildControl;
+		private System.Windows.Forms.TableLayoutPanel buildOptionsRow;
 		private System.Windows.Forms.Splitter splitter1;
 		private System.Windows.Forms.ComboBox buildConfigurations;
 		private System.Windows.Forms.Button buildButton;

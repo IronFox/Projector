@@ -72,7 +72,7 @@
 			this.tabRecent = new System.Windows.Forms.TabPage();
 			this.recentSolutions = new System.Windows.Forms.Panel();
 			this.tabLoaded = new System.Windows.Forms.TabPage();
-			this.panel3 = new System.Windows.Forms.Panel();
+			this.panel3 = new System.Windows.Forms.TableLayoutPanel();
 			this.openSelectedButton = new System.Windows.Forms.Button();
 			this.generateSelectedButton = new System.Windows.Forms.Button();
 			this.loadedSolutionsView = new System.Windows.Forms.ListView();
@@ -81,7 +81,7 @@
 			this.columnHeader2 = new System.Windows.Forms.ColumnHeader();
 			this.tabSelected = new System.Windows.Forms.TabPage();
 			this.solutionView = new System.Windows.Forms.TreeView();
-			this.panel1 = new System.Windows.Forms.Panel();
+			this.panel1 = new System.Windows.Forms.TableLayoutPanel();
 			this.openGeneratedSolutionButton = new System.Windows.Forms.Button();
 			this.buildSolutionButton = new System.Windows.Forms.Button();
 			this.log = new System.Windows.Forms.TextBox();
@@ -89,7 +89,7 @@
 			this.chooseDestination = new System.Windows.Forms.SaveFileDialog();
 			this.statusStrip = new System.Windows.Forms.StatusStrip();
 			this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-			this.toolsetPanel = new System.Windows.Forms.Panel();
+			this.toolsetPanel = new System.Windows.Forms.TableLayoutPanel();
 			this.toolsetLabel = new System.Windows.Forms.Label();
 			this.toolSet = new System.Windows.Forms.ComboBox();
 			this.startVSTimer = new System.Windows.Forms.Timer(this.components);
@@ -383,9 +383,7 @@
 			// 
 			// solutionViewSplit
 			// 
-			this.solutionViewSplit.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.solutionViewSplit.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.solutionViewSplit.Location = new System.Drawing.Point(0, 85);
 			this.solutionViewSplit.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.solutionViewSplit.Name = "solutionViewSplit";
@@ -445,8 +443,8 @@
 			// 
 			// tabLoaded
 			// 
-			this.tabLoaded.Controls.Add(this.panel3);
 			this.tabLoaded.Controls.Add(this.loadedSolutionsView);
+			this.tabLoaded.Controls.Add(this.panel3);
 			this.tabLoaded.Location = new System.Drawing.Point(4, 29);
 			this.tabLoaded.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.tabLoaded.Name = "tabLoaded";
@@ -459,18 +457,23 @@
 			// 
 			this.panel3.AutoSize = true;
 			this.panel3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-			this.panel3.Controls.Add(this.openSelectedButton);
-			this.panel3.Controls.Add(this.generateSelectedButton);
+			this.panel3.ColumnCount = 2;
+			this.panel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.panel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.panel3.Controls.Add(this.generateSelectedButton, 0, 0);
+			this.panel3.Controls.Add(this.openSelectedButton, 1, 0);
 			this.panel3.Dock = System.Windows.Forms.DockStyle.Bottom;
 			this.panel3.Location = new System.Drawing.Point(0, 324);
 			this.panel3.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.panel3.Name = "panel3";
+			this.panel3.RowCount = 1;
+			this.panel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
 			this.panel3.Size = new System.Drawing.Size(744, 46);
 			this.panel3.TabIndex = 1;
 			// 
 			// openSelectedButton
 			// 
-			this.openSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+			this.openSelectedButton.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.openSelectedButton.Location = new System.Drawing.Point(380, 0);
 			this.openSelectedButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.openSelectedButton.Name = "openSelectedButton";
@@ -482,8 +485,7 @@
 			// 
 			// generateSelectedButton
 			// 
-			this.generateSelectedButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.generateSelectedButton.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.generateSelectedButton.Location = new System.Drawing.Point(-1, 0);
 			this.generateSelectedButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.generateSelectedButton.Name = "generateSelectedButton";
@@ -496,9 +498,7 @@
 			// loadedSolutionsView
 			// 
 			this.loadedSolutionsView.AllowDrop = true;
-			this.loadedSolutionsView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.loadedSolutionsView.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.loadedSolutionsView.CheckBoxes = true;
 			this.loadedSolutionsView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.solutionNameHeader,
@@ -563,18 +563,25 @@
 			// 
 			// panel1
 			// 
-			this.panel1.Controls.Add(this.openGeneratedSolutionButton);
-			this.panel1.Controls.Add(this.buildSolutionButton);
+			this.panel1.AutoSize = true;
+			this.panel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+			this.panel1.ColumnCount = 2;
+			this.panel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.panel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+			this.panel1.Controls.Add(this.buildSolutionButton, 0, 0);
+			this.panel1.Controls.Add(this.openGeneratedSolutionButton, 1, 0);
 			this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
 			this.panel1.Location = new System.Drawing.Point(4, 5);
 			this.panel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.panel1.Name = "panel1";
+			this.panel1.RowCount = 1;
+			this.panel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
 			this.panel1.Size = new System.Drawing.Size(736, 35);
 			this.panel1.TabIndex = 5;
 			// 
 			// openGeneratedSolutionButton
 			// 
-			this.openGeneratedSolutionButton.Dock = System.Windows.Forms.DockStyle.Right;
+			this.openGeneratedSolutionButton.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.openGeneratedSolutionButton.Enabled = false;
 			this.openGeneratedSolutionButton.Location = new System.Drawing.Point(369, 0);
 			this.openGeneratedSolutionButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -587,8 +594,7 @@
 			// 
 			// buildSolutionButton
 			// 
-			this.buildSolutionButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.buildSolutionButton.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.buildSolutionButton.Enabled = false;
 			this.buildSolutionButton.Location = new System.Drawing.Point(0, 0);
 			this.buildSolutionButton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
@@ -601,9 +607,7 @@
 			// 
 			// log
 			// 
-			this.log.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+			this.log.Dock = System.Windows.Forms.DockStyle.Fill;
 			this.log.Location = new System.Drawing.Point(4, 34);
 			this.log.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.log.MaxLength = 65536;
@@ -617,6 +621,8 @@
 			// logLabel
 			// 
 			this.logLabel.AutoSize = true;
+			this.logLabel.Dock = System.Windows.Forms.DockStyle.Top;
+			this.logLabel.Padding = new System.Windows.Forms.Padding(0, 4, 0, 4);
 			this.logLabel.Location = new System.Drawing.Point(4, 9);
 			this.logLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
 			this.logLabel.Name = "logLabel";
@@ -644,18 +650,26 @@
 			// 
 			// toolsetPanel
 			// 
-			this.toolsetPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-			this.toolsetPanel.Controls.Add(this.toolsetLabel);
-			this.toolsetPanel.Controls.Add(this.toolSet);
+			this.toolsetPanel.AutoSize = true;
+			this.toolsetPanel.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+			this.toolsetPanel.ColumnCount = 2;
+			this.toolsetPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.AutoSize));
+			this.toolsetPanel.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+			this.toolsetPanel.Controls.Add(this.toolsetLabel, 0, 0);
+			this.toolsetPanel.Controls.Add(this.toolSet, 1, 0);
+			this.toolsetPanel.Dock = System.Windows.Forms.DockStyle.Top;
 			this.toolsetPanel.Location = new System.Drawing.Point(0, 38);
 			this.toolsetPanel.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
 			this.toolsetPanel.Name = "toolsetPanel";
+			this.toolsetPanel.Padding = new System.Windows.Forms.Padding(2);
+			this.toolsetPanel.RowCount = 1;
+			this.toolsetPanel.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.AutoSize));
 			this.toolsetPanel.Size = new System.Drawing.Size(751, 48);
 			this.toolsetPanel.TabIndex = 6;
 			// 
 			// toolsetLabel
 			// 
+			this.toolsetLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
 			this.toolsetLabel.AutoSize = true;
 			this.toolsetLabel.Location = new System.Drawing.Point(0, 11);
 			this.toolsetLabel.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
@@ -689,14 +703,14 @@
 			this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 20F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(752, 711);
+			this.Controls.Add(this.solutionViewSplit);
 			this.Controls.Add(this.toolsetPanel);
 			this.Controls.Add(this.statusStrip);
-			this.Controls.Add(this.solutionViewSplit);
 			this.Controls.Add(this.menuStrip1);
 			this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
 			this.MainMenuStrip = this.menuStrip1;
 			this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
-			this.MinimumSize = new System.Drawing.Size(766, 742);
+			this.MinimumSize = new System.Drawing.Size(560, 420);
 			this.Name = "ProjectView";
 			this.Text = "Projector";
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.ProjectView_FormClosed);
@@ -714,8 +728,11 @@
 			this.tabLoaded.ResumeLayout(false);
 			this.tabLoaded.PerformLayout();
 			this.panel3.ResumeLayout(false);
+			this.panel3.PerformLayout();
 			this.tabSelected.ResumeLayout(false);
+			this.tabSelected.PerformLayout();
 			this.panel1.ResumeLayout(false);
+			this.panel1.PerformLayout();
 			this.statusStrip.ResumeLayout(false);
 			this.statusStrip.PerformLayout();
 			this.toolsetPanel.ResumeLayout(false);
@@ -753,10 +770,10 @@
 		private System.Windows.Forms.Panel recentSolutions;
 		private System.Windows.Forms.TabPage tabSelected;
 		private System.Windows.Forms.TreeView solutionView;
-		private System.Windows.Forms.Panel panel1;
+		private System.Windows.Forms.TableLayoutPanel panel1;
 		private System.Windows.Forms.Button openGeneratedSolutionButton;
 		private System.Windows.Forms.Button buildSolutionButton;
-		private System.Windows.Forms.Panel toolsetPanel;
+		private System.Windows.Forms.TableLayoutPanel toolsetPanel;
 		private System.Windows.Forms.Label toolsetLabel;
 		private System.Windows.Forms.ComboBox toolSet;
 		private System.Windows.Forms.TabPage tabLoaded;
@@ -769,7 +786,7 @@
 		private System.Windows.Forms.ToolStripMenuItem openGeneratedToolStripMenuItem;
 		private System.Windows.Forms.ToolStripSeparator toolStripMenuItem6;
 		private System.Windows.Forms.ToolStripMenuItem unloadSelectedToolStripMenuItem;
-		private System.Windows.Forms.Panel panel3;
+		private System.Windows.Forms.TableLayoutPanel panel3;
 		private System.Windows.Forms.Button openSelectedButton;
 		private System.Windows.Forms.Button generateSelectedButton;
 		private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;

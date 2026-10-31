@@ -4,10 +4,29 @@ Projector is a simplified VS C++ solution/project assembler, adhering to the res
 It scans source code files automatically and maintains a global project registry to automatically resolve project dependencies.
 Projector is firmly geared towards Windows development at this stage, enabling the inclusion of installed libraries from fixed or Registry-identifiable paths.
 
-The application can currently build solutions for Visual Studio 2013, 2015, 2017, and 2019.
+The application can currently build solutions for Visual Studio 2013, 2015, 2017, 2019, 2022, and 2026.
+Installed Visual Studio versions are detected automatically and offered as toolset versions (v120, v140, v141, v142, v143, v145).
 Generated projects loaded by Visual Studio will compile as parallel as possible
 
  
+
+## Building Projector
+
+Projector is a Windows Forms application targeting .NET 10.
+Building it requires the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0); running it requires the .NET 10 Desktop Runtime.
+
+```
+dotnet build Projector.sln -c Release
+```
+
+The executable is written to `Projector/bin/Release/net10.0-windows/Projector.exe`.
+To produce a single self-contained executable that runs without an installed runtime:
+
+```
+dotnet publish Projector/Projector.csproj -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
+```
+
+Alternatively, open `Projector.sln` in Visual Studio 2022 (17.14 or newer) or Visual Studio 2026.
 
 ## General Usage
 
