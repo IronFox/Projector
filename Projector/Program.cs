@@ -19,10 +19,6 @@ namespace Projector
     static class Program
     {
 
-		[System.Runtime.InteropServices.DllImport("user32.dll")]
-		private static extern bool SetProcessDPIAware();
-
-
 		static NamedPipeServerStream? pipeServer;
 		static Thread? pipeServerThread;
 		static ProjectView? view;
@@ -156,7 +152,7 @@ namespace Projector
 				}
 				if (cmds[1] == "--make" || cmds[1] == "-m")
 				{
-					if (cmds.Length < 2)
+					if (cmds.Length < 3)
 					{
 						Console.Error.WriteLine("Missing parameter. --make/-m Requires a valid .solution file");
 						return;
@@ -191,8 +187,9 @@ namespace Projector
 					Application.Exit();
 					return;
 				}
-				Console.WriteLine("Unknown parameter given. Use --help to see the list of compatible parameters.");
-				Application.Exit();
+				//A solution file passed as parameter is loaded by the GUI (see ProjectView.LoadFromParameter)
+				if (!File.Exists(cmds[1]))
+					Console.WriteLine("Unknown parameter given. Use --help to see the list of compatible parameters.");
 			}
 
 			//if (Environment.OSVersion.Version.Major >= 6)
@@ -206,9 +203,6 @@ namespace Projector
 			//{
 			//	if (createdNew)
 			//	{
-					Application.EnableVisualStyles();
-					Application.SetCompatibleTextRenderingDefault(false);
-
 				//	CreatePipeServer();
 
 					view = new ProjectView();

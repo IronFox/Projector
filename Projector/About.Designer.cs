@@ -35,16 +35,19 @@
 			// 
 			// aboutTitle
 			// 
+			this.aboutTitle.AutoSize = true;
 			this.aboutTitle.Dock = System.Windows.Forms.DockStyle.Top;
-			this.aboutTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+			this.aboutTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
 			this.aboutTitle.Image = global::Projector.Properties.Resources.Projector;
 			this.aboutTitle.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this.aboutTitle.Location = new System.Drawing.Point(0, 0);
 			this.aboutTitle.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
+			this.aboutTitle.MinimumSize = new System.Drawing.Size(0, 40);
 			this.aboutTitle.Name = "aboutTitle";
+			this.aboutTitle.Padding = new System.Windows.Forms.Padding(4);
 			this.aboutTitle.Size = new System.Drawing.Size(379, 37);
 			this.aboutTitle.TabIndex = 0;
-			this.aboutTitle.Text = "Projector v1.3";
+			this.aboutTitle.Text = "Projector v1.4";
 			this.aboutTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
 			// 
 			// textBox

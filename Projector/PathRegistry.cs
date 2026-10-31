@@ -250,7 +250,7 @@ namespace Projector
 					return info;
 			}
 			MessageBox.Show("Project '"+name+"' is currently unknown. Please locate the .project file to continue...","Project not known");
-            ProjectView view = (ProjectView)Application.OpenForms["ProjectView"];
+            ProjectView view = (ProjectView?)Application.OpenForms["ProjectView"] ?? throw new InvalidOperationException("Main window not found");
             OpenFileDialog dialog = view.OpenDialog;
 			do
 			{
