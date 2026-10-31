@@ -243,8 +243,37 @@ namespace Projector
 			}
 		}
 
+		/// <summary>
+		/// Adds the Options > Color Mode submenu (System / Dark / Light)
+		/// </summary>
+		private void AddColorModeMenu()
+		{
+			var colorModeMenu = new ToolStripMenuItem("Color Mode");
+			foreach (var (mode, label) in new[] { ("System", "Follow Windows"), ("Dark", "Dark"), ("Light", "Light") })
+			{
+				var item = new ToolStripMenuItem(label)
+				{
+					Checked = PersistentState.ColorMode == mode,
+					Tag = mode
+				};
+				item.Click += (sender, args) =>
+				{
+					foreach (ToolStripMenuItem other in colorModeMenu.DropDownItems)
+						other.Checked = other == item;
+					PersistentState.ColorMode = mode;
+					Program.SetColorMode(mode);
+					LogLine("Color mode set to " + label + ". Restart Projector if some controls do not update.");
+				};
+				colorModeMenu.DropDownItems.Add(item);
+			}
+			optionsToolStripMenuItem.DropDownItems.Add(new ToolStripSeparator());
+			optionsToolStripMenuItem.DropDownItems.Add(colorModeMenu);
+		}
+
 		private void ProjectView_Load(object sender, EventArgs e)
         {
+			AddColorModeMenu();
+
 			RegisterToolSet(12, 0, "VS 2013", 12,0);
 			RegisterToolSet(14, 0, "VS 2015", 14,0);
 			RegisterToolSet(14, 1, "VS 2017", 15,-1);

@@ -129,12 +129,45 @@ namespace Projector
 		private const int ATTACH_PARENT_PROCESS = -1;
 
 		/// <summary>
+		/// Applies the color mode stored in the persistent state (follows the Windows setting by default)
+		/// </summary>
+		private static void ApplyColorMode()
+		{
+			try
+			{
+				PersistentState.Restore();
+			}
+			catch (Exception)
+			{
+				//unreadable state file: keep defaults, the main window reports state issues itself
+			}
+			SetColorMode(PersistentState.ColorMode);
+		}
+
+		/// <summary>
+		/// Switches the application color mode
+		/// </summary>
+		/// <param name="mode">"System", "Dark", or "Light"</param>
+		internal static void SetColorMode(string mode)
+		{
+#pragma warning disable WFO5001 // dark mode support is flagged experimental in Windows Forms
+			Application.SetColorMode(mode switch
+			{
+				"Dark" => SystemColorMode.Dark,
+				"Light" => SystemColorMode.Classic,
+				_ => SystemColorMode.System
+			});
+#pragma warning restore WFO5001
+		}
+
+		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>
 		[STAThread]
         static void Main()
         {
 			ApplicationConfiguration.Initialize();
+			ApplyColorMode();
 
 			var cmds = Environment.GetCommandLineArgs();
 

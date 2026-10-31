@@ -73,6 +73,24 @@ namespace Projector
             }
         }
 
+		/// <summary>
+		/// Persistent color mode of the user interface: "System" (follow Windows), "Dark", or "Light"
+		/// </summary>
+		public static string ColorMode
+		{
+			get
+			{
+				return colorMode;
+			}
+			set
+			{
+				if (colorMode == value)
+					return;
+				colorMode = value;
+				Backup();
+			}
+		}
+
 		
 		private static FilePath stateFile = new FilePath(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal),"projector","persistentState.xml"));
 
@@ -133,6 +151,9 @@ namespace Projector
                 XmlNode? xtoolset = xdoc.SelectSingleNode("state/toolset");
                 if (xtoolset is not null)
                     toolset = xtoolset.InnerText;
+                XmlNode? xcolorMode = xdoc.SelectSingleNode("state/colorMode");
+                if (xcolorMode is not null && xcolorMode.InnerText.Length > 0)
+                    colorMode = xcolorMode.InnerText;
                 xreader.Close();
 				return true;
             }
@@ -141,6 +162,7 @@ namespace Projector
         private static List<SolutionDescriptor> recent = new ();
         private static Dictionary<string, FilePath> outPaths = new ();
         private static string? toolset;
+        private static string colorMode = "System";
 
         /// <summary>
         /// Writes the local state to XML
@@ -170,6 +192,7 @@ namespace Projector
                         }
                     writer.WriteEndElement();
                     writer.WriteElementString("toolset", toolset);
+                    writer.WriteElementString("colorMode", colorMode);
                 writer.WriteEndElement();
                 writer.WriteEndDocument();
                 writer.Close();

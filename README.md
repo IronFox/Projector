@@ -36,6 +36,10 @@ dotnet publish Projector/Projector.csproj -c Release -r win-x64 --self-contained
 
 Alternatively, open `Projector.sln` in Visual Studio 2022 (17.14 or newer) or Visual Studio 2026.
 
+## Dark Mode
+
+Projector follows the Windows light/dark app setting by default. Use *Options > Color Mode* to force *Dark* or *Light*; the choice is remembered.
+
 ## General Usage
 
 In order to use Projector, one XML file needs to be created per project (ending with .project) and a separate one to outline the solution (ending with .solution).
