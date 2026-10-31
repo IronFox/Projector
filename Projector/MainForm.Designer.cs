@@ -426,7 +426,7 @@
 			this.tabRecent.Size = new System.Drawing.Size(744, 370);
 			this.tabRecent.TabIndex = 0;
 			this.tabRecent.Text = "Recent";
-			this.tabRecent.UseVisualStyleBackColor = true;
+			this.tabRecent.UseVisualStyleBackColor = false;
 			// 
 			// recentSolutions
 			// 
@@ -451,7 +451,7 @@
 			this.tabLoaded.Size = new System.Drawing.Size(744, 370);
 			this.tabLoaded.TabIndex = 2;
 			this.tabLoaded.Text = "Loaded";
-			this.tabLoaded.UseVisualStyleBackColor = true;
+			this.tabLoaded.UseVisualStyleBackColor = false;
 			// 
 			// panel3
 			// 
@@ -548,7 +548,7 @@
 			this.tabSelected.Size = new System.Drawing.Size(744, 370);
 			this.tabSelected.TabIndex = 1;
 			this.tabSelected.Text = "Focused (none)";
-			this.tabSelected.UseVisualStyleBackColor = true;
+			this.tabSelected.UseVisualStyleBackColor = false;
 			// 
 			// solutionView
 			// 
